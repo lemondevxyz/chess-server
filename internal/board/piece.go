@@ -52,6 +52,10 @@ func (p Piece) CanGo(x, y int) bool {
 		}
 	}
 
+	if p.X == x && p.Y == y {
+		return false
+	}
+
 	src, dst := Point{
 		X: p.X,
 		Y: p.Y,
@@ -95,6 +99,7 @@ func (p Piece) CanGo(x, y int) bool {
 	// move within square or diagonal or horizontal or vertical
 	case Queen:
 		return Vertical(src, dst) || Horizontal(src, dst) || Diagonal(src, dst) || Square(src, dst)
+	// move within square
 	case King:
 		return Square(src, dst)
 	}
