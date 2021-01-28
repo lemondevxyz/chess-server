@@ -27,7 +27,22 @@ type Piece struct {
 	Y      int
 }
 
-func (p Piece) String() string {
+func (p *Piece) ShortString() string {
+	strings := map[uint8]string{
+		Empty:  " ",
+		PawnF:  "P",
+		PawnB:  "P",
+		Bishop: "B",
+		Knight: "N",
+		Rook:   "R",
+		Queen:  "Q",
+		King:   "K",
+	}
+
+	return strings[p.T]
+}
+
+func (p *Piece) String() string {
 	strings := map[uint8]string{
 		Empty:  "",
 		PawnF:  "Pawn",
@@ -42,7 +57,7 @@ func (p Piece) String() string {
 	return strings[p.T]
 }
 
-func (p Piece) CanGo(x, y int) bool {
+func (p *Piece) CanGo(x, y int) bool {
 
 	limit := 8
 	if x >= limit && y >= limit {
