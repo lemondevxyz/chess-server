@@ -1,32 +1,40 @@
 package board
 
-// absolute value of i
-func abs(i int) int {
-	if i < 0 {
-		return i * -1
-	}
-
-	return i
-}
-
 const (
 	Empty uint8 = iota
-	PawnF       // move forward, start from 1
-	PawnB       // move backward, start from 6
+	// Pawn Forward -> 1, 0 - 2, 0
+	PawnF
+	// Pawn Backward -> 6, 0 -> 5, 0
+	PawnB
+	// Bishop
+	// Moves diagonally
 	Bishop
+	// Knight
+	// Moves with [2, 1] or [1, 2]
 	Knight
+	// Rook
+	// Moves horizontally, vertically and diagonally
 	Rook
+	// Queen
+	// Moves horizontally, vertically, diagonally, and within square.
 	Queen
+	// King
+	// Moves within square.
 	King
 )
 
 type Piece struct {
-	Player int
-	T      uint8
-	X      int
-	Y      int
+	// Player could be any number, but mostly [1, 2]
+	Player uint8
+	// T the piece type
+	T uint8
+	// X place in array
+	X int
+	// Y place in array
+	Y int
 }
 
+// ShortString produces a one-character string to represent the piece. Used for debugging.
 func (p *Piece) ShortString() string {
 	strings := map[uint8]string{
 		Empty:  " ",
@@ -42,6 +50,7 @@ func (p *Piece) ShortString() string {
 	return strings[p.T]
 }
 
+// String representation of the type
 func (p *Piece) String() string {
 	strings := map[uint8]string{
 		Empty:  "",
@@ -57,6 +66,7 @@ func (p *Piece) String() string {
 	return strings[p.T]
 }
 
+// CanGo does validation for the piece. Each piece has it's own rules.
 func (p *Piece) CanGo(x, y int) bool {
 
 	limit := 8

@@ -2,6 +2,7 @@ package board
 
 import (
 	"testing"
+	"time"
 )
 
 // placement test
@@ -13,8 +14,8 @@ func TestNewBoard(t *testing.T) {
 
 	b := NewBoard()
 	for x := 0; x < 2; x++ {
-		for y := 0; y < len(b); y++ {
-			if b[x][y].T != u[x][y] {
+		for y := 0; y < len(b.data); y++ {
+			if b.data[x][y].T != u[x][y] {
 				t.Fatalf("Top rows are not setup properly: [%d, %d]", x, y)
 			}
 		}
@@ -22,13 +23,13 @@ func TestNewBoard(t *testing.T) {
 
 	u[0], u[1] = u[1], u[0]
 	for x := 0; x < 2; x++ {
-		for y := 0; y < len(b); y++ {
+		for y := 0; y < len(b.data); y++ {
 			v := u[x][y]
 			if v == PawnB {
 				v = PawnF
 			}
 
-			if b[x+6][y].T != v {
+			if b.data[x+6][y].T != v {
 				t.Fatalf("Bottom rows are not setup properly: [%d, %d]", x, y)
 			}
 		}
@@ -58,10 +59,62 @@ R N B K Q B N R`
 }
 */
 
+func TestBoardListen(t *testing.T) {
+	b := NewBoard()
+
+	pre := make(chan bool)
+	post := make(chan bool)
+
+	ok := make(chan bool)
+	go func() {
+		a := <-pre
+		b := <-post
+
+		if a && b {
+			ok <- true
+		}
+	}()
+
+	x, y := false, false
+	b.Listen(func(_ *Piece, _ Point, p bool) {
+		if p {
+			pre <- true
+			x = true
+		} else {
+			post <- true
+			y = true
+		}
+	})
+	b.Move(b.data[1][1], Point{3, 1})
+
+	select {
+	case <-time.After(time.Millisecond * 20):
+		t.Fatalf("Listen does not listen. pre: %t - post: %t", x, y)
+	case <-ok:
+		break
+	}
+
+}
+
+func TestBoardSet(t *testing.T) {
+	b := NewBoard()
+
+	p := &Piece{
+		X: 1,
+		Y: 1,
+		T: Bishop,
+	}
+
+	b.Set(p)
+	if b.data[p.X][p.Y] != p {
+		t.Fatalf("Set does not work")
+	}
+}
+
 func TestBoardMove(t *testing.T) {
 	b := NewBoard()
 
-	x := b[1][3]
+	x := b.data[1][3]
 
 	if !b.Move(x, Point{
 		X: 3,
@@ -70,7 +123,7 @@ func TestBoardMove(t *testing.T) {
 		t.Fatalf("CanGo failed")
 	}
 
-	if b[3][3].T != PawnB {
+	if b.data[3][3].T != PawnB {
 		t.Fatalf("Pawn didn't move")
 	}
 }
@@ -78,13 +131,13 @@ func TestBoardMove(t *testing.T) {
 func TestBoardMovePawn(t *testing.T) {
 
 	b := NewBoard()
-	x := b[1][3]
-	y := b[6][4]
+	x := b.data[1][3]
+	y := b.data[6][4]
 
 	b.Move(x, Point{3, 3})
 	b.Move(y, Point{4, 4})
 
-	z := b[6][5]
+	z := b.data[6][5]
 	b.Move(z, Point{5, 5})
 
 	if !b.Move(x, Point{4, 4}) {
@@ -93,7 +146,7 @@ func TestBoardMovePawn(t *testing.T) {
 		t.Fatalf("forward pawn should kill other pawn")
 	}
 
-	x = b[1][4]
+	x = b.data[1][4]
 	b.Move(x, Point{3, 4})
 	if b.Move(x, Point{4, 4}) {
 		t.Fatalf("pawn cannot takeout pawn in front of it")
@@ -149,48 +202,48 @@ func TestBoardMoveOthers(t *testing.T) {
 	}
 
 	for _, v := range cs {
-		b[v.src.X][v.src.Y] = &Piece{
+		b.data[v.src.X][v.src.Y] = &Piece{
 			Player: 1,
 			T:      v.t,
 			X:      v.src.X,
 			Y:      v.src.Y,
 		}
-		b[v.dst.X][v.dst.Y] = &Piece{
+		b.data[v.dst.X][v.dst.Y] = &Piece{
 			Player: 2,
 			T:      v.t,
 			X:      v.dst.X,
 			Y:      v.dst.Y,
 		}
 
-		x := b[v.src.X][v.src.Y]
-		if !b.Move(b[v.src.X][v.src.Y], v.dst) {
+		x := b.data[v.src.X][v.src.Y]
+		if !b.Move(b.data[v.src.X][v.src.Y], v.dst) {
 			t.Fatalf("test cordinates are invalid. src: %d - dst: %d - type: %d", v.src, v.dst, v.t)
 			return
 		} else {
-			if b[v.src.X][v.src.Y] != nil {
+			if b.data[v.src.X][v.src.Y] != nil {
 				t.Fatalf("move doesn't actually move")
 			} else {
-				if b[v.dst.X][v.dst.Y] != x {
+				if b.data[v.dst.X][v.dst.Y] != x {
 					t.Fatalf("move doesn't replace enemy")
 				}
 			}
 		}
 	}
 
-	b[0][0] = &Piece{
+	b.data[0][0] = &Piece{
 		Player: 1,
 		T:      PawnF,
 		X:      0,
 		Y:      0,
 	}
-	b[1][1] = &Piece{
+	b.data[1][1] = &Piece{
 		Player: 1,
 		T:      PawnB,
 		X:      1,
 		Y:      1,
 	}
 
-	if b.Move(b[0][0], Point{1, 1}) {
+	if b.Move(b.data[0][0], Point{1, 1}) {
 		t.Fatalf("ally killed")
 	}
 

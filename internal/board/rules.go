@@ -1,5 +1,15 @@
 package board
 
+// absolute value of i
+func abs(i int) int {
+	if i < 0 {
+		return i * -1
+	}
+
+	return i
+}
+
+// Point represents the piece's position in the Board.
 type Point struct {
 	X int
 	Y int
