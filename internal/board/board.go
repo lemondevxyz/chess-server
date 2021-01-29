@@ -79,19 +79,60 @@ func (b *Board) String() (str string) {
 	return str
 }
 
-func (b *Board) Move(p *Piece, dst Point) bool {
-
-	if p.CanGo(dst.X, dst.Y) {
-		if p != nil {
+func (b *Board) Move(p *Piece, dst Point) (ret bool) {
+	defer func() {
+		if ret {
 			b[p.X][p.Y] = nil
 
 			p.X = dst.X
 			p.Y = dst.Y
 
 			b[dst.X][dst.Y] = p
-			return true
+		}
+	}()
+
+	if p != nil {
+		x := b[dst.X][dst.Y]
+		if p.CanGo(dst.X, dst.Y) {
+			if x != nil {
+				if x.T != PawnB && x.T != PawnF {
+					if p.T != PawnB && p.T != PawnF {
+						if p.Player != x.Player {
+							ret = true
+						}
+					}
+				}
+			} else {
+				ret = true
+			}
+		} else {
+			if p.T == PawnB || p.T == PawnF {
+				x := p.X
+				y := p.Y
+				if p.T == PawnF {
+					x--
+				} else if p.T == PawnB {
+					x++
+				}
+
+				if dst.X == x {
+					oldy := y
+					// other piece
+					o := b[x][y+1]
+					i := b[x][y-1]
+					if o != nil && o.T != Empty && o.Player != p.Player {
+						y = y + 1
+					} else if i != nil && i.T != Empty && i.Player != p.Player {
+						y = y - 1
+					}
+
+					if oldy != y {
+						ret = true
+					}
+				}
+			}
 		}
 	}
 
-	return false
+	return
 }
