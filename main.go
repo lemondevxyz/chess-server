@@ -7,5 +7,8 @@ import (
 )
 
 func main() {
-	fmt.Println(board.NewBoard())
+	b := board.NewBoard()
+
+	body, err := b.MarshalJSON()
+	fmt.Println(string(body), err)
 }

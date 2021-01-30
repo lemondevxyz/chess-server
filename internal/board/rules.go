@@ -11,8 +11,8 @@ func abs(i int) int {
 
 // Point represents the piece's position in the Board.
 type Point struct {
-	X int
-	Y int
+	X int `json:"x"`
+	Y int `json:"y"`
 }
 
 // Swap swaps X and Y

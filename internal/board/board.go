@@ -1,6 +1,8 @@
 // Package board provides game-logic for chess, without the need of interaction from the user.
 package board
 
+import "encoding/json"
+
 type MoveEvent func(p *Piece, dst Point, pre bool)
 
 type Board struct {
@@ -95,10 +97,17 @@ func (b *Board) Listen(callback MoveEvent) {
 }
 
 // Set sets a piece in the board without game-logic interfering.
+/*
 func (b *Board) Set(p *Piece) {
 	if p != nil {
 		b.data[p.X][p.Y] = p
 	}
+}
+*/
+
+// Get returns a piece
+func (b *Board) Get(src Point) *Piece {
+	return b.data[src.X][src.Y]
 }
 
 // Move moves a piece from it's original position to the destination. Returns true if it did, or false if it didn't.
@@ -166,4 +175,66 @@ func (b *Board) Move(p *Piece, dst Point) (ret bool) {
 	}
 
 	return
+}
+
+// MarshalJSON json.Marshaler
+func (b Board) MarshalJSON() ([]byte, error) {
+	body, err := json.Marshal(b.data)
+	if err != nil {
+		return nil, err
+	}
+
+	return body, nil
+}
+
+// UnmarshalJSON json.Unmarshaler
+func (b Board) UnmarshalJSON(body []byte) error {
+	b.ml = []MoveEvent{}
+
+	err := json.Unmarshal(body, &b.data)
+	if err != nil {
+		return err
+	}
+
+	size := len(b.data)
+	for x := 0; x < size; x++ {
+		for y := 0; y < size; y++ {
+			p := b.data[x][y]
+			if p != nil {
+				p.X = x
+				p.Y = y
+			}
+		}
+	}
+
+	return nil
+}
+
+// DeadPieces returns all the dead pieces
+func (b Board) DeadPieces() map[uint8]uint8 {
+	x := map[uint8]uint8{
+		PawnF:  8,
+		PawnB:  8,
+		Bishop: 2,
+		Knight: 2,
+		Rook:   2,
+		King:   1,
+		Queen:  1,
+	}
+
+	for _, s := range b.data {
+		for _, v := range s {
+			if v != nil {
+				_, ok := x[v.T]
+				if ok {
+					x[v.T]--
+					if x[v.T] == 0 {
+						delete(x, v.T)
+					}
+				}
+			}
+		}
+	}
+
+	return x
 }

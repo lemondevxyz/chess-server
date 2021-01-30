@@ -1,5 +1,7 @@
 package board
 
+import "encoding/json"
+
 const (
 	Empty uint8 = iota
 	// Pawn Forward -> 1, 0 - 2, 0
@@ -32,6 +34,14 @@ type Piece struct {
 	X int
 	// Y place in array
 	Y int
+}
+
+func (p *Piece) Valid() bool {
+	if p.T >= PawnF && p.T <= King {
+		return true
+	}
+
+	return false
 }
 
 // ShortString produces a one-character string to represent the piece. Used for debugging.
@@ -130,4 +140,34 @@ func (p *Piece) CanGo(x, y int) bool {
 	}
 
 	return false
+}
+
+// MarshalJSON json.Marshaler
+func (p Piece) MarshalJSON() ([]byte, error) {
+	x := struct {
+		P uint8 `json:"player"`
+		T uint8 `json:"type"`
+	}{p.Player, p.T}
+
+	body, err := json.Marshal(x)
+	if err != nil {
+		return nil, err
+	}
+
+	return body, nil
+}
+
+// UnmarshalJSON json.Unmarshaler
+func (p Piece) UnmarshalJSON(b []byte) error {
+	x := struct {
+		P uint8 `json:"player"`
+		T uint8 `json:"type"`
+	}{p.Player, p.T}
+
+	err := json.Unmarshal(b, &x)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
