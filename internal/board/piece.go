@@ -1,7 +1,5 @@
 package board
 
-import "encoding/json"
-
 const (
 	Empty uint8 = iota
 	// Pawn Forward -> 1, 0 - 2, 0
@@ -27,13 +25,13 @@ const (
 
 type Piece struct {
 	// Player could be any number, but mostly [1, 2]
-	Player uint8
+	Player uint8 `json:"player"`
 	// T the piece type
-	T uint8
+	T uint8 `json:"type"`
 	// X place in array
-	X int
+	X int `json:"-"`
 	// Y place in array
-	Y int
+	Y int `json:"-"`
 }
 
 func (p *Piece) Valid() bool {
@@ -143,13 +141,14 @@ func (p *Piece) CanGo(x, y int) bool {
 }
 
 // MarshalJSON json.Marshaler
-func (p Piece) MarshalJSON() ([]byte, error) {
-	x := struct {
-		P uint8 `json:"player"`
-		T uint8 `json:"type"`
-	}{p.Player, p.T}
+/*
+func (p *Piece) MarshalJSON() ([]byte, error) {
+		x := struct {
+			P uint8 `json:"player"`
+			T uint8 `json:"type"`
+		}{p.Player, p.T}
 
-	body, err := json.Marshal(x)
+	body, err := json.Marshal(p)
 	if err != nil {
 		return nil, err
 	}
@@ -158,16 +157,17 @@ func (p Piece) MarshalJSON() ([]byte, error) {
 }
 
 // UnmarshalJSON json.Unmarshaler
-func (p Piece) UnmarshalJSON(b []byte) error {
-	x := struct {
-		P uint8 `json:"player"`
-		T uint8 `json:"type"`
-	}{p.Player, p.T}
+func (p *Piece) UnmarshalJSON(b []byte) error {
+		x := struct {
+			P uint8 `json:"player"`
+			T uint8 `json:"type"`
+		}{p.Player, p.T}
 
-	err := json.Unmarshal(b, &x)
+	err := json.Unmarshal(b, p)
 	if err != nil {
 		return err
 	}
 
 	return nil
 }
+*/

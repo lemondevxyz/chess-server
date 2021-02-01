@@ -1,9 +1,12 @@
 // Package board provides game-logic for chess, without the need of interaction from the user.
 package board
 
-import "encoding/json"
+import (
+	"encoding/json"
+)
 
-type MoveEvent func(p *Piece, dst Point, pre bool)
+// MoveEvent is a function called post-movement of a piece, ret is a boolean representing the validity of the move.
+type MoveEvent func(p *Piece, src Point, dst Point, ret bool)
 
 type Board struct {
 	data [8][8]*Piece
@@ -97,13 +100,11 @@ func (b *Board) Listen(callback MoveEvent) {
 }
 
 // Set sets a piece in the board without game-logic interfering.
-/*
 func (b *Board) Set(p *Piece) {
 	if p != nil {
 		b.data[p.X][p.Y] = p
 	}
 }
-*/
 
 // Get returns a piece
 func (b *Board) Get(src Point) *Piece {
@@ -112,12 +113,13 @@ func (b *Board) Get(src Point) *Piece {
 
 // Move moves a piece from it's original position to the destination. Returns true if it did, or false if it didn't.
 func (b *Board) Move(p *Piece, dst Point) (ret bool) {
+	src := Point{X: p.X, Y: p.Y}
 	defer func() {
 		for _, v := range b.ml {
-			v(p, dst, false)
+			v(p, src, dst, ret)
 		}
 
-		if ret {
+		if p != nil && ret {
 			b.data[p.X][p.Y] = nil
 
 			p.X = dst.X
@@ -126,10 +128,6 @@ func (b *Board) Move(p *Piece, dst Point) (ret bool) {
 			b.data[dst.X][dst.Y] = p
 		}
 	}()
-
-	for _, v := range b.ml {
-		v(p, dst, true)
-	}
 
 	if p != nil {
 		x := b.data[dst.X][dst.Y]
@@ -178,7 +176,7 @@ func (b *Board) Move(p *Piece, dst Point) (ret bool) {
 }
 
 // MarshalJSON json.Marshaler
-func (b Board) MarshalJSON() ([]byte, error) {
+func (b *Board) MarshalJSON() ([]byte, error) {
 	body, err := json.Marshal(b.data)
 	if err != nil {
 		return nil, err
@@ -188,7 +186,7 @@ func (b Board) MarshalJSON() ([]byte, error) {
 }
 
 // UnmarshalJSON json.Unmarshaler
-func (b Board) UnmarshalJSON(body []byte) error {
+func (b *Board) UnmarshalJSON(body []byte) error {
 	b.ml = []MoveEvent{}
 
 	err := json.Unmarshal(body, &b.data)

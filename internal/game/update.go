@@ -1,25 +1,57 @@
 package game
 
+import "encoding/json"
+
 // Update is a communication structure from the server to the client, while Command is from the client to the server.
 type Update struct {
-	ID   uint8
-	Data []byte
+	ID   uint8           `json:"id"`
+	Data json.RawMessage `json:"data"`
+	// used inside this package only
+	parameter interface{}
 }
 
+// UpdateCallback sets the data for the update, since some updates are quite repetitive.
+type UpdateCallback func(c *Client, u *Update) error
+
+// Tests are bundled with command tests.
 const (
 	// UpdateBoard is an update for the board, this happens whenever a player moves a piece.
-	// Data parameters are `[board_array]`
 	UpdateBoard uint8 = iota + 1
-	// UpdatePick happens whenever a pawn reaches the end of their board.
-	// Data parameters are `` - empty.
-	UpdatePromtion
+	// UpdatePromotion happens whenever a pawn reaches the end of their board.
+	UpdatePromotion
 	// UpdatePause is sent whenever one of the players wants to pause the game for the other player to confirm, and sent another time to confirm game pause or opposite.
-	// Data parameters are `{ type: 0 }` - for the player to confirm it
-	// and `{ type: 1 }` - game is paused
-	// and lastly `{ type: 2 }` - other player declined
 	UpdatePause
 	// UpdateMessage whenever a player sends a message
-	// Data parameters are `{player: 1, message: "hello world"}`
-	// Player 0 would mean a message from game
 	UpdateMessage
 )
+
+// redundant updates go here
+// as well as verification
+var ubs = map[uint8]UpdateCallback{
+	UpdateBoard: func(c *Client, u *Update) error {
+		body, err := json.Marshal(c.g.b)
+		if err != nil {
+			return err
+		}
+
+		u.Data = body
+
+		return nil
+	},
+
+	UpdatePromotion: func(c *Client, u *Update) error {
+		x, ok := u.parameter.(StructUpdatePromotion)
+		if !ok {
+			return ErrUpdateParameter
+		}
+
+		dst := x.Dst
+		p := c.g.b.Get(dst)
+
+		if p.Player != x.Player {
+			return ErrIllegalPromotion
+		}
+
+		return nil
+	},
+}

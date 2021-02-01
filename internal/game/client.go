@@ -5,13 +5,18 @@ import "io"
 // Client is a struct used for the server to communicate to the client.
 type Client struct {
 	// W where to write updates
-	w   io.WriteCloser
+	W   io.WriteCloser
 	num uint8 // player 1 or 2??
-	// ID the ID used to authenticate commands
-	id string
+	id  string
 	// G the underlying game
 	g *Game
 }
 
-func (c Client) Send() {
+func (c *Client) Do(cmd Command) error {
+	x, ok := cbs[cmd.ID]
+	if !ok {
+		return ErrCommandNil
+	}
+
+	return x(c, cmd)
 }

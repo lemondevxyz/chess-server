@@ -2,18 +2,17 @@ package game
 
 import (
 	"encoding/json"
-
-	"github.com/toms1441/chess/internal/board"
+	"fmt"
 )
 
 // Command is a communication structure sent from the client to the server.
-// Data should be encoded in JSON, and each command have their own parameters.
+// Data should be encoded in JSON, and each command has it's own parameters.
 type Command struct {
 	ID   uint8
-	Data []byte
+	Data json.RawMessage
 }
 
-type CommandBallback func(c *Client, m *Command) error
+type CommandBallback func(c *Client, m Command) error
 
 const (
 	// CmdPiece is used whenever a player wants to move one of their pieces.
@@ -32,83 +31,106 @@ const (
 )
 
 var cbs = map[uint8]CommandBallback{
-	CmdPiece: func(c *Client, m *Command) error {
+	CmdPiece: func(c *Client, m Command) error {
 		g := c.g
 		if g == nil {
 			return ErrGameNil
 		}
 
-		data := struct {
-			Src board.Point `json:"src"`
-			Dst board.Point `json:"dst"`
-		}{}
+		s := &ModelCmdPiece{}
 
-		err := json.Unmarshal(m.Data, &data)
+		err := json.Unmarshal(m.Data, s)
 		if err != nil {
 			return err
 		}
 
-		p := g.b.Get(data.Src)
+		p := g.b.Get(s.Src)
 		if p == nil {
 			return ErrPieceNil
 		}
 
-		ret := g.b.Move(p, data.Dst)
+		ret := g.b.Move(p, s.Dst)
 		if ret == false {
 			return ErrIllegalMove
 		}
 
-		err = g.UpdateAll(Update{
-			ID: UpdateBoard,
-		})
-		if err != nil {
-			return err
-		}
+		go func() {
+			g.UpdateAll(Update{
+				ID: UpdateBoard,
+			})
+		}()
 
 		return nil
 	},
-	CmdPromotion: func(c *Client, m *Command) error {
+	CmdPromotion: func(c *Client, m Command) error {
 		g := c.g
 		if g == nil {
 			return ErrGameNil
 		}
 
-		data := struct {
-			Src board.Point `json:"src"`
-			ID  uint8       `json:"id"`
-		}{}
+		s := &ModelCmdPromotion{}
 
-		err := json.Unmarshal(m.Data, &data)
+		err := json.Unmarshal(m.Data, s)
 		if err != nil {
 			return err
 		}
 
 		dps := g.b.DeadPieces()
-		_, ok := dps[data.ID]
+		_, ok := dps[s.ID]
 		if !ok {
 			return ErrIllegalPromotion
 		}
 
-		p := g.b.Get(data.Src)
+		p := g.b.Get(s.Src)
 		if p == nil {
 			return ErrPieceNil
 		}
-		p.T = data.ID
+		p.T = s.ID
 
-		err = g.UpdateAll(Update{
-			ID: UpdateBoard,
-		})
-		if err != nil {
-			return err
-		}
+		go func() {
+			g.UpdateAll(Update{
+				ID: UpdateBoard,
+			})
+		}()
 
 		return nil
 	},
+	/* TODO: implement later, specifically after chess is working
 	CmdPauseGame: func(c *Client, m *Command) error {
 		g := c.g
 		if g == nil {
 			return ErrGameNil
 		}
+
+		s := []struct {
+			Player1 bool
+			Player2 bool
+		}{}
+
+		return nil
+	},
+	*/
+	CmdSendMessage: func(c *Client, m Command) error {
+		g := c.g
+		if g == nil {
+			return ErrGameNil
+		}
+
+		s := &ModelCmdMessage{}
+
+		err := json.Unmarshal(m.Data, s)
+		if err != nil {
+			return err
+		}
+
+		s.Message = fmt.Sprintf("Player%d: %s", c.num, s.Message)
+
+		go func() {
+			g.UpdateAll(Update{
+				ID:   UpdateMessage,
+				Data: m.Data,
+			})
+		}()
 
 		return nil
 	},

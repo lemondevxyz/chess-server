@@ -10,5 +10,8 @@ func main() {
 	b := board.NewBoard()
 
 	body, err := b.MarshalJSON()
-	fmt.Println(string(body), err)
+
+	b = &board.Board{}
+	err = b.UnmarshalJSON(body)
+	fmt.Println(b, err)
 }

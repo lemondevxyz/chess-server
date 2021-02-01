@@ -34,6 +34,8 @@ func TestNewBoard(t *testing.T) {
 			}
 		}
 	}
+
+	t.Logf("\n%s", b.String())
 }
 
 /* somethings do not need tests
@@ -62,13 +64,13 @@ R N B K Q B N R`
 func TestBoardListen(t *testing.T) {
 	b := NewBoard()
 
-	pre := make(chan bool)
-	post := make(chan bool)
+	valid := make(chan bool)
+	invalid := make(chan bool)
 
 	ok := make(chan bool)
 	go func() {
-		a := <-pre
-		b := <-post
+		a := <-valid
+		b := <-invalid
 
 		if a && b {
 			ok <- true
@@ -76,16 +78,16 @@ func TestBoardListen(t *testing.T) {
 	}()
 
 	x, y := false, false
-	b.Listen(func(_ *Piece, _ Point, p bool) {
-		if p {
-			pre <- true
-			x = true
+	b.Listen(func(_ *Piece, _, _ Point, ret bool) {
+		if ret {
+			valid <- true
 		} else {
-			post <- true
-			y = true
+			invalid <- true
 		}
 	})
+
 	b.Move(b.data[1][1], Point{3, 1})
+	b.Move(b.data[3][1], Point{7, 1})
 
 	select {
 	case <-time.After(time.Millisecond * 20):
