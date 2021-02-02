@@ -25,6 +25,8 @@ const (
 	UpdatePause
 	// UpdateMessage whenever a player sends a message
 	UpdateMessage
+	// UpdateTurn it's your turn pal
+	UpdateTurn
 )
 
 // redundant updates go here
@@ -40,7 +42,6 @@ var ubs = map[uint8]UpdateCallback{
 
 		return nil
 	},
-
 	// verification
 	UpdatePromotion: func(c *Client, u *Update) error {
 		x, ok := u.parameter.(ModelUpdatePromotion)

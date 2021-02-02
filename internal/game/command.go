@@ -54,6 +54,8 @@ var cbs = map[uint8]CommandBallback{
 			return ErrIllegalMove
 		}
 
+		g.SwitchTurn()
+
 		return g.UpdateAll(Update{
 			ID: UpdateBoard,
 		})
@@ -82,7 +84,9 @@ var cbs = map[uint8]CommandBallback{
 		if p == nil {
 			return ErrPieceNil
 		}
+
 		p.T = s.Type
+		g.SwitchTurn()
 
 		return g.UpdateAll(Update{
 			ID: UpdateBoard,
@@ -116,7 +120,7 @@ var cbs = map[uint8]CommandBallback{
 			return err
 		}
 
-		s.Message = fmt.Sprintf("Player%d: %s", c.num, s.Message)
+		s.Message = fmt.Sprintf("[Player] %d: %s", c.num, s.Message)
 
 		return g.UpdateAll(Update{
 			ID:   UpdateMessage,

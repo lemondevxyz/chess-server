@@ -7,13 +7,12 @@ import (
 )
 
 type Game struct {
-	id     string
-	cs     [2]*Client
-	turn   chan int
-	listen []chan int
-	done   bool
-	b      *board.Board
-	cmd    map[string]interface{} // command-specific data
+	id   string
+	cs   [2]*Client
+	turn uint8
+	done bool
+	b    *board.Board
+	cmd  map[string]interface{} // command-specific data
 }
 
 func NewGame(cl1, cl2 *Client) (*Game, error) {
@@ -27,30 +26,12 @@ func NewGame(cl1, cl2 *Client) (*Game, error) {
 
 	g := &Game{
 		cs:   [2]*Client{cl1, cl2},
-		turn: make(chan int),
+		turn: 0,
 		cmd:  map[string]interface{}{},
 	}
 
 	cl1.g = g
 	cl2.g = g
-
-	go func(g *Game) {
-		for !g.done {
-			select {
-			case a := <-g.turn:
-				var c *Client
-				if a == 1 {
-					c = g.cs[0]
-				} else if a == 2 {
-					c = g.cs[1]
-				}
-
-				if c == nil {
-					break
-				}
-			}
-		}
-	}(g)
 
 	g.b = board.NewBoard()
 
@@ -73,9 +54,28 @@ func NewGame(cl1, cl2 *Client) (*Game, error) {
 		}
 	})
 
+	g.SwitchTurn()
+
 	return g, nil
 }
 
+// SwitchTurn called after a player ends their turn, to notify the other player.
+func (g *Game) SwitchTurn() {
+	if g.turn == 1 {
+		g.turn = 2
+	} else {
+		g.turn = 1
+	}
+	t := g.turn
+	// TODO: make this not byte me in the ass
+	x, _ := json.Marshal(ModelUpdateTurn{
+		Player: t,
+	})
+
+	g.UpdateAll(Update{ID: UpdateTurn, Data: x})
+}
+
+// Update is used to send updates to the client, such as a movement of a piece.
 func (g *Game) Update(c *Client, u Update) error {
 	if u.Data == nil {
 		x, ok := ubs[u.ID]
@@ -118,6 +118,7 @@ func (g *Game) Update(c *Client, u Update) error {
 	return nil
 }
 
+// UpdateAll sends the update to all of the players.
 func (g *Game) UpdateAll(u Update) error {
 	err := g.Update(g.cs[0], u)
 	if err != nil {

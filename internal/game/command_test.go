@@ -36,6 +36,9 @@ func TestCommandSendMessage(t *testing.T) {
 		t.Fatalf("cl.Do: %s", err.Error())
 	}
 
+	// first message is the turn message
+	<-clientRead(rd1)
+
 	select {
 	case <-time.After(time.Millisecond * 10):
 		t.Fatalf("timeout")
@@ -91,6 +94,8 @@ func TestCommandPiece(t *testing.T) {
 			return fmt.Errorf("cl.Do: %s", err.Error())
 		}
 
+		// turn message
+		<-clientRead(rd1)
 		select {
 		case <-time.After(time.Millisecond * 10):
 			return fmt.Errorf("timeout")

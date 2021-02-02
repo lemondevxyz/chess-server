@@ -7,6 +7,7 @@ var (
 	ErrGameNil          = errors.New("game is nil")
 	ErrCommandNil       = errors.New("command is nil")
 	ErrPieceNil         = errors.New("piece is nil")
+	ErrIllegalTurn      = errors.New("illegal turn")
 	ErrIllegalMove      = errors.New("illegal move")
 	ErrIllegalPromotion = errors.New("illegal promotion")
 	ErrUpdateNil        = errors.New("update is nil")
