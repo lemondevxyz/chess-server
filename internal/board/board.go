@@ -102,7 +102,11 @@ func (b *Board) Listen(callback MoveEvent) {
 // Set sets a piece in the board without game-logic interfering.
 func (b *Board) Set(p *Piece) {
 	if p != nil {
-		b.data[p.X][p.Y] = p
+		if p.T == Empty {
+			b.data[p.X][p.Y] = nil
+		} else {
+			b.data[p.X][p.Y] = p
+		}
 	}
 }
 
@@ -115,10 +119,6 @@ func (b *Board) Get(src Point) *Piece {
 func (b *Board) Move(p *Piece, dst Point) (ret bool) {
 	src := Point{X: p.X, Y: p.Y}
 	defer func() {
-		for _, v := range b.ml {
-			v(p, src, dst, ret)
-		}
-
 		if p != nil && ret {
 			b.data[p.X][p.Y] = nil
 
@@ -126,6 +126,10 @@ func (b *Board) Move(p *Piece, dst Point) (ret bool) {
 			p.Y = dst.Y
 
 			b.data[dst.X][dst.Y] = p
+		}
+
+		for _, v := range b.ml {
+			v(p, src, dst, ret)
 		}
 	}()
 
@@ -209,7 +213,7 @@ func (b *Board) UnmarshalJSON(body []byte) error {
 }
 
 // DeadPieces returns all the dead pieces
-func (b Board) DeadPieces() map[uint8]uint8 {
+func (b Board) DeadPieces(player uint8) map[uint8]uint8 {
 	x := map[uint8]uint8{
 		PawnF:  8,
 		PawnB:  8,
@@ -222,7 +226,7 @@ func (b Board) DeadPieces() map[uint8]uint8 {
 
 	for _, s := range b.data {
 		for _, v := range s {
-			if v != nil {
+			if v != nil && v.Player == player {
 				_, ok := x[v.T]
 				if ok {
 					x[v.T]--

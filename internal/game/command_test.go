@@ -50,6 +50,8 @@ func TestCommandSendMessage(t *testing.T) {
 			t.Fatalf("json.Unmarshal: %s", err.Error())
 		}
 
+		t.Logf("%s", string(body))
+
 		err = json.Unmarshal(u.Data, &x)
 		if err != nil {
 			t.Fatalf("json.Unmarshal: %s", err.Error())
@@ -130,15 +132,64 @@ func TestCommandPiece(t *testing.T) {
 }
 
 func TestCommandPromotion(t *testing.T) {
+	defer resetPipe()
+
+	p := gGame.b.Get(board.Point{X: 1, Y: 5})
 	go func() {
-		p := gGame.b.Get(board.Point{X: 3, Y: 1})
-		p.X = 7
-		p.Y = 1
-		gGame.b.Set(p)
+
+		gGame.b.Move(p, board.Point{X: p.X + 2, Y: p.Y})
+
+		gGame.b.Set(&board.Piece{T: board.Empty, X: 0, Y: 4})
+		gGame.b.Set(&board.Piece{T: board.Empty, X: 6, Y: 5})
+		gGame.b.Set(&board.Piece{T: board.Empty, X: 7, Y: 5})
+
+		gGame.b.Move(p, board.Point{X: p.X + 1, Y: p.Y})
+		gGame.b.Move(p, board.Point{X: p.X + 1, Y: p.Y})
+		gGame.b.Move(p, board.Point{X: p.X + 1, Y: p.Y})
+		gGame.b.Move(p, board.Point{X: p.X + 1, Y: p.Y})
 	}()
 
 	select {
-	case <-time.After(time.Millisecond * 10):
+	case <-time.After(time.Millisecond * 100):
 		t.Fatalf("timeout")
+	case body := <-clientRead(rd1):
+		t.Logf("\n%s", gGame.b.String())
+		t.Log(string(body))
+
+		u := Update{}
+		err := json.Unmarshal(body, &u)
+		if err != nil {
+			t.Fatalf("json.Unmarshal: %s", err.Error())
+		}
+
+		parameter := ModelUpdatePromotion{}
+		err = json.Unmarshal(u.Data, &parameter)
+		if err != nil {
+			t.Fatalf("json.Unmarshal: %s", err.Error())
+		}
+
+		x := ModelCmdPromotion{
+			Src:  parameter.Dst,
+			Type: board.Queen,
+		}
+
+		data, err := json.Marshal(x)
+		if err != nil {
+			t.Fatalf("json.Marshal: %s", err.Error())
+		}
+
+		err = cl1.Do(Command{
+			ID:   CmdPromotion,
+			Data: data,
+		})
+		if err != nil {
+			t.Fatalf("cl.Do: %s", err.Error())
+		}
+
+		v := gGame.b.Get(parameter.Dst)
+		if p.T != board.Queen || (v != nil && v.T != board.Queen) {
+			t.Fatalf("promotion dont work")
+		}
+		t.Logf("\n%s", gGame.b.String())
 	}
 }

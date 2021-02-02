@@ -9,8 +9,8 @@ type (
 	}
 
 	ModelCmdPromotion struct {
-		Src board.Point `json:"src"`
-		ID  uint8       `json:"id"`
+		Src  board.Point `json:"src"`
+		Type uint8       `json:"type"`
 	}
 
 	ModelCmdMessage struct {

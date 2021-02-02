@@ -2,7 +2,6 @@ package game
 
 import (
 	"encoding/json"
-	"time"
 
 	"github.com/toms1441/chess/internal/board"
 )
@@ -63,9 +62,9 @@ func NewGame(cl1, cl2 *Client) (*Game, error) {
 					if c != nil {
 						g.Update(c, Update{
 							ID: UpdatePromotion,
-							parameter: map[string]interface{}{
-								"player": p.Player,
-								"dst":    dst,
+							parameter: ModelUpdatePromotion{
+								Player: p.Player,
+								Dst:    dst,
 							},
 						})
 					}
@@ -95,18 +94,26 @@ func (g *Game) Update(c *Client, u Update) error {
 		return err
 	}
 
-	cherr := make(chan error)
-	go func() {
-		_, err = c.W.Write(body)
-		cherr <- err
-	}()
+	/*
+		cherr := make(chan error)
+		go func() {
+			_, err = c.W.Write(body)
+			cherr <- err
+		}()
 
-	select {
-	case <-time.After(time.Second * 10):
-		return ErrUpdateTimeout
-	case err := <-cherr:
-		return err
-	}
+		select {
+		case <-time.After(time.Second * 10):
+			return ErrUpdateTimeout
+		case err := <-cherr:
+			return err
+		}
+
+		return nil
+	*/
+
+	go func() {
+		c.W.Write(body)
+	}()
 
 	return nil
 }

@@ -54,13 +54,9 @@ var cbs = map[uint8]CommandBallback{
 			return ErrIllegalMove
 		}
 
-		go func() {
-			g.UpdateAll(Update{
-				ID: UpdateBoard,
-			})
-		}()
-
-		return nil
+		return g.UpdateAll(Update{
+			ID: UpdateBoard,
+		})
 	},
 	CmdPromotion: func(c *Client, m Command) error {
 		g := c.g
@@ -75,8 +71,9 @@ var cbs = map[uint8]CommandBallback{
 			return err
 		}
 
-		dps := g.b.DeadPieces()
-		_, ok := dps[s.ID]
+		dps := g.b.DeadPieces(c.num)
+		_, ok := dps[s.Type]
+
 		if !ok {
 			return ErrIllegalPromotion
 		}
@@ -85,15 +82,11 @@ var cbs = map[uint8]CommandBallback{
 		if p == nil {
 			return ErrPieceNil
 		}
-		p.T = s.ID
+		p.T = s.Type
 
-		go func() {
-			g.UpdateAll(Update{
-				ID: UpdateBoard,
-			})
-		}()
-
-		return nil
+		return g.UpdateAll(Update{
+			ID: UpdateBoard,
+		})
 	},
 	/* TODO: implement later, specifically after chess is working
 	CmdPauseGame: func(c *Client, m *Command) error {
@@ -125,13 +118,9 @@ var cbs = map[uint8]CommandBallback{
 
 		s.Message = fmt.Sprintf("Player%d: %s", c.num, s.Message)
 
-		go func() {
-			g.UpdateAll(Update{
-				ID:   UpdateMessage,
-				Data: m.Data,
-			})
-		}()
-
-		return nil
+		return g.UpdateAll(Update{
+			ID:   UpdateMessage,
+			Data: m.Data,
+		})
 	},
 }

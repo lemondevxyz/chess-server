@@ -61,7 +61,7 @@ func (p *Piece) ShortString() string {
 // String representation of the type
 func (p *Piece) String() string {
 	strings := map[uint8]string{
-		Empty:  "",
+		Empty:  "Empty",
 		PawnF:  "Pawn",
 		PawnB:  "Pawn",
 		Bishop: "Bishop",

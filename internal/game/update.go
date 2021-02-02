@@ -1,6 +1,8 @@
 package game
 
-import "encoding/json"
+import (
+	"encoding/json"
+)
 
 // Update is a communication structure from the server to the client, while Command is from the client to the server.
 type Update struct {
@@ -39,17 +41,23 @@ var ubs = map[uint8]UpdateCallback{
 		return nil
 	},
 
+	// verification
 	UpdatePromotion: func(c *Client, u *Update) error {
-		x, ok := u.parameter.(StructUpdatePromotion)
+		x, ok := u.parameter.(ModelUpdatePromotion)
 		if !ok {
 			return ErrUpdateParameter
 		}
 
 		dst := x.Dst
 		p := c.g.b.Get(dst)
-
 		if p.Player != x.Player {
 			return ErrIllegalPromotion
+		}
+
+		var err error
+		u.Data, err = json.Marshal(x)
+		if err != nil {
+			return err
 		}
 
 		return nil
