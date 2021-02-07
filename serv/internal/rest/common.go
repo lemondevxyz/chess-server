@@ -2,8 +2,8 @@ package rest
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 
 	"gopkg.in/go-playground/validator.v9"
@@ -32,17 +32,13 @@ func respondError(w http.ResponseWriter, status int, err error) {
 }
 
 func bindJSON(r *http.Request, obj interface{}) error {
-	body, err := r.GetBody()
-	if err != nil {
-		return fmt.Errorf("internal body: %w", err)
+	if r == nil || obj == nil || r.Body == nil {
+		return errors.New("invalid parameters")
 	}
 
-	data, err := ioutil.ReadAll(body)
-	if err != nil {
-		return fmt.Errorf("internal data: %w", err)
-	}
+	decoder := json.NewDecoder(r.Body)
 
-	err = json.Unmarshal(data, obj)
+	err := decoder.Decode(obj)
 	if err != nil {
 		return fmt.Errorf("json: %w", err)
 	}

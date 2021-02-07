@@ -3,7 +3,7 @@ package game
 import (
 	"encoding/json"
 
-	"github.com/toms1441/chess/internal/board"
+	"github.com/toms1441/chess/serv/internal/board"
 )
 
 type Game struct {
