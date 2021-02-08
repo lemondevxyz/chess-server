@@ -16,13 +16,6 @@ type teststruct struct {
 
 func TestRespondJSON(t *testing.T) {
 
-	/*
-		ts := httptest.NewServer(func(w http.ResponseWriter, r *http.Request) {
-			respondJSON(w, http.StatusOK, teststruct{ID: "asid"})
-		})
-		defer ts.Close()
-	*/
-
 	resp := httptest.NewRecorder()
 	req, err := http.NewRequest("GET", "/", nil)
 	if err != nil {
@@ -30,9 +23,6 @@ func TestRespondJSON(t *testing.T) {
 	}
 
 	status := http.StatusOK
-	if resp.Result().StatusCode != status {
-		t.Fatalf("status")
-	}
 
 	handle := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		respondJSON(w, status, teststruct{ID: "test"})
@@ -40,6 +30,9 @@ func TestRespondJSON(t *testing.T) {
 
 	handle.ServeHTTP(resp, req)
 	hh := resp.Header()
+	if resp.Result().StatusCode != status {
+		t.Fatalf("status")
+	}
 	if hh.Get("Content-Type") != "application/json" {
 		t.Fatalf("bad content type")
 	}
@@ -82,7 +75,7 @@ func TestRespondError(t *testing.T) {
 	}
 
 	if resp.Result().StatusCode != status {
-		t.Fatalf("status")
+		t.Fatalf("status. want: %d, have: %d", status, resp.Result().StatusCode)
 	}
 
 	if p, err := ioutil.ReadAll(resp.Body); err != nil {

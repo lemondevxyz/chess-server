@@ -3,6 +3,8 @@ package game
 import "github.com/toms1441/chess/serv/internal/board"
 
 type (
+	ModelUpdateBoard board.Board
+
 	ModelUpdateMessage struct {
 		Message string `json:"message"`
 	}

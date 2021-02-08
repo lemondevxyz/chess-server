@@ -6,12 +6,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/toms1441/chess/internal/board"
+	"github.com/toms1441/chess/serv/internal/board"
 )
 
 var gGame, _ = NewGame(cl1, cl2)
 
 func TestTurns(t *testing.T) {
+	cl1.g, cl2.g = nil, nil
+
 	resetPipe()
 	go func() {
 		gGame, _ = NewGame(cl1, cl2)

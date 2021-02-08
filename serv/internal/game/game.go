@@ -2,6 +2,7 @@ package game
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/toms1441/chess/serv/internal/board"
 )
@@ -21,8 +22,15 @@ func NewGame(cl1, cl2 *Client) (*Game, error) {
 		return nil, ErrClientNil
 	}
 
+	if cl1.g != nil || cl2.g != nil {
+		return nil, ErrGameIsNotNil
+	}
+
 	cl1.num = 1
+	cl1.id = fmt.Sprintf("Player %d", cl1.num)
+
 	cl2.num = 2
+	cl2.id = fmt.Sprintf("Player %d", cl2.num)
 
 	g := &Game{
 		cs:   [2]*Client{cl1, cl2},
@@ -30,8 +38,7 @@ func NewGame(cl1, cl2 *Client) (*Game, error) {
 		cmd:  map[string]interface{}{},
 	}
 
-	cl1.g = g
-	cl2.g = g
+	cl1.g, cl2.g = g, g
 
 	g.b = board.NewBoard()
 

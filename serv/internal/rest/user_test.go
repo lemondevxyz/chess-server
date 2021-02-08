@@ -1,20 +1,43 @@
 package rest
 
 import (
-	"io"
+	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"testing"
-
-	"github.com/toms1441/chess/serv/internal/game"
 )
 
 var (
-	rd2, wr1 = io.Pipe()
-	cl1      = &game.Client{W: wr1}
-	us       = User{}
+	us = User{}
 )
 
 func TestNewUser(t *testing.T) {
-	us = addClient(cl1)
+	us = AddClient(cl1)
+}
+
+func TestGetUser(t *testing.T) {
+	resp := httptest.NewRecorder()
+	req, err := http.NewRequest("GET", "/", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", us.Token))
+
+	handle := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, err := GetUser(r)
+		if err != nil {
+			respondError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		respondJSON(w, http.StatusOK, "success")
+	})
+
+	handle.ServeHTTP(resp, req)
+	if resp.Result().StatusCode != http.StatusOK {
+		t.Fatalf("header authentication doesnt work")
+	}
+
 }
 
 func TestUserClient(t *testing.T) {

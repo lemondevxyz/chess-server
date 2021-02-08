@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/toms1441/chess/internal/board"
+	"github.com/toms1441/chess/serv/internal/board"
 )
 
 func TestCommandSendMessage(t *testing.T) {
@@ -22,7 +22,7 @@ func TestCommandSendMessage(t *testing.T) {
 	}
 
 	c := Command{
-		ID:   CmdSendMessage,
+		ID:   CmdMessage,
 		Data: body,
 	}
 

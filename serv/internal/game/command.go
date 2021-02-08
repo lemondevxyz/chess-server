@@ -27,7 +27,7 @@ const (
 	CmdPauseGame
 	// CmdSendMessage is used to send chat messages to the other player.
 	// Data parameters are `{message: "hello world"}`
-	CmdSendMessage
+	CmdMessage
 )
 
 var cbs = map[uint8]CommandBallback{
@@ -107,7 +107,7 @@ var cbs = map[uint8]CommandBallback{
 		return nil
 	},
 	*/
-	CmdSendMessage: func(c *Client, m Command) error {
+	CmdMessage: func(c *Client, m Command) error {
 		g := c.g
 		if g == nil {
 			return ErrGameNil

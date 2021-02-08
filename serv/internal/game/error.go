@@ -5,6 +5,7 @@ import "errors"
 var (
 	ErrClientNil        = errors.New("client is nil")
 	ErrGameNil          = errors.New("game is nil")
+	ErrGameIsNotNil     = errors.New("game isnt nil")
 	ErrCommandNil       = errors.New("command is nil")
 	ErrPieceNil         = errors.New("piece is nil")
 	ErrIllegalTurn      = errors.New("illegal turn")
