@@ -1,16 +1,19 @@
 package main
 
 import (
-	"github.com/gin-gonic/gin"
-	"github.com/toms1441/chess/serv/internal/board"
-	"github.com/toms1441/chess/serv/internal/game"
+	"net/http"
+
+	"github.com/gorilla/mux"
+	"github.com/toms1441/chess/serv/internal/rest"
 )
 
+const dir = "./static/"
+
 func main() {
-	g := game.Game{}
-	b := board.NewBoard()
+	r := mux.NewRouter()
+	r.HandleFunc("/", rest.WebsocketHandler)
 
-	r := gin.Default()
+	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir(dir))))
 
-	r.Run(":8080")
+	http.ListenAndServe(":6969", r)
 }
