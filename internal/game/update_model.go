@@ -1,6 +1,6 @@
 package game
 
-import "github.com/toms1441/chess/serv/internal/board"
+import "github.com/toms1441/chess-server/internal/board"
 
 type (
 	ModelUpdateBoard board.Board

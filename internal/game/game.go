@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/toms1441/chess/serv/internal/board"
+	"github.com/toms1441/chess-server/internal/board"
 )
 
 type Game struct {
@@ -80,6 +80,10 @@ func (g *Game) SwitchTurn() {
 	})
 
 	g.UpdateAll(Update{ID: UpdateTurn, Data: x})
+}
+
+func (g *Game) IsTurn(c *Client) bool {
+	return c.num == g.turn
 }
 
 // Update is used to send updates to the client, such as a movement of a piece.

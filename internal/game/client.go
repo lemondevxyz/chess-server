@@ -13,6 +13,10 @@ type Client struct {
 }
 
 func (c *Client) Do(cmd Command) error {
+	if c.g == nil {
+		return ErrGameNil
+	}
+
 	x, ok := cbs[cmd.ID]
 	if !ok {
 		return ErrCommandNil

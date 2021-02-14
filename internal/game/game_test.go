@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/toms1441/chess/serv/internal/board"
+	"github.com/toms1441/chess-server/internal/board"
 )
 
 var gGame, _ = NewGame(cl1, cl2)
@@ -62,6 +62,12 @@ func TestTurns(t *testing.T) {
 			Data: body,
 		}
 
+		err = cl2.Do(c)
+		if err == nil {
+			cherr <- fmt.Errorf("it's not 2 turn, yet it works .. :(")
+			return
+		}
+
 		err = cl1.Do(c)
 		if err != nil {
 			cherr <- err
@@ -74,7 +80,11 @@ func TestTurns(t *testing.T) {
 	select {
 	case <-time.After(time.Millisecond * 100):
 		t.Fatalf("timeout")
-	case <-cherr:
+	case err := <-cherr:
+		if err != nil {
+			t.Fatalf("err: %s", err.Error())
+		}
+
 		select {
 		case <-time.After(time.Millisecond * 100):
 			t.Fatalf("timeout")

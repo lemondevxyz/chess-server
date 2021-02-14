@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/kjk/betterguid"
-	"github.com/toms1441/chess/serv/internal/game"
+	"github.com/toms1441/chess-server/internal/game"
 )
 
 type User struct {

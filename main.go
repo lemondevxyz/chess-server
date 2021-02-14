@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"github.com/toms1441/chess/serv/internal/rest"
+	"github.com/toms1441/chess-server/internal/rest"
 )
 
 const dir = "./static/"

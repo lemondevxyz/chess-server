@@ -3,7 +3,7 @@ package rest
 import (
 	"net/http"
 
-	"github.com/toms1441/chess/serv/internal/game"
+	"github.com/toms1441/chess-server/internal/game"
 )
 
 func CmdHandler(w http.ResponseWriter, r *http.Request) {

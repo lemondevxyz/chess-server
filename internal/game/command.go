@@ -33,8 +33,8 @@ const (
 var cbs = map[uint8]CommandBallback{
 	CmdPiece: func(c *Client, m Command) error {
 		g := c.g
-		if g == nil {
-			return ErrGameNil
+		if !g.IsTurn(c) {
+			return ErrIllegalTurn
 		}
 
 		s := &ModelCmdPiece{}
@@ -62,8 +62,8 @@ var cbs = map[uint8]CommandBallback{
 	},
 	CmdPromotion: func(c *Client, m Command) error {
 		g := c.g
-		if g == nil {
-			return ErrGameNil
+		if !g.IsTurn(c) {
+			return ErrIllegalTurn
 		}
 
 		s := &ModelCmdPromotion{}
@@ -109,10 +109,6 @@ var cbs = map[uint8]CommandBallback{
 	*/
 	CmdMessage: func(c *Client, m Command) error {
 		g := c.g
-		if g == nil {
-			return ErrGameNil
-		}
-
 		s := &ModelCmdMessage{}
 
 		err := json.Unmarshal(m.Data, s)

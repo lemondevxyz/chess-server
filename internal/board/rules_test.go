@@ -2,6 +2,20 @@ package board
 
 import "testing"
 
+func TestEqual(t *testing.T) {
+	src := Point{1, 1}
+	dst := Point{1, 1}
+
+	if !Equal(src, dst) {
+		t.Fatalf("Equal: bad code")
+	}
+
+	dst.X++
+	if Equal(src, dst) {
+		t.Fatalf("Equal: bad code")
+	}
+}
+
 // We'll test against every possible valid case
 // and some invalid cases
 func TestForward(t *testing.T) {
