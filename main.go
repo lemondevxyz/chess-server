@@ -1,17 +1,19 @@
 package main
 
 import (
-	"fmt"
+	"net/http"
 
-	"github.com/toms1441/chess/internal/board"
+	"github.com/gorilla/mux"
+	"github.com/toms1441/chess/serv/internal/rest"
 )
 
+const dir = "./static/"
+
 func main() {
-	b := board.NewBoard()
+	r := mux.NewRouter()
+	r.HandleFunc("/", rest.WebsocketHandler)
 
-	body, err := b.MarshalJSON()
+	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir(dir))))
 
-	b = &board.Board{}
-	err = b.UnmarshalJSON(body)
-	fmt.Println(b, err)
+	http.ListenAndServe(":6969", r)
 }
