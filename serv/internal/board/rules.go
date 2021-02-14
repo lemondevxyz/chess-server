@@ -20,14 +20,18 @@ func Swap(p Point) Point {
 	return Point{X: p.Y, Y: p.X}
 }
 
+func Equal(src, dst Point) bool {
+	return src.X == dst.X && src.Y == dst.Y
+}
+
 // Forward allows dst to only move forward, where dst is greater than or equal to src. If src == dst, it returns false
 func Forward(src, dst Point) bool {
+	if Equal(src, dst) {
+		return false
+	}
+
 	i, j := src.X-dst.X, src.Y-dst.Y
 	if i >= 0 && j >= 0 {
-		// we didnt move
-		if i == 0 && j == i {
-			return false
-		}
 		return true
 	}
 
@@ -36,16 +40,11 @@ func Forward(src, dst Point) bool {
 
 // Backward allows dst to only move backward, where dst is less than or equal to src. If src == dst, it returns false
 func Backward(src, dst Point) bool {
-	i, j := src.X-dst.X, src.Y-dst.Y
-	if i <= 0 && j <= 0 {
-		// we didnt move
-		if i == 0 && j == i {
-			return false
-		}
-		return true
+	if Equal(src, dst) {
+		return false
 	}
 
-	return false
+	return !Forward(src, dst)
 }
 
 // Within allows dst to be inside area
@@ -114,7 +113,7 @@ func Square(src, dst Point) bool {
 	}
 	area := Point{X: 1, Y: 0}
 
-	if src.X == dst.X && src.Y == dst.Y {
+	if Equal(src, dst) {
 		return false
 	}
 
