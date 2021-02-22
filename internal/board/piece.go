@@ -1,5 +1,9 @@
 package board
 
+import (
+	"encoding/json"
+)
+
 const (
 	Empty uint8 = iota
 	// Pawn Forward -> 1, 0 - 2, 0
@@ -13,7 +17,7 @@ const (
 	// Moves with [2, 1] or [1, 2]
 	Knight
 	// Rook
-	// Moves horizontally, vertically and diagonally
+	// Moves horizontally, vertically.
 	Rook
 	// Queen
 	// Moves horizontally, vertically, diagonally, and within square.
@@ -101,54 +105,54 @@ func (p *Piece) CanGo(x, y int) bool {
 	// Only horizontally, can't move back
 	// 2 points at start, 1 point after that
 	case PawnF, PawnB:
-		area := Point{
-			X: 1,
-			Y: 0,
-		}
-
-		ok := false
+		ps := Points{}
 		if p.T == PawnF {
-			ok = Forward(src, dst)
-		} else if p.T == PawnB {
-			ok = Backward(src, dst)
+			ps = src.Forward()
+		} else {
+			ps = src.Backward()
+		}
+		if p.X == 1 || p.X == 6 {
+			ps = append(ps, Point{X: p.X - 2, Y: p.Y})
+			ps = append(ps, Point{X: p.X + 2, Y: p.Y})
+
+			ps.Clean()
 		}
 
-		if p.X == 1 || p.X == 6 {
-			// can move two units
-			return ok && (Within(Point{X: 2, Y: 0}, src, dst) || Within(area, src, dst))
-		} else {
-			return ok && Within(area, src, dst)
-		}
+		return ps.In(dst)
 	// Only diagonal
 	case Bishop:
-		return Diagonal(src, dst)
+		return src.Diagonal().In(dst)
 	// Move within [2, 1] or [1, 2]
 	case Knight:
-		area := Point{X: 2, Y: 1}
-		return Within(area, src, dst) || Within(Swap(area), src, dst)
+		return src.Knight().In(dst)
 	// horizontal or vertical
 	case Rook:
-		return Horizontal(src, dst) || Vertical(src, dst)
+		return src.Horizontal().
+			Merge(src.Vertical()).
+			In(dst)
 	// move within square or diagonal or horizontal or vertical
 	case Queen:
-		return Vertical(src, dst) || Horizontal(src, dst) || Diagonal(src, dst) || Square(src, dst)
+		return src.Horizontal().
+			Merge(src.Vertical()).
+			Merge(src.Square()).
+			Merge(src.Diagonal()).
+			In(dst)
 	// move within square
 	case King:
-		return Square(src, dst)
+		return src.Square().In(dst)
 	}
 
 	return false
 }
 
 // MarshalJSON json.Marshaler
-/*
 func (p *Piece) MarshalJSON() ([]byte, error) {
-		x := struct {
-			P uint8 `json:"player"`
-			T uint8 `json:"type"`
-		}{p.Player, p.T}
+	x := struct {
+		P uint8 `json:"player"`
+		T uint8 `json:"type"`
+	}{p.Player, p.T}
 
-	body, err := json.Marshal(p)
+	body, err := json.Marshal(x)
 	if err != nil {
 		return nil, err
 	}
@@ -158,16 +162,15 @@ func (p *Piece) MarshalJSON() ([]byte, error) {
 
 // UnmarshalJSON json.Unmarshaler
 func (p *Piece) UnmarshalJSON(b []byte) error {
-		x := struct {
-			P uint8 `json:"player"`
-			T uint8 `json:"type"`
-		}{p.Player, p.T}
+	x := struct {
+		P uint8 `json:"player"`
+		T uint8 `json:"type"`
+	}{p.Player, p.T}
 
-	err := json.Unmarshal(b, p)
+	err := json.Unmarshal(b, x)
 	if err != nil {
 		return err
 	}
 
 	return nil
 }
-*/

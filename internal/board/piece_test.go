@@ -1,8 +1,6 @@
 package board
 
-import (
-	"testing"
-)
+import "testing"
 
 type TestCase struct {
 	src Point
@@ -22,7 +20,7 @@ func generate(ignore []Point) []Point {
 
 	for _, v := range ignore {
 		for i := len(ret) - 1; i >= 0; i-- {
-			if Equal(v, ret[i]) {
+			if v.Equal(ret[i]) {
 				ret = append(ret[:i], ret[i+1:]...)
 			}
 		}

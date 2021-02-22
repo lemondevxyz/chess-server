@@ -38,7 +38,8 @@ func TestNewBoard(t *testing.T) {
 	t.Logf("\n%s", b.String())
 }
 
-/* somethings do not need tests
+/*
+ somethings do not need tests
 func TestBoardString(t *testing.T) {
 	str := `R N B K Q B N R
 P P P P P P P P
