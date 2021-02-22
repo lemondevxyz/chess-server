@@ -201,19 +201,19 @@ func TestBoardMoveOthers(t *testing.T) {
 	}
 
 	for _, v := range cs {
-		b.data[v.src.X][v.src.Y] = &Piece{
+		b.Set(&Piece{
 			Player: 1,
 			T:      v.t,
-			pos:    Point{v.src.X, v.dst.Y},
-		}
-		b.data[v.dst.X][v.dst.Y] = &Piece{
+			pos:    v.src,
+		})
+		b.Set(&Piece{
 			Player: 2,
 			T:      v.t,
-			pos:    Point{v.dst.X, v.dst.Y},
-		}
+			pos:    v.dst,
+		})
 
 		x := b.data[v.src.X][v.src.Y]
-		if !b.Move(b.data[v.src.X][v.src.Y], v.dst) {
+		if !b.Move(x, v.dst) {
 			t.Fatalf("test cordinates are invalid. src: %d - dst: %d - type: %d", v.src, v.dst, v.t)
 			return
 		} else {

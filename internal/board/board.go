@@ -180,7 +180,53 @@ func (b *Board) Move(p *Piece, dst Point) (ret bool) {
 */
 
 func (b *Board) Move(p *Piece, dst Point) (ret bool) {
+	defer func() {
+		if p != nil && ret {
+			b.data[p.pos.X][p.pos.Y] = nil
+
+			p.pos.X = dst.X
+			p.pos.Y = dst.Y
+
+			b.data[dst.X][dst.Y] = p
+		}
+
+		for _, v := range b.ml {
+			v(p, p.pos, dst, ret)
+		}
+	}()
 	if p != nil {
+		o := b.Get(dst)
+		if p.CanGo(dst) {
+			if o != nil && o.T != Empty {
+				// if it's not pawn and there's a piece in dst.
+				// then kill it
+				// if it's pawn then don't move
+				if p.T != PawnF && p.T != PawnB && p.Player != o.Player {
+					ret = true
+				}
+			} else {
+				ret = true
+			}
+		} else {
+			if p.T == PawnB || p.T == PawnF {
+				x := p.pos.X
+				if p.T == PawnB {
+					x++
+				} else if p.T == PawnF {
+					x--
+				}
+
+				ps := Points{
+					{x, p.pos.Y + 1},
+					{x, p.pos.Y - 1},
+				}
+				if ps.In(dst) {
+					if o != nil && o.T != Empty && o.Player != p.Player {
+						ret = true
+					}
+				}
+			}
+		}
 	}
 
 	return
