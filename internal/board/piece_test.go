@@ -2,360 +2,187 @@ package board
 
 import "testing"
 
-type TestCase struct {
-	src Point
-	dst []Point
-	ok  bool
-}
-
-func generate(ignore []Point) []Point {
-	max := 8
-	ret := []Point{}
-
-	for x := 0; x < max; x++ {
-		for y := 0; y < max; y++ {
-			ret = append(ret, Point{x, y})
+func piece_test(t *testing.T, name string, p Piece, ps Points) {
+	for _, v := range ps {
+		if !p.CanGo(v) {
+			t.Fatalf("%s | want: true, have: false - pos: %v", name, v)
 		}
 	}
 
-	for _, v := range ignore {
-		for i := len(ret) - 1; i >= 0; i-- {
-			if v.Equal(ret[i]) {
-				ret = append(ret[:i], ret[i+1:]...)
-			}
+	for _, v := range ps.Outside() {
+		if p.CanGo(v) {
+			t.Fatalf("%s | want: false, have: true - pos: %v", name, v)
 		}
 	}
-
-	return ret
 }
 
 func TestCanGoOutOfBound(t *testing.T) {
 	p := Piece{
-		T: PawnB,
-		X: 0,
-		Y: 0,
+		T:   PawnB,
+		pos: Point{0, 0},
 	}
 
-	if p.CanGo(-1, 0) || p.CanGo(0, -1) || p.CanGo(-1, -1) {
+	if p.CanGo(Point{-1, 0}) || p.CanGo(Point{0, -1}) || p.CanGo(Point{-1, -1}) {
 		t.Fatalf("CanGo: allows out of bounds")
 	}
 }
 
-func TestCanGoPawn(t *testing.T) {
-
+func TestCanGoEqual(t *testing.T) {
 	p := Piece{
-		T: PawnB,
+		T:   PawnB,
+		pos: Point{0, 0},
 	}
 
-	tc := []TestCase{
-		{
-			src: Point{1, 1},
-			dst: []Point{
-				{3, 1},
-				{2, 1},
-			},
-			ok: true,
-		},
-		{
-			src: Point{2, 1},
-			dst: []Point{
-				{3, 1},
-			},
-			ok: true,
-		},
-	}
-
-	for _, v := range tc {
-		p.X, p.Y = v.src.X, v.src.Y
-		for _, d := range v.dst {
-			if p.CanGo(d.X, d.Y) != v.ok {
-				t.Fatalf("src: %v - dst: %v - want: %v", v.src, d, v.ok)
-			}
-		}
-
-		for _, d := range generate(v.dst) {
-			if p.CanGo(d.X, d.Y) != !v.ok {
-				t.Fatalf("src: %v - dst: %v - want: %v", v.src, d, false)
-			}
-		}
-	}
-
-	p.T = PawnF
-	tc = []TestCase{
-		{
-			src: Point{6, 2},
-			dst: []Point{
-				{5, 2},
-				{4, 2},
-			},
-			ok: true,
-		},
-		{
-			src: Point{2, 1},
-			dst: []Point{
-				{1, 1},
-			},
-			ok: true,
-		},
-	}
-
-	for _, v := range tc {
-		p.X, p.Y = v.src.X, v.src.Y
-		for _, d := range v.dst {
-			if v.ok != p.CanGo(d.X, d.Y) {
-				t.Fatalf("src: %v - dst: %v - want: %v", v.src, d, v.ok)
-			}
-		}
-
-		for _, d := range generate(v.dst) {
-			if p.CanGo(d.X, d.Y) != !v.ok {
-				t.Fatalf("src: %v - dst: %v - want: %v", v.src, d, false)
-			}
-		}
-	}
-
-}
-
-func TestCanGoBishop(t *testing.T) {
-
-	p := Piece{
-		T: Bishop,
-	}
-
-	tc := []TestCase{
-		{
-			src: Point{4, 4},
-			dst: []Point{
-				{7, 7},
-				{6, 6},
-				{5, 5},
-				{3, 3},
-				{2, 2},
-				{1, 1},
-				{0, 0},
-
-				{1, 7},
-				{2, 6},
-				{3, 5},
-				{5, 3},
-				{6, 2},
-				{7, 1},
-			},
-			ok: true,
-		},
-	}
-
-	for _, v := range tc {
-		p.X, p.Y = v.src.X, v.src.Y
-		for _, d := range v.dst {
-			if v.ok != p.CanGo(d.X, d.Y) {
-				t.Fatalf("src: %v - dst: %v - want: %v", v.src, d, v.ok)
-			}
-		}
-
-		for _, d := range generate(v.dst) {
-			if p.CanGo(d.X, d.Y) != !v.ok {
-				t.Fatalf("src: %v - dst: %v - want: %v", v.src, d, false)
-			}
-		}
+	if p.CanGo(p.pos) {
+		t.Fatalf("CanGo: allow same position movement")
 	}
 }
 
-func TestCanGoKnight(t *testing.T) {
-
+func TestPawnB(t *testing.T) {
 	p := Piece{
-		T: Knight,
+		T:   PawnB,
+		pos: Point{1, 1},
 	}
 
-	tc := []TestCase{
-		{
-			src: Point{4, 3},
-			dst: []Point{
-				{6, 4},
-				{6, 2},
-				{5, 5},
-				{5, 1},
-				{2, 4},
-				{2, 2},
-				{3, 5},
-				{3, 1},
-			},
-			ok: true,
-		},
+	if !p.CanGo(Point{3, 1}) {
+		t.Fatalf("Pawn cannot go two steps at the beginning")
+	} else if !p.CanGo(Point{2, 1}) {
+		t.Fatalf("Pawn cannot go a normal step at the beginning")
+	} else if p.CanGo(Point{0, 1}) {
+		t.Fatalf("Backward Pawn can go Forwards")
 	}
 
-	for _, v := range tc {
-		p.X, p.Y = v.src.X, v.src.Y
-		for _, d := range v.dst {
-			if v.ok != p.CanGo(d.X, d.Y) {
-				t.Fatalf("src: %v - dst: %v - want: %v", v.src, d, v.ok)
-			}
-		}
-
-		for _, d := range generate(v.dst) {
-			if p.CanGo(d.X, d.Y) != !v.ok {
-				t.Fatalf("src: %v - dst: %v - want: %v", v.src, d, false)
-			}
-		}
+	p.pos = Point{2, 1}
+	if p.CanGo(Point{4, 1}) {
+		t.Fatalf("Pawn can go two steps after the spawn position")
 	}
-
 }
 
-func TestCanGoRook(t *testing.T) {
-
+func TestPawnF(t *testing.T) {
 	p := Piece{
-		T: Rook,
+		T:   PawnF,
+		pos: Point{6, 1},
 	}
 
-	tc := []TestCase{
-		{
-			src: Point{4, 4},
-			dst: []Point{
-				{7, 4},
-				{6, 4},
-				{5, 4},
-				{3, 4},
-				{2, 4},
-				{1, 4},
-				{0, 4},
-
-				{4, 7},
-				{4, 6},
-				{4, 5},
-				{4, 3},
-				{4, 2},
-				{4, 1},
-				{4, 0},
-			},
-			ok: true,
-		},
+	if !p.CanGo(Point{4, 1}) {
+		t.Fatalf("Pawn cannot go two steps at the beginning")
+	} else if !p.CanGo(Point{5, 1}) {
+		t.Fatalf("Pawn cannot go a normal step at the beginning")
+	} else if p.CanGo(Point{7, 1}) {
+		t.Fatalf("Forward Pawn can go Backwards")
 	}
 
-	for _, v := range tc {
-		p.X, p.Y = v.src.X, v.src.Y
-		for _, d := range v.dst {
-			if v.ok != p.CanGo(d.X, d.Y) {
-				t.Fatalf("src: %v - dst: %v - want: %v", v.src, d, v.ok)
-			}
-		}
-
-		for _, d := range generate(v.dst) {
-			if p.CanGo(d.X, d.Y) != !v.ok {
-				t.Fatalf("src: %v - dst: %v - want: %v", v.src, d, false)
-			}
-		}
+	p.pos = Point{5, 1}
+	if p.CanGo(Point{3, 1}) {
+		t.Fatalf("Pawn can go two steps after the spawn position")
 	}
-
 }
 
-func TestCanGoQueen(t *testing.T) {
+func TestRook(t *testing.T) {
+	pos := Point{4, 3}
 
-	p := Piece{
-		T: Queen,
-	}
-
-	tc := []TestCase{
-		{
-			src: Point{4, 4},
-			dst: []Point{
-				// square
-				{3, 3},
-				{3, 4},
-				{3, 5},
-				{4, 3},
-				{4, 5},
-				{5, 3},
-				{5, 4},
-				{5, 5},
-				// horizontal
-				{7, 4},
-				{6, 4},
-				{5, 4},
-				{3, 4},
-				{2, 4},
-				{1, 4},
-				{0, 4},
-				// vertical
-				{4, 7},
-				{4, 6},
-				{4, 5},
-				{4, 3},
-				{4, 2},
-				{4, 1},
-				{4, 0},
-				// diagonal
-				{7, 7},
-				{6, 6},
-				{5, 5},
-				{3, 3},
-				{2, 2},
-				{1, 1},
-				{0, 0},
-				{1, 7},
-				{2, 6},
-				{3, 5},
-				{5, 3},
-				{6, 2},
-				{7, 1},
-			},
-			ok: true,
-		},
-	}
-
-	for _, v := range tc {
-		p.X, p.Y = v.src.X, v.src.Y
-		for _, d := range v.dst {
-			if v.ok != p.CanGo(d.X, d.Y) {
-				t.Fatalf("src: %v - dst: %v - want: %v", v.src, d, v.ok)
-			}
-		}
-
-		for _, d := range generate(v.dst) {
-			if p.CanGo(d.X, d.Y) != !v.ok {
-				t.Fatalf("src: %v - dst: %v - want: %v", v.src, d, false)
-			}
-		}
-	}
-
+	piece_test(t, "Rook", Piece{
+		T:   Rook,
+		pos: pos,
+	}, Points{
+		{7, 3},
+		{6, 3},
+		{5, 3},
+		{3, 3},
+		{2, 3},
+		{1, 3},
+		{0, 3},
+		{4, 7},
+		{4, 6},
+		{4, 5},
+		{4, 4},
+		{4, 2},
+		{4, 1},
+		{4, 0},
+	})
 }
 
-func TestCanGoKing(t *testing.T) {
+// no need - generators tests for this
+//func TestKnight(t *testing.T) {
+//}
 
-	p := Piece{
-		T: King,
-	}
+func TestBishop(t *testing.T) {
+	pos := Point{4, 3}
 
-	tc := []TestCase{
-		{
-			src: Point{4, 4},
-			dst: []Point{
-				// square
-				{3, 3},
-				{3, 4},
-				{3, 5},
-				{4, 3},
-				{4, 5},
-				{5, 3},
-				{5, 4},
-				{5, 5},
-			},
-			ok: true,
-		},
-	}
+	piece_test(t, "Bishop", Piece{
+		T:   Bishop,
+		pos: pos,
+	}, Points{
+		{7, 6},
+		{6, 5},
+		{5, 4},
+		{3, 2},
+		{2, 1},
+		{1, 0},
 
-	for _, v := range tc {
-		p.X, p.Y = v.src.X, v.src.Y
-		for _, d := range v.dst {
-			if v.ok != p.CanGo(d.X, d.Y) {
-				t.Fatalf("src: %v - dst: %v - want: %v", v.src, d, v.ok)
-			}
-		}
+		{7, 0},
+		{6, 1},
+		{5, 2},
+		{3, 4},
+		{2, 5},
+		{1, 6},
+		{0, 7},
+	})
+}
 
-		for _, d := range generate(v.dst) {
-			if p.CanGo(d.X, d.Y) != !v.ok {
-				t.Fatalf("src: %v - dst: %v - want: %v", v.src, d, false)
-			}
-		}
-	}
+func TestQueen(t *testing.T) {
+	pos := Point{4, 3}
+	piece_test(t, "Queen", Piece{
+		T:   Queen,
+		pos: pos,
+	}, Points{
+		{7, 3},
+		{6, 3},
+		{5, 3},
+		{3, 3},
+		{2, 3},
+		{1, 3},
+		{0, 3},
+		{4, 7},
+		{4, 6},
+		{4, 5},
+		{4, 4},
+		{4, 2},
+		{4, 1},
+		{4, 0},
 
+		{7, 6},
+		{6, 5},
+		{5, 4},
+		{3, 2},
+		{2, 1},
+		{1, 0},
+
+		{7, 0},
+		{6, 1},
+		{5, 2},
+		{3, 4},
+		{2, 5},
+		{1, 6},
+		{0, 7},
+	})
+}
+
+func TestKing(t *testing.T) {
+	pos := Point{4, 3}
+	piece_test(t, "King", Piece{
+		T:   King,
+		pos: pos,
+	}, Points{
+		{5, 2},
+		{5, 3},
+		{5, 4},
+
+		{4, 4},
+		{4, 2},
+
+		{3, 2},
+		{3, 3},
+		{3, 4},
+	})
 }

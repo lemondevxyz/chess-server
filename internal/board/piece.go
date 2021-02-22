@@ -32,10 +32,8 @@ type Piece struct {
 	Player uint8 `json:"player"`
 	// T the piece type
 	T uint8 `json:"type"`
-	// X place in array
-	X int `json:"-"`
-	// Y place in array
-	Y int `json:"-"`
+	// pos
+	pos Point
 }
 
 func (p *Piece) Valid() bool {
@@ -79,27 +77,12 @@ func (p *Piece) String() string {
 }
 
 // CanGo does validation for the piece. Each piece has it's own rules.
-func (p *Piece) CanGo(x, y int) bool {
-
-	limit := 8
-	if x >= limit && y >= limit {
-		if x < 0 && y < 0 {
-			// out of bounds
-			return false
-		}
-	}
-
-	if p.X == x && p.Y == y {
+func (p *Piece) CanGo(dst Point) bool {
+	if dst.Equal(p.pos) || !dst.Valid() {
 		return false
 	}
 
-	src, dst := Point{
-		X: p.X,
-		Y: p.Y,
-	}, Point{
-		X: x,
-		Y: y,
-	}
+	src := p.pos
 	// i.e starting point
 	switch p.T {
 	// Only horizontally, can't move back
@@ -111,9 +94,9 @@ func (p *Piece) CanGo(x, y int) bool {
 		} else {
 			ps = src.Backward()
 		}
-		if p.X == 1 || p.X == 6 {
-			ps = append(ps, Point{X: p.X - 2, Y: p.Y})
-			ps = append(ps, Point{X: p.X + 2, Y: p.Y})
+		if src.X == 1 || src.X == 6 {
+			ps = append(ps, Point{X: src.X - 2, Y: src.Y})
+			ps = append(ps, Point{X: src.X + 2, Y: src.Y})
 
 			ps.Clean()
 		}

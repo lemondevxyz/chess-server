@@ -49,8 +49,7 @@ func NewBoard() *Board {
 			b.data[x][y] = &Piece{
 				T:      v,
 				Player: 1,
-				X:      x,
-				Y:      y,
+				pos:    Point{x, y},
 			}
 		}
 	}
@@ -66,8 +65,7 @@ func NewBoard() *Board {
 			b.data[x][y] = &Piece{
 				T:      v,
 				Player: 2,
-				X:      x,
-				Y:      y,
+				pos:    Point{x, y},
 			}
 		}
 	}
@@ -103,9 +101,9 @@ func (b *Board) Listen(callback MoveEvent) {
 func (b *Board) Set(p *Piece) {
 	if p != nil {
 		if p.T == Empty {
-			b.data[p.X][p.Y] = nil
+			b.data[p.pos.X][p.pos.Y] = nil
 		} else {
-			b.data[p.X][p.Y] = p
+			b.data[p.pos.X][p.pos.Y] = p
 		}
 	}
 }
@@ -116,6 +114,7 @@ func (b *Board) Get(src Point) *Piece {
 }
 
 // Move moves a piece from it's original position to the destination. Returns true if it did, or false if it didn't.
+/*
 func (b *Board) Move(p *Piece, dst Point) (ret bool) {
 	src := Point{X: p.X, Y: p.Y}
 	defer func() {
@@ -178,6 +177,14 @@ func (b *Board) Move(p *Piece, dst Point) (ret bool) {
 
 	return
 }
+*/
+
+func (b *Board) Move(p *Piece, dst Point) (ret bool) {
+	if p != nil {
+	}
+
+	return
+}
 
 // MarshalJSON json.Marshaler
 func (b *Board) MarshalJSON() ([]byte, error) {
@@ -203,8 +210,8 @@ func (b *Board) UnmarshalJSON(body []byte) error {
 		for y := 0; y < size; y++ {
 			p := b.data[x][y]
 			if p != nil {
-				p.X = x
-				p.Y = y
+				p.pos.X = x
+				p.pos.Y = y
 			}
 		}
 	}

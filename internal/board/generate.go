@@ -8,13 +8,16 @@ type Point struct {
 type Points []Point
 
 // Clean removes all out of bounds points
-func (ps Points) Clean() {
+func (ps Points) Clean() (ret Points) {
+	ret = ps
 	for i := len(ps) - 1; i >= 0; i-- {
-		p := ps[i]
+		p := ret[i]
 		if !p.Valid() {
-			ps = append(ps[:i], ps[i+1:]...)
+			ret = append(ret[:i], ret[i+1:]...)
 		}
 	}
+
+	return
 }
 
 // Merge merges ps with all
@@ -113,8 +116,7 @@ func (p Point) Diagonal() (ret Points) {
 		ret = append(ret, p)
 	}
 
-	ret.Clean()
-	return ret
+	return ret.Clean()
 }
 
 // Horizontal generates horizontal points
@@ -154,8 +156,7 @@ func (p Point) Square() Points {
 		{p.X - 1, p.Y + 1},
 		{p.X - 1, p.Y},
 		{p.X - 1, p.Y - 1},
-	}
-	ps.Clean()
+	}.Clean()
 
 	return ps
 }
@@ -172,8 +173,7 @@ func (p Point) Knight() Points {
 		{p.X - 1, p.Y + 2},
 		{p.X + 1, p.Y - 2},
 		{p.X - 1, p.Y - 2},
-	}
-	ps.Clean()
+	}.Clean()
 
 	return ps
 }
@@ -182,8 +182,7 @@ func (p Point) Knight() Points {
 func (p Point) Forward() Points {
 	ps := Points{
 		{p.X - 1, p.Y},
-	}
-	ps.Clean()
+	}.Clean()
 
 	return ps
 }
@@ -192,8 +191,7 @@ func (p Point) Forward() Points {
 func (p Point) Backward() Points {
 	ps := Points{
 		{p.X + 1, p.Y},
-	}
-	ps.Clean()
+	}.Clean()
 
 	return ps
 }
@@ -202,8 +200,7 @@ func (p Point) Backward() Points {
 func (p Point) Left() Points {
 	ps := Points{
 		{p.X, p.Y - 1},
-	}
-	ps.Clean()
+	}.Clean()
 
 	return ps
 }
@@ -212,8 +209,7 @@ func (p Point) Left() Points {
 func (p Point) Right() Points {
 	ps := Points{
 		{p.X, p.Y + 1},
-	}
-	ps.Clean()
+	}.Clean()
 
 	return ps
 }
@@ -225,8 +221,7 @@ func (p Point) Corner() Points {
 		{p.X + 1, p.Y - 1},
 		{p.X - 1, p.Y + 1},
 		{p.X - 1, p.Y - 1},
-	}
-	ps.Clean()
+	}.Clean()
 
 	return ps
 }

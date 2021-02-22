@@ -64,7 +64,7 @@ func out_board(b *Board, want Points) bool {
 	return false
 }
 
-func test_it(t *testing.T, name string, p Point, ps Points, want []Point) {
+func generate_test(t *testing.T, name string, p Point, ps Points, want []Point) {
 	b := board_set(p, ps)
 	t.Logf("have: %v", ps)
 	t.Logf("want: %v", want)
@@ -88,9 +88,22 @@ func TestPointsMerge(t *testing.T) {
 	}
 }
 
+func TestPointsClean(t *testing.T) {
+	ps := Points{
+		{1, -4},
+		{-6, 0},
+		{1, 1},
+	}
+	ps.Clean()
+
+	if ps.In(Point{1, -4}) || ps.In(Point{-6, 0}) || !ps.In(Point{1, 1}) {
+		t.Fatalf("Clean does not invalid points")
+	}
+}
+
 func TestDiagonal(t *testing.T) {
 	p := Point{4, 3}
-	test_it(t, "diagonal", p, p.Diagonal(), []Point{
+	generate_test(t, "diagonal", p, p.Diagonal(), []Point{
 		{7, 6},
 		{6, 5},
 		{5, 4},
@@ -110,7 +123,7 @@ func TestDiagonal(t *testing.T) {
 
 func TestHorizontal(t *testing.T) {
 	p := Point{4, 3}
-	test_it(t, "horizontal", p, p.Horizontal(), []Point{
+	generate_test(t, "horizontal", p, p.Horizontal(), []Point{
 		{4, 0},
 		{4, 1},
 		{4, 2},
@@ -123,7 +136,7 @@ func TestHorizontal(t *testing.T) {
 
 func TestVertical(t *testing.T) {
 	p := Point{4, 3}
-	test_it(t, "vertical", p, p.Vertical(), []Point{
+	generate_test(t, "vertical", p, p.Vertical(), []Point{
 		{0, 3},
 		{1, 3},
 		{2, 3},
@@ -136,7 +149,7 @@ func TestVertical(t *testing.T) {
 
 func TestSquare(t *testing.T) {
 	p := Point{4, 3}
-	test_it(t, "square", p, p.Square(), []Point{
+	generate_test(t, "square", p, p.Square(), []Point{
 		{5, 4},
 		{5, 3},
 		{5, 2},
@@ -149,7 +162,7 @@ func TestSquare(t *testing.T) {
 
 	// out of bounds?
 	p = Point{7, 7}
-	test_it(t, "square", p, p.Square(), []Point{
+	generate_test(t, "square", p, p.Square(), []Point{
 		{6, 7},
 		{7, 6},
 		{6, 6},
@@ -158,7 +171,7 @@ func TestSquare(t *testing.T) {
 
 func TestKnight(t *testing.T) {
 	p := Point{4, 3}
-	test_it(t, "knight", p, p.Knight(), []Point{
+	generate_test(t, "knight", p, p.Knight(), []Point{
 		{6, 4},
 		{6, 2},
 		{2, 4},
@@ -168,11 +181,19 @@ func TestKnight(t *testing.T) {
 		{3, 5},
 		{3, 1},
 	})
+
+	p = Point{0, 1}
+	t.Log(p.Knight())
+	generate_test(t, "knight", p, p.Knight(), []Point{
+		{1, 3},
+		{2, 0},
+		{2, 2},
+	})
 }
 
 func TestCorner(t *testing.T) {
 	p := Point{4, 3}
-	test_it(t, "corner", p, p.Corner(), []Point{
+	generate_test(t, "corner", p, p.Corner(), []Point{
 		{5, 4},
 		{5, 2},
 		{3, 4},

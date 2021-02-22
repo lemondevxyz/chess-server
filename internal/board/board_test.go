@@ -103,13 +103,12 @@ func TestBoardSet(t *testing.T) {
 	b := NewBoard()
 
 	p := &Piece{
-		X: 1,
-		Y: 1,
-		T: Bishop,
+		pos: Point{1, 1},
+		T:   Bishop,
 	}
 
 	b.Set(p)
-	if b.data[p.X][p.Y] != p {
+	if b.data[p.pos.X][p.pos.Y] != p {
 		t.Fatalf("Set does not work")
 	}
 }
@@ -119,10 +118,7 @@ func TestBoardMove(t *testing.T) {
 
 	x := b.data[1][3]
 
-	if !b.Move(x, Point{
-		X: 3,
-		Y: 3,
-	}) {
+	if !b.Move(x, Point{3, 3}) {
 		t.Fatalf("CanGo failed")
 	}
 
@@ -208,14 +204,12 @@ func TestBoardMoveOthers(t *testing.T) {
 		b.data[v.src.X][v.src.Y] = &Piece{
 			Player: 1,
 			T:      v.t,
-			X:      v.src.X,
-			Y:      v.src.Y,
+			pos:    Point{v.src.X, v.dst.Y},
 		}
 		b.data[v.dst.X][v.dst.Y] = &Piece{
 			Player: 2,
 			T:      v.t,
-			X:      v.dst.X,
-			Y:      v.dst.Y,
+			pos:    Point{v.dst.X, v.dst.Y},
 		}
 
 		x := b.data[v.src.X][v.src.Y]
@@ -236,14 +230,12 @@ func TestBoardMoveOthers(t *testing.T) {
 	b.data[0][0] = &Piece{
 		Player: 1,
 		T:      PawnF,
-		X:      0,
-		Y:      0,
+		pos:    Point{0, 0},
 	}
 	b.data[1][1] = &Piece{
 		Player: 1,
 		T:      PawnB,
-		X:      1,
-		Y:      1,
+		pos:    Point{1, 1},
 	}
 
 	if b.Move(b.data[0][0], Point{1, 1}) {
