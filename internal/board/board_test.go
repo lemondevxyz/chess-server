@@ -243,3 +243,42 @@ func TestBoardMoveOthers(t *testing.T) {
 	}
 
 }
+
+// check if some pieces can move over pieces that are in the way...
+func TestBoardMoveInTheWay(t *testing.T) {
+	b := NewBoard()
+
+	// try moving the rook through the pawn
+	p := b.Get(Point{7, 0})
+	t.Log(p)
+	if b.Move(p, Point{3, 0}) || b.Move(p, Point{7, 4}) {
+		t.Fatalf("rook can move over other pieces")
+	}
+
+	// try moving knight through pawn
+	p = b.Get(Point{7, 1})
+	t.Log(p)
+	if !b.Move(p, Point{5, 0}) {
+		t.Fatalf("knight cannot move over other pieces")
+	}
+
+	// try moving bishop through pawn
+	p = b.Get(Point{7, 2})
+	t.Log(p)
+	if b.Move(p, Point{6, 3}) || b.Move(p, Point{6, 1}) {
+		t.Fatalf("bishop can move over other pieces")
+	}
+
+	//p = b.Get(Point{7, })
+	// try moving king through other pieces
+	p = b.Get(Point{7, 3})
+	t.Log(p)
+	if b.Move(p, Point{6, 4}) || b.Move(p, Point{7, 4}) {
+		t.Fatalf("king can move over other pieces")
+	}
+
+	p = b.Get(Point{7, 4})
+	t.Log(p)
+	if b.Move(p, Point{5, 2}) || b.Move(p, Point{5, 7}) {
+	}
+}

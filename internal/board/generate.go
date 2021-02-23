@@ -1,11 +1,31 @@
 package board
 
+const (
+	DirUp uint8 = 1 << iota
+	DirDown
+	DirLeft
+	DirRight
+)
+
+func Set(b, flag uint8) uint8    { return b | flag }
+func Clear(b, flag uint8) uint8  { return b &^ flag }
+func Toggle(b, flag uint8) uint8 { return b ^ flag }
+func Has(b, flag uint8) bool     { return b&flag != 0 }
+
 type Point struct {
 	X int
 	Y int
 }
 
 type Points []Point
+
+func abs(i int) int {
+	if i < 0 {
+		return i * -1
+	}
+
+	return i
+}
 
 // Clean removes all out of bounds points
 func (ps Points) Clean() (ret Points) {
@@ -63,6 +83,108 @@ func (p Point) Equal(o Point) bool {
 // Valid return false when out of bounds
 func (p Point) Valid() bool {
 	return !(p.X > 7 || p.Y > 7 || p.X < 0 || p.Y < 0)
+}
+
+/*
+// IsDiagonalUpRight returns true if dst is UpRight of p
+func (p Point) IsDiagonalUpRight(dst Point) bool {
+	x := dst.X - p.X
+	y := dst.Y - p.Y
+	if x > 0 && y > 0 && x == y {
+		return true
+	}
+
+	return false
+}
+
+// IsDiagonalUpLeft returns true if dst is UpLeft of p
+func (p Point) IsDiagonalUpLeft(dst Point) bool {
+	x := dst.X - p.X
+	y := dst.Y - p.Y
+
+	if abs(y) == x && y < 0 && x > 0 {
+		return true
+	}
+
+	return false
+}
+
+// IsDiagonalUpRight returns true if dst is DownRight of p
+func (p Point) IsDiagonalDownRight(dst Point) bool {
+	x := dst.X - p.X
+	y := dst.Y - p.Y
+	if abs(x) == y && x < 0 && y > 0 {
+		return true
+	}
+
+	return false
+}
+
+// IsDiagonalDownLeft returns true if dst is DownLeft of p
+func (p Point) IsDiagonalDownLeft(dst Point) bool {
+	x := dst.X - p.X
+	y := dst.Y - p.Y
+
+	if y < 0 && x < 0 && x == y {
+		return true
+	}
+
+	return false
+}
+
+// IsLeft returns if the dst is left of the point
+func (p Point) IsLeft(dst Point) bool {
+	if dst.X != p.X || dst.Y == p.Y {
+		return false
+	}
+
+	return dst.Y-p.Y < 0
+}
+
+// IsRight returns if the dst is right of the point
+func (p Point) IsRight(dst Point) bool {
+	if dst.X != p.X || dst.Y == p.Y {
+		return false
+	}
+
+	return dst.Y-p.Y > 0
+}
+
+// IsUp returns if the dst is up of the point
+func (p Point) IsUp(dst Point) bool {
+	if dst.X == p.X || dst.Y != p.Y {
+		return false
+	}
+
+	return dst.X-p.X < 0
+}
+
+// IsDown returns if the dst is downwards of the point
+func (p Point) IsDown(dst Point) bool {
+	if dst.X == p.X || dst.Y != p.Y {
+		return false
+	}
+
+	return dst.X-p.X > 0
+}
+*/
+
+func (p Point) Direction(dst Point) (d uint8) {
+	x := dst.X - p.X
+	if x < 0 {
+		d = Set(d, DirUp)
+	} else if x > 0 {
+		d = Set(d, DirDown)
+	}
+
+	y := dst.Y - p.Y
+	if y < 0 {
+		d = Set(d, DirLeft)
+	} else if y > 0 {
+		d = Set(d, DirRight)
+	}
+
+	return
 }
 
 // Diagonal generates diagonal points

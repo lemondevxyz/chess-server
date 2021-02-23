@@ -200,3 +200,132 @@ func TestCorner(t *testing.T) {
 		{3, 2},
 	})
 }
+
+func TestDirection(t *testing.T) {
+	p := Point{4, 3}
+	ps := Points{
+		{3, 2},
+		{3, 3},
+		{3, 4},
+		{4, 4},
+		{5, 4},
+		{5, 3},
+		{5, 2},
+		{4, 2},
+	}
+	dirs := []uint8{
+		Set(DirUp, DirLeft),
+		DirUp,
+		Set(DirUp, DirRight),
+		DirRight,
+		Set(DirDown, DirRight),
+		DirDown,
+		Set(DirDown, DirLeft),
+		DirLeft,
+	}
+
+	for i, v := range ps {
+		d := p.Direction(v)
+		if d != dirs[i] {
+			t.Fatalf("%d failed. want: %d, have: %d", i, dirs[i], d)
+		}
+	}
+}
+
+/*
+func TestIsDiagonal(t *testing.T) {
+	p := Point{4, 3}
+	ps := []Point{
+		{5, 4},
+		{5, 2},
+		{3, 4},
+		{3, 2},
+	}
+	fn := []func(dst Point) bool{
+		p.IsDiagonalUpRight,
+		p.IsDiagonalUpLeft,
+		p.IsDiagonalDownRight,
+		p.IsDiagonalDownLeft,
+	}
+
+	for i, v := range ps {
+		f := fn[i]
+
+		if !f(v) {
+			t.Fatalf("%d fails.", i)
+		}
+
+		for j, v := range ps {
+			if i == j {
+				continue
+			}
+
+			if f(v) {
+				t.Fatalf("%d succeeds. %d", j, i)
+			}
+		}
+	}
+}
+
+func TestIsHorizontal(t *testing.T) {
+	p := Point{4, 3}
+	ps := []Point{
+		{3, 3},
+		{5, 3},
+	}
+	fn := []func(dst Point) bool{
+		p.IsUp,
+		p.IsDown,
+	}
+
+	for i, v := range ps {
+		f := fn[i]
+
+		if !f(v) {
+			t.Fatalf("%d fails.", i)
+		}
+
+		for j, v := range ps {
+			if i == j {
+				continue
+			}
+
+			if f(v) {
+				t.Fatalf("%d succeeds. %d", j, i)
+			}
+		}
+	}
+
+}
+
+func TestIsVertical(t *testing.T) {
+	p := Point{4, 3}
+	ps := []Point{
+		{4, 2},
+		{4, 4},
+	}
+	fn := []func(dst Point) bool{
+		p.IsLeft,
+		p.IsRight,
+	}
+
+	for i, v := range ps {
+		f := fn[i]
+
+		if !f(v) {
+			t.Fatalf("%d fails.", i)
+		}
+
+		for j, v := range ps {
+			if i == j {
+				continue
+			}
+
+			if f(v) {
+				t.Fatalf("%d succeeds. %d", j, i)
+			}
+		}
+	}
+
+}
+*/
