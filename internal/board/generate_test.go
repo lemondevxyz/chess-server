@@ -1,10 +1,11 @@
 package board
 
 import (
+	"sort"
 	"testing"
 )
 
-const t_empty = Empty
+const t_empty = Bishop
 const t_points = King
 const t_point = Knight
 
@@ -38,7 +39,7 @@ func in_board(b *Board, want Points) bool {
 func out_board(b *Board, want Points) bool {
 	for x, v := range b.data {
 		for y, b := range v {
-			if b != nil && b.T != Empty && b.T != t_point {
+			if b != nil && b.T != t_empty && b.T != t_point {
 				found := false
 
 				for _, p := range want {
@@ -66,10 +67,16 @@ func out_board(b *Board, want Points) bool {
 
 func generate_test(t *testing.T, name string, p Point, ps Points, want []Point) {
 	b := board_set(p, ps)
+
+	sort.Sort(ps)
+	sort.Sort(Points(want))
+
+	t.Logf("src: %v", p)
 	t.Logf("have: %v", ps)
 	t.Logf("want: %v", want)
 
 	t.Logf("\n%s", b.String())
+
 	if !in_board(b, want) {
 		t.Fatalf("%s is not predictable. points not inside selection", name)
 	} else if out_board(b, want) {
@@ -101,22 +108,102 @@ func TestPointsClean(t *testing.T) {
 	}
 }
 
+// TODO: make diagonal tests more reliable...
 func TestDiagonal(t *testing.T) {
+
 	p := Point{4, 3}
-	generate_test(t, "diagonal", p, p.Diagonal(), []Point{
+	generate_test(t, "diagonal top", p, p.Diagonal(), []Point{
+		// +, +
 		{7, 6},
 		{6, 5},
 		{5, 4},
+		// -, -
 		{3, 2},
 		{2, 1},
 		{1, 0},
-		{0, 7},
-		{1, 6},
-		{2, 5},
+		// -, +
 		{3, 4},
+		{2, 5},
+		{1, 6},
+		{0, 7},
+		// +, -
 		{5, 2},
 		{6, 1},
 		{7, 0},
+	})
+
+	p = Point{5, 2}
+	generate_test(t, "diagonal left", p, p.Diagonal(), []Point{
+		// +, +
+		{7, 4},
+		{6, 3},
+		// -, -
+		{4, 1},
+		{3, 0},
+		// +, -
+		{7, 0},
+		{6, 1},
+		// -, +
+		{4, 3},
+		{3, 4},
+		{2, 5},
+		{1, 6},
+		{0, 7},
+	})
+
+	p = Point{5, 3}
+	generate_test(t, "diagonal center", p, p.Diagonal(), []Point{
+		// +, +
+		{7, 5},
+		{6, 4},
+		// -, -
+		{4, 2},
+		{3, 1},
+		{2, 0},
+		// +, -
+		{7, 1},
+		{6, 2},
+		// -, +
+		{4, 4},
+		{3, 5},
+		{2, 6},
+		{1, 7},
+	})
+
+	p = Point{5, 4}
+	generate_test(t, "diagonal center", p, p.Diagonal(), []Point{
+		// +, +
+		{7, 6},
+		{6, 5},
+		// -, -
+		{4, 3},
+		{3, 2},
+		{2, 1},
+		{1, 0},
+		// +, -
+		{7, 2},
+		{6, 3},
+		// -, +
+		{4, 5},
+		{3, 6},
+		{2, 7},
+	})
+
+	p = Point{6, 3}
+	generate_test(t, "diagonal bottom", p, p.Diagonal(), []Point{
+		// +, +
+		{7, 4},
+		// -, -
+		{5, 2},
+		{4, 1},
+		{3, 0},
+		// +, -
+		{7, 2},
+		// -, +
+		{5, 4},
+		{4, 5},
+		{3, 6},
+		{2, 7},
 	})
 
 }
@@ -231,101 +318,3 @@ func TestDirection(t *testing.T) {
 		}
 	}
 }
-
-/*
-func TestIsDiagonal(t *testing.T) {
-	p := Point{4, 3}
-	ps := []Point{
-		{5, 4},
-		{5, 2},
-		{3, 4},
-		{3, 2},
-	}
-	fn := []func(dst Point) bool{
-		p.IsDiagonalUpRight,
-		p.IsDiagonalUpLeft,
-		p.IsDiagonalDownRight,
-		p.IsDiagonalDownLeft,
-	}
-
-	for i, v := range ps {
-		f := fn[i]
-
-		if !f(v) {
-			t.Fatalf("%d fails.", i)
-		}
-
-		for j, v := range ps {
-			if i == j {
-				continue
-			}
-
-			if f(v) {
-				t.Fatalf("%d succeeds. %d", j, i)
-			}
-		}
-	}
-}
-
-func TestIsHorizontal(t *testing.T) {
-	p := Point{4, 3}
-	ps := []Point{
-		{3, 3},
-		{5, 3},
-	}
-	fn := []func(dst Point) bool{
-		p.IsUp,
-		p.IsDown,
-	}
-
-	for i, v := range ps {
-		f := fn[i]
-
-		if !f(v) {
-			t.Fatalf("%d fails.", i)
-		}
-
-		for j, v := range ps {
-			if i == j {
-				continue
-			}
-
-			if f(v) {
-				t.Fatalf("%d succeeds. %d", j, i)
-			}
-		}
-	}
-
-}
-
-func TestIsVertical(t *testing.T) {
-	p := Point{4, 3}
-	ps := []Point{
-		{4, 2},
-		{4, 4},
-	}
-	fn := []func(dst Point) bool{
-		p.IsLeft,
-		p.IsRight,
-	}
-
-	for i, v := range ps {
-		f := fn[i]
-
-		if !f(v) {
-			t.Fatalf("%d fails.", i)
-		}
-
-		for j, v := range ps {
-			if i == j {
-				continue
-			}
-
-			if f(v) {
-				t.Fatalf("%d succeeds. %d", j, i)
-			}
-		}
-	}
-
-}
-*/

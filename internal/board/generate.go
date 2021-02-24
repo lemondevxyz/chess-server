@@ -19,6 +19,23 @@ type Point struct {
 
 type Points []Point
 
+func (ps Points) Len() int {
+	return len(ps)
+}
+
+func (ps Points) Less(i, j int) bool {
+	p, o := ps[i], ps[j]
+	if p.X == o.X {
+		return p.Y < o.Y
+	}
+
+	return p.X < o.X
+}
+
+func (ps Points) Swap(i, j int) {
+	ps[i], ps[j] = ps[j], ps[i]
+}
+
 func abs(i int) int {
 	if i < 0 {
 		return i * -1
@@ -85,90 +102,6 @@ func (p Point) Valid() bool {
 	return !(p.X > 7 || p.Y > 7 || p.X < 0 || p.Y < 0)
 }
 
-/*
-// IsDiagonalUpRight returns true if dst is UpRight of p
-func (p Point) IsDiagonalUpRight(dst Point) bool {
-	x := dst.X - p.X
-	y := dst.Y - p.Y
-	if x > 0 && y > 0 && x == y {
-		return true
-	}
-
-	return false
-}
-
-// IsDiagonalUpLeft returns true if dst is UpLeft of p
-func (p Point) IsDiagonalUpLeft(dst Point) bool {
-	x := dst.X - p.X
-	y := dst.Y - p.Y
-
-	if abs(y) == x && y < 0 && x > 0 {
-		return true
-	}
-
-	return false
-}
-
-// IsDiagonalUpRight returns true if dst is DownRight of p
-func (p Point) IsDiagonalDownRight(dst Point) bool {
-	x := dst.X - p.X
-	y := dst.Y - p.Y
-	if abs(x) == y && x < 0 && y > 0 {
-		return true
-	}
-
-	return false
-}
-
-// IsDiagonalDownLeft returns true if dst is DownLeft of p
-func (p Point) IsDiagonalDownLeft(dst Point) bool {
-	x := dst.X - p.X
-	y := dst.Y - p.Y
-
-	if y < 0 && x < 0 && x == y {
-		return true
-	}
-
-	return false
-}
-
-// IsLeft returns if the dst is left of the point
-func (p Point) IsLeft(dst Point) bool {
-	if dst.X != p.X || dst.Y == p.Y {
-		return false
-	}
-
-	return dst.Y-p.Y < 0
-}
-
-// IsRight returns if the dst is right of the point
-func (p Point) IsRight(dst Point) bool {
-	if dst.X != p.X || dst.Y == p.Y {
-		return false
-	}
-
-	return dst.Y-p.Y > 0
-}
-
-// IsUp returns if the dst is up of the point
-func (p Point) IsUp(dst Point) bool {
-	if dst.X == p.X || dst.Y != p.Y {
-		return false
-	}
-
-	return dst.X-p.X < 0
-}
-
-// IsDown returns if the dst is downwards of the point
-func (p Point) IsDown(dst Point) bool {
-	if dst.X == p.X || dst.Y != p.Y {
-		return false
-	}
-
-	return dst.X-p.X > 0
-}
-*/
-
 func (p Point) Direction(dst Point) (d uint8) {
 	x := dst.X - p.X
 	if x < 0 {
@@ -189,53 +122,58 @@ func (p Point) Direction(dst Point) (d uint8) {
 
 // Diagonal generates diagonal points
 func (p Point) Diagonal() (ret Points) {
-	x := 7 - p.X
-	y := 7 - p.Y
-
-	diff := 0
-	if x > y {
-		diff = x
+	x, y := 0, 0
+	res := p.X - p.Y
+	if res > 0 {
+		x = res
 	} else {
-		diff = y
+		y = abs(res)
 	}
 
-	x = p.X + diff
-	y = p.Y + diff
-	ret = append(ret, Point{x, y})
-
-	for i := 0; i < 8; i++ {
-		x--
-		y--
-
-		if p.X == x && p.Y == y {
-			continue
-		}
-
-		p := Point{x, y}
-		if !p.Valid() {
-			break
-		}
-
-		ret = append(ret, p)
-	}
-
-	y = p.Y + diff
-	x = p.X - diff
+	//orix, oriy := x, y
 
 	ret = append(ret, Point{x, y})
 	for i := 0; i < 8; i++ {
 		x++
-		y--
+		y++
 
-		if p.X == x && p.Y == y {
+		o := Point{x, y}
+
+		if p.Equal(o) {
 			continue
 		}
-
-		p := Point{x, y}
-		if !p.Valid() {
+		if !o.Valid() {
 			break
 		}
-		ret = append(ret, p)
+
+		ret = append(ret, o)
+	}
+
+	// this part took me a bit to figure it out
+	x, y = 0, 7
+	res = p.X + p.Y
+	if res < 7 {
+		y = res
+	} else if res > 7 {
+		x = x + (res - 7)
+	}
+
+	ret = append(ret, Point{x, y})
+
+	for i := 0; i < 8; i++ {
+		x++
+		y--
+
+		o := Point{x, y}
+
+		if p.Equal(o) {
+			continue
+		}
+		if !o.Valid() {
+			break
+		}
+
+		ret = append(ret, o)
 	}
 
 	return ret.Clean()

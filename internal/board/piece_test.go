@@ -106,6 +106,8 @@ func TestRook(t *testing.T) {
 //func TestKnight(t *testing.T) {
 //}
 
+// no need - generators tests for this
+/*
 func TestBishop(t *testing.T) {
 	pos := Point{4, 3}
 
@@ -129,6 +131,7 @@ func TestBishop(t *testing.T) {
 		{0, 7},
 	})
 }
+*/
 
 func TestQueen(t *testing.T) {
 	pos := Point{4, 3}
