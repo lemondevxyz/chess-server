@@ -7,11 +7,12 @@ import (
 )
 
 func CmdHandler(w http.ResponseWriter, r *http.Request) {
-	cl, err := GetUser(r)
+	u, err := GetUser(r)
 	if err != nil {
 		respondError(w, http.StatusUnauthorized, err)
 		return
 	}
+	cl := u.Client()
 
 	cmd := game.Command{}
 	err = bindJSON(r, &cmd)

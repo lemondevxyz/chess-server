@@ -139,19 +139,25 @@ func TestCommandPiece(t *testing.T) {
 func TestCommandPromotion(t *testing.T) {
 	defer resetPipe()
 
+	pos := board.Point{X: 1, Y: 5}
 	p := gGame.b.Get(board.Point{X: 1, Y: 5})
 	go func() {
 
-		gGame.b.Move(p, board.Point{X: p.X + 2, Y: p.Y})
+		pos.X += 2
+		gGame.b.Move(p, pos)
 
-		gGame.b.Set(&board.Piece{T: board.Empty, X: 0, Y: 4})
-		gGame.b.Set(&board.Piece{T: board.Empty, X: 6, Y: 5})
-		gGame.b.Set(&board.Piece{T: board.Empty, X: 7, Y: 5})
+		gGame.b.Set(&board.Piece{T: board.Empty, Pos: board.Point{X: 0, Y: 4}})
+		gGame.b.Set(&board.Piece{T: board.Empty, Pos: board.Point{X: 6, Y: 5}})
+		gGame.b.Set(&board.Piece{T: board.Empty, Pos: board.Point{X: 7, Y: 5}})
 
-		gGame.b.Move(p, board.Point{X: p.X + 1, Y: p.Y})
-		gGame.b.Move(p, board.Point{X: p.X + 1, Y: p.Y})
-		gGame.b.Move(p, board.Point{X: p.X + 1, Y: p.Y})
-		gGame.b.Move(p, board.Point{X: p.X + 1, Y: p.Y})
+		pos.X++
+		gGame.b.Move(p, board.Point{X: pos.X, Y: pos.Y})
+		pos.X++
+		gGame.b.Move(p, board.Point{X: pos.X, Y: pos.Y})
+		pos.X++
+		gGame.b.Move(p, board.Point{X: pos.X, Y: pos.Y})
+		pos.X++
+		gGame.b.Move(p, board.Point{X: pos.X, Y: pos.Y})
 	}()
 
 	select {

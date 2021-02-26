@@ -16,7 +16,7 @@ type WsClient struct {
 	W      chan []byte
 	r      []chan []byte
 	c      []chan bool
-	u      User
+	u      *User
 	closed bool
 }
 

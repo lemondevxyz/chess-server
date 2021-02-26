@@ -101,7 +101,7 @@ func TestCommandRequest(t *testing.T) {
 				if err != nil {
 					t.Fatalf("rd1.Read: %s", err.Error())
 				}
-				fmt.Println(string(b))
+				t.Log(string(b))
 
 				b = make([]byte, 40)
 				_, err = rd2.Read(b)
@@ -109,7 +109,7 @@ func TestCommandRequest(t *testing.T) {
 					t.Fatalf("rd1.Read: %s", err.Error())
 				}
 
-				fmt.Println(string(b))
+				t.Log(string(b))
 			}
 		}
 	}

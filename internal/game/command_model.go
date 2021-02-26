@@ -3,6 +3,9 @@ package game
 import "github.com/toms1441/chess-server/internal/board"
 
 type (
+	ModelCmdInvite struct {
+	}
+
 	ModelCmdPiece struct {
 		Src board.Point `json:"src"`
 		Dst board.Point `json:"dst"`

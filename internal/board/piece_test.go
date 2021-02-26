@@ -5,13 +5,13 @@ import "testing"
 func piece_test(t *testing.T, name string, p Piece, ps Points) {
 	for _, v := range ps {
 		if !p.CanGo(v) {
-			t.Fatalf("%s | want: true, have: false - pos: %v", name, v)
+			t.Fatalf("%s | want: true, have: false - Pos: %v", name, v)
 		}
 	}
 
 	for _, v := range ps.Outside() {
 		if p.CanGo(v) {
-			t.Fatalf("%s | want: false, have: true - pos: %v", name, v)
+			t.Fatalf("%s | want: false, have: true - Pos: %v", name, v)
 		}
 	}
 }
@@ -19,7 +19,7 @@ func piece_test(t *testing.T, name string, p Piece, ps Points) {
 func TestCanGoOutOfBound(t *testing.T) {
 	p := Piece{
 		T:   PawnB,
-		pos: Point{0, 0},
+		Pos: Point{0, 0},
 	}
 
 	if p.CanGo(Point{-1, 0}) || p.CanGo(Point{0, -1}) || p.CanGo(Point{-1, -1}) {
@@ -30,10 +30,10 @@ func TestCanGoOutOfBound(t *testing.T) {
 func TestCanGoEqual(t *testing.T) {
 	p := Piece{
 		T:   PawnB,
-		pos: Point{0, 0},
+		Pos: Point{0, 0},
 	}
 
-	if p.CanGo(p.pos) {
+	if p.CanGo(p.Pos) {
 		t.Fatalf("CanGo: allow same position movement")
 	}
 }
@@ -41,7 +41,7 @@ func TestCanGoEqual(t *testing.T) {
 func TestPawnB(t *testing.T) {
 	p := Piece{
 		T:   PawnB,
-		pos: Point{1, 1},
+		Pos: Point{1, 1},
 	}
 
 	if !p.CanGo(Point{3, 1}) {
@@ -52,7 +52,7 @@ func TestPawnB(t *testing.T) {
 		t.Fatalf("Backward Pawn can go Forwards")
 	}
 
-	p.pos = Point{2, 1}
+	p.Pos = Point{2, 1}
 	if p.CanGo(Point{4, 1}) {
 		t.Fatalf("Pawn can go two steps after the spawn position")
 	}
@@ -61,7 +61,7 @@ func TestPawnB(t *testing.T) {
 func TestPawnF(t *testing.T) {
 	p := Piece{
 		T:   PawnF,
-		pos: Point{6, 1},
+		Pos: Point{6, 1},
 	}
 
 	if !p.CanGo(Point{4, 1}) {
@@ -72,7 +72,7 @@ func TestPawnF(t *testing.T) {
 		t.Fatalf("Forward Pawn can go Backwards")
 	}
 
-	p.pos = Point{5, 1}
+	p.Pos = Point{5, 1}
 	if p.CanGo(Point{3, 1}) {
 		t.Fatalf("Pawn can go two steps after the spawn position")
 	}
@@ -83,7 +83,7 @@ func TestRook(t *testing.T) {
 
 	piece_test(t, "Rook", Piece{
 		T:   Rook,
-		pos: pos,
+		Pos: pos,
 	}, Points{
 		{7, 3},
 		{6, 3},
@@ -113,7 +113,7 @@ func TestBishop(t *testing.T) {
 
 	piece_test(t, "Bishop", Piece{
 		T:   Bishop,
-		pos: pos,
+		Pos: pos,
 	}, Points{
 		{7, 6},
 		{6, 5},
@@ -137,7 +137,7 @@ func TestQueen(t *testing.T) {
 	pos := Point{4, 3}
 	piece_test(t, "Queen", Piece{
 		T:   Queen,
-		pos: pos,
+		Pos: pos,
 	}, Points{
 		{7, 3},
 		{6, 3},
@@ -175,7 +175,7 @@ func TestKing(t *testing.T) {
 	pos := Point{4, 3}
 	piece_test(t, "King", Piece{
 		T:   King,
-		pos: pos,
+		Pos: pos,
 	}, Points{
 		{5, 2},
 		{5, 3},

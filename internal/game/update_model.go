@@ -17,4 +17,8 @@ type (
 	ModelUpdateTurn struct {
 		Player uint8 `json:"player"`
 	}
+
+	ModelUpdateInvite struct {
+		ID string `json:"id"`
+	}
 )

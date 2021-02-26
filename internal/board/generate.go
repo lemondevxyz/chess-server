@@ -285,3 +285,44 @@ func (p Point) Corner() Points {
 
 	return ps
 }
+
+func (p Point) Increase(dir uint8) Point {
+	x, y := p.X, p.Y
+	if Has(dir, DirUp) {
+		x--
+	} else if Has(dir, DirDown) {
+		x++
+	}
+	if Has(dir, DirLeft) {
+		y--
+	} else if Has(dir, DirRight) {
+		y++
+	}
+
+	return Point{x, y}
+}
+
+// Smaller returns true if dst is smaller than src. Smaller compares x to x, and then y to y.
+/*
+func (p Point) Smaller(dst Point) bool {
+	if p.Equal(dst) {
+		return false
+	}
+
+	x, y := p.X, p.Y
+	if x > dst.X {
+		return true
+	}
+
+	return y > dst.Y
+}
+
+// Bigger returns true if dst is bigger than src
+func (p Point) Bigger(dst Point) bool {
+	if p.Equal(dst) {
+		return false
+	}
+
+	return !p.Smaller(dst)
+}
+*/

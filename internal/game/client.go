@@ -28,3 +28,8 @@ func (c *Client) Do(cmd Command) error {
 func (c *Client) Game() *Game {
 	return c.g
 }
+
+func (c *Client) LeaveGame() {
+	// TODO: c.Do(CmdForfeit)
+	c.g = nil
+}

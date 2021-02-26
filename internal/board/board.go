@@ -49,7 +49,7 @@ func NewBoard() *Board {
 			b.data[x][y] = &Piece{
 				T:      v,
 				Player: 1,
-				pos:    Point{x, y},
+				Pos:    Point{x, y},
 			}
 		}
 	}
@@ -65,7 +65,7 @@ func NewBoard() *Board {
 			b.data[x][y] = &Piece{
 				T:      v,
 				Player: 2,
-				pos:    Point{x, y},
+				Pos:    Point{x, y},
 			}
 		}
 	}
@@ -101,9 +101,9 @@ func (b *Board) Listen(callback MoveEvent) {
 func (b *Board) Set(p *Piece) {
 	if p != nil {
 		if p.T == Empty {
-			b.data[p.pos.X][p.pos.Y] = nil
+			b.data[p.Pos.X][p.Pos.Y] = nil
 		} else {
-			b.data[p.pos.X][p.pos.Y] = p
+			b.data[p.Pos.X][p.Pos.Y] = p
 		}
 	}
 }
@@ -113,16 +113,78 @@ func (b *Board) Get(src Point) *Piece {
 	return b.data[src.X][src.Y]
 }
 
-// Move moves a piece from it's original position to the destination. Returns true if it did, or false if it didn't.
+// Possib is the same as Piece.Possib, but with removal of illegal moves.
 /*
-func (b *Board) Move(p *Piece, dst Point) (ret bool) {
-	src := Point{X: p.X, Y: p.Y}
-	defer func() {
-		if p != nil && ret {
-			b.data[p.X][p.Y] = nil
+func (b *Board) Possib(p *Piece) Points {
+	ps := p.Possib()
+	if p.T != Knight && p.T != PawnB && p.T != PawnF {
+		dir := p.Pos.Direction(dst)
 
-			p.X = dst.X
-			p.Y = dst.Y
+		x, y := p.Pos.X, p.Pos.Y
+		stopat := Point{-1, -1}
+
+		// here we see if there's a piece in the way..
+		// if so then we remove that point from the possible points we could go through
+		for i := 0; i < 8; i++ {
+			// direction movement
+
+			pos := Point{x, y}
+			if !pos.Valid() {
+				break
+			}
+			if pos.Equal(dst) {
+				break
+			} else {
+				o := b.Get(pos)
+				if o != nil && o.T != Empty {
+					// there's a piece in the way
+					stopat = pos
+					break
+				}
+			}
+		}
+
+		// this means there was a piece in the way
+		if stopat.Valid() {
+			// start from the piece in the way, and cancel all the "next" moves
+			x, y = stopat.X, stopat.Y
+			// so for example, if we want to go to (4, 3) and there is a piece in (2, 1) - (3, 2) would not be possible
+			// as well as (4,3) and so on.
+
+			// therefore we don't really need
+			var fn func(Point) bool
+			if Has(dir, DirDown) {
+				fn = stopat.Bigger
+			} else if Has(dir, DirUp) {
+				fn = stopat.Smaller
+			} else if Has(dir, DirLeft) {
+				fn = stopat.Smaller
+			} else if Has(dir, DirRight) {
+				fn = stopat.Bigger
+			}
+
+			for i := len(ps) - 1; i >= 0; i-- {
+				v := ps[i]
+				if fn(v) {
+					ps = append(ps[:i], ps[i+1:]...)
+				}
+			}
+		}
+	}
+
+	return ps
+}
+*/
+
+// Move moves a piece from it's original position to the destination. Returns true if it did, or false if it didn't.
+func (b *Board) Move(p *Piece, dst Point) (ret bool) {
+	defer func() {
+		src := p.Pos
+		if p != nil && ret {
+			b.data[p.Pos.X][p.Pos.Y] = nil
+
+			p.Pos.X = dst.X
+			p.Pos.Y = dst.Y
 
 			b.data[dst.X][dst.Y] = p
 		}
@@ -133,70 +195,7 @@ func (b *Board) Move(p *Piece, dst Point) (ret bool) {
 	}()
 
 	if p != nil {
-		x := b.data[dst.X][dst.Y]
-		if p.CanGo(dst.X, dst.Y) {
-			if x != nil {
-				if x.T != PawnB && x.T != PawnF {
-					if p.T != PawnB && p.T != PawnF {
-						if p.Player != x.Player {
-							ret = true
-						}
-					}
-				}
-			} else {
-				ret = true
-			}
-		} else {
-			if p.T == PawnB || p.T == PawnF {
-				x := p.X
-				y := p.Y
-				if p.T == PawnF {
-					x--
-				} else if p.T == PawnB {
-					x++
-				}
-
-				if dst.X == x {
-					oldy := y
-					// other piece
-					o := b.data[x][y+1]
-					i := b.data[x][y-1]
-					if o != nil && o.T != Empty && o.Player != p.Player {
-						y = y + 1
-					} else if i != nil && i.T != Empty && i.Player != p.Player {
-						y = y - 1
-					}
-
-					if oldy != y {
-						ret = true
-					}
-				}
-			}
-		}
-	}
-
-	return
-}
-*/
-
-func (b *Board) Move(p *Piece, dst Point) (ret bool) {
-	defer func() {
-		if p != nil && ret {
-			b.data[p.pos.X][p.pos.Y] = nil
-
-			p.pos.X = dst.X
-			p.pos.Y = dst.Y
-
-			b.data[dst.X][dst.Y] = p
-		}
-
-		for _, v := range b.ml {
-			v(p, p.pos, dst, ret)
-		}
-	}()
-
-	if p != nil {
-		if b.Get(p.pos) != p {
+		if b.Get(p.Pos) != p {
 			return
 		}
 
@@ -212,10 +211,10 @@ func (b *Board) Move(p *Piece, dst Point) (ret bool) {
 			} else {
 				ret = true
 				// knights don't have to go through this
-				// they can skip pieces
+				// they can jump over pieces
 				if p.T != Knight {
-					d := p.pos.Direction(dst)
-					x, y := p.pos.X, p.pos.Y
+					d := p.Pos.Direction(dst)
+					x, y := p.Pos.X, p.Pos.Y
 					for i := 0; i < 8; i++ {
 						if Has(d, DirUp) {
 							x--
@@ -247,7 +246,7 @@ func (b *Board) Move(p *Piece, dst Point) (ret bool) {
 			}
 		} else {
 			if p.T == PawnB || p.T == PawnF {
-				x := p.pos.X
+				x := p.Pos.X
 				if p.T == PawnB {
 					x++
 				} else if p.T == PawnF {
@@ -255,8 +254,8 @@ func (b *Board) Move(p *Piece, dst Point) (ret bool) {
 				}
 
 				ps := Points{
-					{x, p.pos.Y + 1},
-					{x, p.pos.Y - 1},
+					{x, p.Pos.Y + 1},
+					{x, p.Pos.Y - 1},
 				}
 				if ps.In(dst) {
 					if o != nil && o.T != Empty && o.Player != p.Player {
@@ -294,8 +293,8 @@ func (b *Board) UnmarshalJSON(body []byte) error {
 		for y := 0; y < size; y++ {
 			p := b.data[x][y]
 			if p != nil {
-				p.pos.X = x
-				p.pos.Y = y
+				p.Pos.X = x
+				p.Pos.Y = y
 			}
 		}
 	}

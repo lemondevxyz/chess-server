@@ -32,8 +32,8 @@ type Piece struct {
 	Player uint8 `json:"player"`
 	// T the piece type
 	T uint8 `json:"type"`
-	// pos
-	pos Point
+	//.Pos
+	Pos Point
 }
 
 func (p *Piece) Valid() bool {
@@ -76,13 +76,9 @@ func (p *Piece) String() string {
 	return strings[p.T]
 }
 
-// CanGo does validation for the piece. Each piece has it's own rules.
-func (p *Piece) CanGo(dst Point) bool {
-	if dst.Equal(p.pos) || !dst.Valid() {
-		return false
-	}
-
-	src := p.pos
+// Possib returns all.Possible moves from piece's.Position.
+func (p *Piece) Possib() Points {
+	src := p.Pos
 	// i.e starting point
 	switch p.T {
 	// Only horizontally, can't move back
@@ -101,31 +97,38 @@ func (p *Piece) CanGo(dst Point) bool {
 			ps.Clean()
 		}
 
-		return ps.In(dst)
+		return ps
 	// Only diagonal
 	case Bishop:
-		return src.Diagonal().In(dst)
+		return src.Diagonal()
 	// Move within [2, 1] or [1, 2]
 	case Knight:
-		return src.Knight().In(dst)
+		return src.Knight()
 	// horizontal or vertical
 	case Rook:
 		return src.Horizontal().
-			Merge(src.Vertical()).
-			In(dst)
+			Merge(src.Vertical())
 	// move within square or diagonal or horizontal or vertical
 	case Queen:
 		return src.Horizontal().
 			Merge(src.Vertical()).
 			Merge(src.Square()).
-			Merge(src.Diagonal()).
-			In(dst)
+			Merge(src.Diagonal())
 	// move within square
 	case King:
-		return src.Square().In(dst)
+		return src.Square()
 	}
 
-	return false
+	return Points{}
+}
+
+// CanGo does validation for the piece. Each piece has it's own rules.
+func (p *Piece) CanGo(dst Point) bool {
+	if dst.Equal(p.Pos) || !dst.Valid() {
+		return false
+	}
+
+	return p.Possib().In(dst)
 }
 
 // MarshalJSON json.Marshaler
@@ -150,7 +153,7 @@ func (p *Piece) UnmarshalJSON(b []byte) error {
 		T uint8 `json:"type"`
 	}{p.Player, p.T}
 
-	err := json.Unmarshal(b, x)
+	err := json.Unmarshal(b, &x)
 	if err != nil {
 		return err
 	}

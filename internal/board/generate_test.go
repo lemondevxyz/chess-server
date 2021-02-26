@@ -318,3 +318,25 @@ func TestDirection(t *testing.T) {
 		}
 	}
 }
+
+/*
+func TestSmaller(t *testing.T) {
+	p := Point{4, 3}
+	dst := Point{3, 3}
+	dst2 := Point{4, 2}
+
+	if p.Smaller(dst) != true || p.Smaller(dst2) != true {
+		t.Fatalf("smaller bad logic")
+	}
+}
+
+func TestBigger(t *testing.T) {
+	p := Point{4, 3}
+	dst := Point{5, 3}
+	dst2 := Point{4, 4}
+
+	if p.Bigger(dst) != true || p.Bigger(dst2) != true {
+		t.Fatalf("smaller bad logic")
+	}
+}
+*/

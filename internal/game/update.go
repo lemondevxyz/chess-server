@@ -27,12 +27,18 @@ const (
 	UpdateMessage
 	// UpdateTurn it's your turn pal
 	UpdateTurn
+	// UpdateInvite sent whenever a player recieved an invite.
+	UpdateInvite
 )
 
 // redundant updates go here
 // as well as verification
 var ubs = map[uint8]UpdateCallback{
 	UpdateBoard: func(c *Client, u *Update) error {
+		if c.g == nil {
+			return ErrGameNil
+		}
+
 		body, err := json.Marshal(c.g.b)
 		if err != nil {
 			return err

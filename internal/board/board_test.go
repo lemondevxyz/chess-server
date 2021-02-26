@@ -103,12 +103,12 @@ func TestBoardSet(t *testing.T) {
 	b := NewBoard()
 
 	p := &Piece{
-		pos: Point{1, 1},
+		Pos: Point{1, 1},
 		T:   Bishop,
 	}
 
 	b.Set(p)
-	if b.data[p.pos.X][p.pos.Y] != p {
+	if b.data[p.Pos.X][p.Pos.Y] != p {
 		t.Fatalf("Set does not work")
 	}
 }
@@ -204,12 +204,12 @@ func TestBoardMoveOthers(t *testing.T) {
 		b.Set(&Piece{
 			Player: 1,
 			T:      v.t,
-			pos:    v.src,
+			Pos:    v.src,
 		})
 		b.Set(&Piece{
 			Player: 2,
 			T:      v.t,
-			pos:    v.dst,
+			Pos:    v.dst,
 		})
 
 		x := b.data[v.src.X][v.src.Y]
@@ -230,12 +230,12 @@ func TestBoardMoveOthers(t *testing.T) {
 	b.data[0][0] = &Piece{
 		Player: 1,
 		T:      PawnF,
-		pos:    Point{0, 0},
+		Pos:    Point{0, 0},
 	}
 	b.data[1][1] = &Piece{
 		Player: 1,
 		T:      PawnB,
-		pos:    Point{1, 1},
+		Pos:    Point{1, 1},
 	}
 
 	if b.Move(b.data[0][0], Point{1, 1}) {
