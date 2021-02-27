@@ -3,6 +3,7 @@ package rest
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -60,25 +61,18 @@ func TestUserDelete(t *testing.T) {
 }
 
 func TestUserInvite(t *testing.T) {
+	rd1, wr1 = io.Pipe()
+	rd2, wr2 = io.Pipe()
+
+	us1.Client().W = wr1
+	us2.Client().W = wr2
 
 	const lifespan = time.Millisecond * 10
-	err := us1.Invite(us2.Token, lifespan)
-	if err != game.ErrGameIsNotNil {
-		t.Fatalf("us.Invite: %s", err.Error())
-	}
-
-	us1.cl.LeaveGame()
-
-	err = us1.Invite(us2.Token, lifespan)
-	if err != game.ErrGameIsNotNil {
-	}
-
-	us2.cl.LeaveGame()
-	// because net.Pipe is synchronous
+	// because net.Pipe is synchronous, we have to read through it. otherwise it would hang forever...
 	go func() {
-		rd2.Read(make([]byte, 32))
+		rd2.Read(make([]byte, 64))
 	}()
-	err = us1.Invite(us2.Token, lifespan)
+	err := us1.Invite(us2.PublicID, lifespan)
 	if err != nil {
 		t.Fatalf("us.Invite: %s", err.Error())
 	}
@@ -99,7 +93,7 @@ func TestUserAcceptInvite(t *testing.T) {
 	}
 	// because net.Pipe is synchronous
 	ch := make(chan error)
-	x := make([]byte, 32)
+	x := make([]byte, 64)
 
 	go func() {
 		n, err := rd2.Read(x)
@@ -107,7 +101,7 @@ func TestUserAcceptInvite(t *testing.T) {
 		x = x[:n]
 	}()
 
-	err = us1.Invite(us2.Token, InviteLifespan)
+	err = us1.Invite(us2.PublicID, InviteLifespan)
 	if err != nil {
 		t.Fatalf("us.Invite: %s", err.Error())
 	}

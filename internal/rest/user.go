@@ -12,9 +12,10 @@ import (
 )
 
 type User struct {
-	Token  string `validate:"required" json:"string"`
-	invite map[string]*User
-	cl     *game.Client
+	Token    string `validate:"required" json:"string"`
+	PublicID string `json:"id"`
+	invite   map[string]*User
+	cl       *game.Client
 }
 
 var users = map[string]*User{}
@@ -31,6 +32,8 @@ func AddClient(c *game.Client) *User {
 		cl:     c,
 	}
 
+	us.PublicID = randstr.String(4)
+
 	users[id] = us
 	return us
 }
@@ -38,8 +41,8 @@ func AddClient(c *game.Client) *User {
 func GetUser(r *http.Request) (*User, error) {
 	str := r.Header.Get("Authorization")
 	str = strings.ReplaceAll(str, "Bearer ", "")
-
 	cl, ok := users[str]
+
 	if !ok {
 		return nil, game.ErrClientNil
 	}
@@ -57,66 +60,100 @@ func (u *User) Delete() {
 	delete(users, u.Token)
 }
 
+func (u *User) Valid() bool {
+	if u.Client() == nil {
+		return false
+	}
+	x, ok := users[u.Token]
+	if !ok {
+		return false
+	}
+	if x != u {
+		u.Delete()
+		return false
+	}
+
+	return true
+}
+
 func (u *User) Invite(tok string, lifespan time.Duration) error {
 	// make sure panic don't happen
-	if u.Client() == nil {
+	if !u.Valid() {
 		return game.ErrClientNil
 	}
 	if u.Client().Game() != nil {
 		return game.ErrGameIsNotNil
 	}
 
-	id := randstr.String(4)
-	param := game.ModelUpdateInvite{
-		ID: id,
-	}
-	body, err := json.Marshal(param)
-	if err != nil {
-		return err
+	var vs *User
+	for _, v := range users {
+		if v.PublicID == tok {
+			vs = v
+			break
+		}
 	}
 
-	vs := users[tok]
-	if vs == nil || vs.Client() == nil {
+	if vs == nil || !vs.Valid() {
 		return game.ErrClientNil
 	}
 	if vs.Client().Game() != nil {
 		return game.ErrGameIsNotNil
 	}
+
+	// lamo you though you were slick
+	if vs == u {
+		return game.ErrClientNil
+	}
+
+	id := randstr.String(4)
+	param := game.ModelUpdateInvite{
+		ID: id,
+	}
+
+	body, err := json.Marshal(param)
+	if err != nil {
+		return err
+	}
+
 	// u invited vs
 	vs.invite[id] = u
 	gu := game.Update{
 		ID:   game.UpdateInvite,
 		Data: body,
 	}
-	body, err = json.Marshal(gu)
+	send, err := json.Marshal(gu)
 	if err != nil {
 		return err
 	}
 
 	// delete after X amount of time
-	go func(u *User, id string) {
+	go func(vs *User, id string) {
 		<-time.After(lifespan)
-		delete(u.invite, id)
+		delete(vs.invite, id)
 	}(vs, id)
 
-	vs.Client().W.Write(body)
+	vs.Client().W.Write(send)
 
 	return nil
 }
 
-func (u User) AcceptInvite(tok string) error {
-	x := u.invite[tok]
-	if x == nil || x.Client() == nil {
-		return game.ErrClientNil
-	}
-	if x.Client().Game() != nil || u.Client().Game() != nil {
-		return game.ErrGameIsNotNil
+// AcceptInvite accepts the invite from the user.
+func (u *User) AcceptInvite(tok string) error {
+	vs, ok := u.invite[tok]
+	if !ok {
+		return ErrInvalidInvite
 	}
 
-	_, err := game.NewGame(u.Client(), x.Client())
+	if vs == nil || vs.Client() == nil {
+		return game.ErrClientNil
+	}
+
+	_, err := game.NewGame(u.Client(), vs.Client())
 	if err != nil {
 		return err
 	}
+
+	u.invite = map[string]*User{}
 
 	return nil
 }
