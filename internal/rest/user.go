@@ -50,11 +50,27 @@ func GetUser(r *http.Request) (*User, error) {
 	return cl, nil
 }
 
+// GetAvaliableUsersHandler returns a list of public ids that are looking to play.
+func GetAvaliableUsersHandler(w http.ResponseWriter, r *http.Request) {
+	ids := []string{}
+	for _, v := range users {
+		if v.Valid() {
+			if v.Client().Game() == nil {
+				ids = append(ids, v.PublicID)
+			}
+		}
+	}
+
+	RespondJSON(w, http.StatusOK, ids)
+}
+
 func (u *User) Client() *game.Client {
 	return u.cl
 }
 
 func (u *User) Delete() {
+	u.PublicID = ""
+	u.Token = ""
 	u.cl = nil
 	u.invite = nil
 	delete(users, u.Token)

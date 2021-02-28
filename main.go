@@ -14,14 +14,22 @@ const port = ":8080"
 func main() {
 
 	rout := mux.NewRouter()
+
 	rout.HandleFunc("/cmd", rest.CmdHandler).Methods("POST")
 	rout.HandleFunc("/invite", rest.InviteHandler).Methods("POST")
 	rout.HandleFunc("/accept", rest.AcceptInviteHandler).Methods("POST")
 	rout.HandleFunc("/ws", rest.WebsocketHandler).Methods("GET")
+	rout.HandleFunc("/invitable", rest.GetAvaliableUsersHandler)
+
 	rout.HandleFunc("/protect", func(w http.ResponseWriter, r *http.Request) {
 		_, err := rest.GetUser(r)
 		if err != nil {
+			w.WriteHeader(http.StatusForbidden)
+			w.Write(nil)
 		}
+
+		w.WriteHeader(http.StatusOK)
+		w.Write(nil)
 	}).Methods("GET")
 
 	rout.PathPrefix("/pub").Handler(http.StripPrefix("/pub", http.FileServer(http.Dir("./static/"))))

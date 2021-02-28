@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -130,4 +131,58 @@ func TestUserAcceptInvite(t *testing.T) {
 	if us1.Client().Game() == nil || us2.Client().Game() == nil {
 		t.Fatalf("us.AcceptInvite: does not start a new game!")
 	}
+}
+
+func TestGetAvaliableUsersHandler(t *testing.T) {
+
+	us1.Client().LeaveGame()
+	us2.Client().LeaveGame()
+
+	handle := http.HandlerFunc(GetAvaliableUsersHandler)
+
+	resp := httptest.NewRecorder()
+	req, err := http.NewRequest("GET", "/", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	avali := []string{}
+
+	handle.ServeHTTP(resp, req)
+	body, err := ioutil.ReadAll(resp.Body)
+	if resp.Result().StatusCode != http.StatusOK {
+		t.Fatalf("status is not ok.")
+	}
+
+	if err := json.Unmarshal(body, &avali); err != nil {
+		t.Fatalf("json.Unmarshal: %s", err.Error())
+	}
+
+	if len(avali) != 2 {
+		t.Fatalf("len(avali): %d - want: 2", len(avali))
+	}
+
+	game.NewGame(cl1, cl2)
+
+	avali = []string{}
+
+	handle.ServeHTTP(resp, req)
+	body, err = ioutil.ReadAll(resp.Body)
+	if resp.Result().StatusCode != http.StatusOK {
+		t.Fatalf("status is not ok.")
+	}
+
+	if err := json.Unmarshal(body, &avali); err != nil {
+		t.Fatalf("json.Unmarshal: %s", err.Error())
+	}
+
+	if len(avali) != 0 {
+		t.Fatalf("len(avali): %d - want: 0", len(avali))
+	}
+
+	rd1, wr1 = io.Pipe()
+	rd2, wr2 = io.Pipe()
+
+	us1.Client().W = wr1
+	us2.Client().W = wr2
 }
