@@ -36,4 +36,5 @@ func CmdHandler(w http.ResponseWriter, r *http.Request) {
 	respondJSON(w, http.StatusOK, map[string]interface{}{
 		"success": true,
 	})
+	return
 }
