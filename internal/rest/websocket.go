@@ -148,7 +148,7 @@ func UpgradeConn(conn net.Conn) (*WsClient, error) {
 func WebsocketHandler(w http.ResponseWriter, r *http.Request) {
 	conn, _, _, err := ws.UpgradeHTTP(r, w)
 	if err != nil {
-		respondError(w, http.StatusBadRequest, err)
+		RespondError(w, http.StatusBadRequest, err)
 		return
 	}
 

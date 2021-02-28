@@ -53,7 +53,7 @@ func RespondJSON(w http.ResponseWriter, status int, obj interface{}) {
 }
 
 func RespondError(w http.ResponseWriter, status int, err error) {
-	respondJSON(w, status, map[string]string{
+	RespondJSON(w, status, map[string]string{
 		"error": err.Error(),
 	})
 }

@@ -25,7 +25,7 @@ func TestRespondJSON(t *testing.T) {
 	status := http.StatusOK
 
 	handle := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		respondJSON(w, status, teststruct{ID: "test"})
+		RespondJSON(w, status, teststruct{ID: "test"})
 	})
 
 	handle.ServeHTTP(resp, req)
@@ -65,7 +65,7 @@ func TestRespondError(t *testing.T) {
 
 	x := errors.New("test error")
 	handle := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		respondError(w, status, x)
+		RespondError(w, status, x)
 	})
 
 	handle.ServeHTTP(resp, req)
@@ -114,13 +114,13 @@ func TestBindJSON(t *testing.T) {
 
 	handle := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		x := teststruct{}
-		err := bindJSON(r, &x)
+		err := BindJSON(r, &x)
 		if err != nil {
-			respondError(w, http.StatusBadRequest, errors.New("input is not json"))
+			RespondError(w, http.StatusBadRequest, errors.New("input is not json"))
 			return
 		}
 
-		respondJSON(w, status, x)
+		RespondJSON(w, status, x)
 	})
 
 	handle.ServeHTTP(resp, req)

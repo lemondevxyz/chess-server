@@ -31,11 +31,11 @@ func TestGetUser(t *testing.T) {
 	handle := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, err := GetUser(r)
 		if err != nil {
-			respondError(w, http.StatusBadRequest, err)
+			RespondError(w, http.StatusBadRequest, err)
 			return
 		}
 
-		respondJSON(w, http.StatusOK, "success")
+		RespondJSON(w, http.StatusOK, "success")
 	})
 
 	handle.ServeHTTP(resp, req)
