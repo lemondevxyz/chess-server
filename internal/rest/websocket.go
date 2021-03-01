@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"encoding/json"
 	"fmt"
 	"net"
 	"net/http"
@@ -138,9 +139,22 @@ func UpgradeConn(conn net.Conn) (*WsClient, error) {
 	cl.u = u
 
 	// send token to the client
-	go func() {
-		cl.Write([]byte(u.Token))
-	}()
+	ch := make(chan error)
+	go func(u *User, ch chan error) {
+		body, err := json.Marshal(u)
+		if err != nil {
+			ch <- err
+		}
+
+		cl.Write(body)
+		ch <- nil
+		close(ch)
+	}(u, ch)
+
+	err := <-ch
+	if err != nil {
+		return nil, err
+	}
 
 	return cl, nil
 }

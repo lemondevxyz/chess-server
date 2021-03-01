@@ -12,8 +12,8 @@ import (
 )
 
 type User struct {
-	Token    string `validate:"required" json:"string"`
-	PublicID string `json:"id"`
+	Token    string `validate:"required" json:"token"`
+	PublicID string `json:"publicid"`
 	invite   map[string]*User
 	cl       *game.Client
 }
@@ -51,6 +51,7 @@ func GetUser(r *http.Request) (*User, error) {
 }
 
 // GetAvaliableUsersHandler returns a list of public ids that are looking to play.
+// TODO: exclude this user's public id from the returned value
 func GetAvaliableUsersHandler(w http.ResponseWriter, r *http.Request) {
 	ids := []string{}
 	for _, v := range users {

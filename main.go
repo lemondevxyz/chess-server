@@ -20,6 +20,7 @@ func main() {
 	rout.HandleFunc("/accept", rest.AcceptInviteHandler).Methods("POST")
 	rout.HandleFunc("/ws", rest.WebsocketHandler).Methods("GET")
 	rout.HandleFunc("/invitable", rest.GetAvaliableUsersHandler)
+	rout.HandleFunc("/avali", rest.GetAvaliableUsersHandler)
 
 	rout.HandleFunc("/protect", func(w http.ResponseWriter, r *http.Request) {
 		_, err := rest.GetUser(r)
