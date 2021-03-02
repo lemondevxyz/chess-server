@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"github.com/toms1441/chess-server/internal/game"
+	"github.com/toms1441/chess-server/internal/order"
 )
 
 var (
@@ -33,29 +34,28 @@ var (
 
 func TestCommandRequest(t *testing.T) {
 
-	b := make([]byte, 30)
-	_, err := rd1.Read(b)
+	byt := make([]byte, 64)
+	_, err := rd1.Read(byt)
 	if err != nil {
 		t.Fatalf("rd1.Read: %s", err.Error())
 	}
 
-	b = make([]byte, 30)
-	_, err = rd2.Read(b)
+	_, err = rd2.Read(byt)
 	if err != nil {
-		t.Fatalf("rd1.Read: %s", err.Error())
+		t.Fatalf("rdv2.Read: %s", err.Error())
 	}
 
-	x := game.ModelCmdMessage{
+	x := order.MessageModel{
 		Message: "test",
 	}
 
-	byt, err := json.Marshal(x)
+	byt, err = json.Marshal(x)
 	if err != nil {
 		t.Fatalf("json.Marshal: %s", err.Error())
 	}
 
-	cmd := game.Command{
-		ID:   game.CmdMessage,
+	cmd := order.Order{
+		ID:   order.Message,
 		Data: byt,
 	}
 
@@ -96,20 +96,20 @@ func TestCommandRequest(t *testing.T) {
 			} else {
 				t.Logf("%v", obj)
 
-				b := make([]byte, 40)
-				_, err := rd1.Read(b)
+				b := make([]byte, 64)
+				n, err := rd1.Read(b)
 				if err != nil {
 					t.Fatalf("rd1.Read: %s", err.Error())
 				}
-				t.Log(string(b))
+				t.Log(string(b), n)
 
-				b = make([]byte, 40)
-				_, err = rd2.Read(b)
+				b = make([]byte, 64)
+				n, err = rd2.Read(b)
 				if err != nil {
 					t.Fatalf("rd1.Read: %s", err.Error())
 				}
 
-				t.Log(string(b))
+				t.Log(string(b), n)
 			}
 		}
 	}

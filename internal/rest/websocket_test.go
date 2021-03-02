@@ -2,12 +2,14 @@ package rest
 
 import (
 	"context"
+	"encoding/json"
 	"net"
 	"testing"
 	"time"
 
 	"github.com/gobwas/ws"
 	"github.com/gobwas/ws/wsutil"
+	"github.com/toms1441/chess-server/internal/order"
 )
 
 var (
@@ -82,33 +84,22 @@ func TestWsWrite(t *testing.T) {
 		t.Fatalf("wsutil.ReadServerText: %s", err.Error())
 	}
 
-	if string(b) != wcl.u.Token {
+	upd := order.Order{}
+	err = json.Unmarshal(b, &upd)
+	if err != nil {
+		t.Fatalf("json.Unmarshal: %s", err.Error())
+	}
+
+	u := order.CredentialsModel{}
+	err = json.Unmarshal(upd.Data, &u)
+	if err != nil {
+		t.Fatalf("json.Unmarshal: %s", err.Error())
+	}
+
+	if u.Token != wcl.u.Token || u.PublicID != wcl.u.PublicID {
+		t.Log(u, wcl.u)
 		t.Fatalf("ids do not match")
 	}
-	/*
-		y := make(chan error)
-		x := make(chan []byte)
-		go func() {
-			b, err := wsutil.ReadServerText(nconn)
-
-			x <- b
-			y <- err
-		}()
-
-		select {
-		case <-time.After(time.Millisecond * 100):
-			t.Fatalf("timeout")
-		case err := <-y:
-			if err != nil {
-				t.Fatalf("wsutil.ReadServerText: %s", err.Error())
-			}
-
-			z := <-x
-			if string(z) != wcl.u.Token {
-				t.Fatalf("ids do not match")
-			}
-		}
-	*/
 
 }
 

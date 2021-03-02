@@ -2,20 +2,25 @@ package game
 
 import (
 	"encoding/json"
+
+	"github.com/toms1441/chess-server/internal/order"
 )
 
 // Update is a communication structure from the server to the client, while Command is from the client to the server.
+/*
 type Update struct {
 	ID   uint8           `json:"id"`
 	Data json.RawMessage `json:"data"`
 	// used inside this package only
 	parameter interface{}
 }
+*/
 
 // UpdateCallback sets the data for the update, since some updates are quite repetitive.
-type UpdateCallback func(c *Client, u *Update) error
+type UpdateCallback func(c *Client, u *order.Order) error
 
 // Tests are bundled with command tests.
+/*
 const (
 	// UpdateBoard is an update for the board, this happens whenever a player moves a piece.
 	UpdateBoard uint8 = iota + 1
@@ -29,12 +34,15 @@ const (
 	UpdateTurn
 	// UpdateInvite sent whenever a player recieved an invite.
 	UpdateInvite
+	// UpdateCredentials sent whenever a player connects to websocket
+	UpdateCredentials
 )
+*/
 
 // redundant updates go here
 // as well as verification
 var ubs = map[uint8]UpdateCallback{
-	UpdateBoard: func(c *Client, u *Update) error {
+	order.Move: func(c *Client, u *order.Order) error {
 		if c.g == nil {
 			return ErrGameNil
 		}
@@ -49,8 +57,8 @@ var ubs = map[uint8]UpdateCallback{
 		return nil
 	},
 	// verification
-	UpdatePromotion: func(c *Client, u *Update) error {
-		x, ok := u.parameter.(ModelUpdatePromotion)
+	order.Promotion: func(c *Client, u *order.Order) error {
+		x, ok := u.Parameter.(order.PromotionModel)
 		if !ok {
 			return ErrUpdateParameter
 		}

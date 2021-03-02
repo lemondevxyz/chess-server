@@ -9,13 +9,13 @@ import (
 	"github.com/kjk/betterguid"
 	"github.com/thanhpk/randstr"
 	"github.com/toms1441/chess-server/internal/game"
+	"github.com/toms1441/chess-server/internal/order"
 )
 
 type User struct {
-	Token    string `validate:"required" json:"token"`
-	PublicID string `json:"publicid"`
-	invite   map[string]*User
-	cl       *game.Client
+	order.CredentialsModel
+	invite map[string]*User
+	cl     *game.Client
 }
 
 var users = map[string]*User{}
@@ -27,11 +27,11 @@ const (
 func AddClient(c *game.Client) *User {
 	id := betterguid.New()
 	us := &User{
-		Token:  id,
 		invite: map[string]*User{},
 		cl:     c,
 	}
 
+	us.Token = id
 	us.PublicID = randstr.String(4)
 
 	users[id] = us
@@ -123,7 +123,7 @@ func (u *User) Invite(tok string, lifespan time.Duration) error {
 	}
 
 	id := randstr.String(4)
-	param := game.ModelUpdateInvite{
+	param := order.InviteModel{
 		ID: id,
 	}
 
@@ -134,8 +134,8 @@ func (u *User) Invite(tok string, lifespan time.Duration) error {
 
 	// u invited vs
 	vs.invite[id] = u
-	gu := game.Update{
-		ID:   game.UpdateInvite,
+	gu := order.Order{
+		ID:   order.Invite,
 		Data: body,
 	}
 	send, err := json.Marshal(gu)

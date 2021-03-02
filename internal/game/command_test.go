@@ -8,12 +8,13 @@ import (
 	"time"
 
 	"github.com/toms1441/chess-server/internal/board"
+	"github.com/toms1441/chess-server/internal/order"
 )
 
 func TestCommandSendMessage(t *testing.T) {
 	defer resetPipe()
 
-	body, err := json.Marshal(ModelCmdMessage{
+	body, err := json.Marshal(order.MessageModel{
 		Message: "test",
 	})
 
@@ -21,8 +22,8 @@ func TestCommandSendMessage(t *testing.T) {
 		t.Fatalf("json.Marshal: %s", err.Error())
 	}
 
-	c := Command{
-		ID:   CmdMessage,
+	c := order.Order{
+		ID:   order.Message,
 		Data: body,
 	}
 
@@ -44,9 +45,9 @@ func TestCommandSendMessage(t *testing.T) {
 		t.Fatalf("timeout")
 	case body := <-clientRead(rd1):
 
-		x := ModelCmdMessage{}
+		x := order.MessageModel{}
 
-		u := Update{}
+		u := order.Order{}
 
 		err := json.Unmarshal(body, &u)
 		if err != nil {
@@ -60,7 +61,7 @@ func TestCommandSendMessage(t *testing.T) {
 			t.Fatalf("json.Unmarshal: %s", err.Error())
 		}
 
-		if x.Message != "test" {
+		if x.Message != "[Player 1]: test" {
 			t.Fatalf("json.Unmarshal: unwanted result")
 		}
 	}
@@ -70,7 +71,7 @@ func TestCommandPiece(t *testing.T) {
 	defer resetPipe()
 
 	do := func(cl *Client, rd *io.PipeReader, src, dst board.Point) error {
-		body, err := json.Marshal(ModelCmdPiece{
+		body, err := json.Marshal(order.MoveModel{
 			Src: src,
 			Dst: dst,
 		})
@@ -79,8 +80,8 @@ func TestCommandPiece(t *testing.T) {
 			return fmt.Errorf("json.Marshal: %s", err.Error())
 		}
 
-		c := Command{
-			ID:   CmdPiece,
+		c := order.Order{
+			ID:   order.Move,
 			Data: body,
 		}
 
@@ -100,8 +101,8 @@ func TestCommandPiece(t *testing.T) {
 		case <-time.After(time.Millisecond * 10):
 			return fmt.Errorf("timeout")
 		case body := <-clientRead(rd1):
-			x := &board.Board{}
-			u := Update{}
+			x := &order.MoveModel{}
+			u := order.Order{}
 			err = json.Unmarshal(body, &u)
 			if err != nil {
 				return fmt.Errorf("json.Unmarshal: %s", err.Error())
@@ -167,19 +168,19 @@ func TestCommandPromotion(t *testing.T) {
 		t.Logf("\n%s", gGame.b.String())
 		t.Log(string(body))
 
-		u := Update{}
+		u := order.Order{}
 		err := json.Unmarshal(body, &u)
 		if err != nil {
 			t.Fatalf("json.Unmarshal: %s", err.Error())
 		}
 
-		parameter := ModelUpdatePromotion{}
+		parameter := order.PromotionModel{}
 		err = json.Unmarshal(u.Data, &parameter)
 		if err != nil {
 			t.Fatalf("json.Unmarshal: %s", err.Error())
 		}
 
-		x := ModelCmdPromotion{
+		x := order.PromoteModel{
 			Src:  parameter.Dst,
 			Type: board.Queen,
 		}
@@ -189,8 +190,8 @@ func TestCommandPromotion(t *testing.T) {
 			t.Fatalf("json.Marshal: %s", err.Error())
 		}
 
-		err = cl1.Do(Command{
-			ID:   CmdPromotion,
+		err = cl1.Do(order.Order{
+			ID:   order.Promote,
 			Data: data,
 		})
 		if err != nil {

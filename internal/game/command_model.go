@@ -1,7 +1,6 @@
 package game
 
-import "github.com/toms1441/chess-server/internal/board"
-
+/*
 type (
 	ModelCmdInvite struct {
 	}
@@ -20,3 +19,4 @@ type (
 		Message string `json:"message"`
 	}
 )
+*/

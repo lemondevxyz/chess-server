@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/toms1441/chess-server/internal/board"
+	"github.com/toms1441/chess-server/internal/order"
 )
 
 type Game struct {
@@ -48,9 +49,9 @@ func NewGame(cl1, cl2 *Client) (*Game, error) {
 				if dst.X == 7 || dst.X == 1 {
 					c := g.cs[p.Player-1]
 					if c != nil {
-						g.Update(c, Update{
-							ID: UpdatePromotion,
-							parameter: ModelUpdatePromotion{
+						g.Update(c, order.Order{
+							ID: order.Promotion,
+							Parameter: order.PromotionModel{
 								Player: p.Player,
 								Dst:    dst,
 							},
@@ -75,11 +76,11 @@ func (g *Game) SwitchTurn() {
 	}
 	t := g.turn
 	// TODO: make this not byte me in the ass
-	x, _ := json.Marshal(ModelUpdateTurn{
+	x, _ := json.Marshal(order.TurnModel{
 		Player: t,
 	})
 
-	g.UpdateAll(Update{ID: UpdateTurn, Data: x})
+	g.UpdateAll(order.Order{ID: order.Turn, Data: x})
 }
 
 func (g *Game) IsTurn(c *Client) bool {
@@ -87,7 +88,7 @@ func (g *Game) IsTurn(c *Client) bool {
 }
 
 // Update is used to send updates to the client, such as a movement of a piece.
-func (g *Game) Update(c *Client, u Update) error {
+func (g *Game) Update(c *Client, u order.Order) error {
 	if u.Data == nil {
 		x, ok := ubs[u.ID]
 		if !ok {
@@ -130,11 +131,11 @@ func (g *Game) Update(c *Client, u Update) error {
 }
 
 // UpdateAll sends the update to all of the players.
-func (g *Game) UpdateAll(u Update) error {
-	err := g.Update(g.cs[0], u)
+func (g *Game) UpdateAll(o order.Order) error {
+	err := g.Update(g.cs[0], o)
 	if err != nil {
 		return err
 	}
 
-	return g.Update(g.cs[1], u)
+	return g.Update(g.cs[1], o)
 }

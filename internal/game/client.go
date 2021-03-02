@@ -1,6 +1,10 @@
 package game
 
-import "io"
+import (
+	"io"
+
+	"github.com/toms1441/chess-server/internal/order"
+)
 
 // Client is a struct used for the server to communicate to the client.
 type Client struct {
@@ -12,7 +16,7 @@ type Client struct {
 	g *Game
 }
 
-func (c *Client) Do(cmd Command) error {
+func (c *Client) Do(cmd order.Order) error {
 	if c.g == nil {
 		return ErrGameNil
 	}

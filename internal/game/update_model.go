@@ -1,7 +1,6 @@
 package game
 
-import "github.com/toms1441/chess-server/internal/board"
-
+/*
 type (
 	ModelUpdateBoard board.Board
 
@@ -18,7 +17,8 @@ type (
 		Player uint8 `json:"player"`
 	}
 
-	ModelUpdateInvite struct {
-		ID string `json:"id"`
-	}
+		ModelUpdateInvite struct {
+			ID string `json:"id"`
+		}
 )
+*/

@@ -2,11 +2,9 @@ package rest
 
 import (
 	"net/http"
-)
 
-type InviteModel struct {
-	ID string `validate:"required" json:"id"`
-}
+	"github.com/toms1441/chess-server/internal/order"
+)
 
 func InviteHandler(w http.ResponseWriter, r *http.Request) {
 	u, err := GetUser(r)
@@ -15,7 +13,7 @@ func InviteHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	inv := InviteModel{}
+	inv := order.InviteModel{}
 	err = BindJSON(r, &inv)
 	if err != nil {
 		RespondError(w, http.StatusBadRequest, err)
@@ -38,7 +36,7 @@ func AcceptInviteHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	inv := InviteModel{}
+	inv := order.InviteModel{}
 	err = BindJSON(r, &inv)
 	if err != nil {
 		RespondError(w, http.StatusBadRequest, err)

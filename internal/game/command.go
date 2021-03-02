@@ -3,17 +3,22 @@ package game
 import (
 	"encoding/json"
 	"fmt"
+
+	"github.com/toms1441/chess-server/internal/order"
 )
 
 // Command is a communication structure sent from the client to the server.
 // Data should be encoded in JSON, and each command has it's own parameters.
+/*
 type Command struct {
 	ID   uint8           `validate:"required" json:"id"`
 	Data json.RawMessage `validate:"required" json:"data"`
 }
+*/
 
-type CommandBallback func(c *Client, m Command) error
+type CommandCallback func(c *Client, o order.Order) error
 
+/*
 const (
 	// CmdPiece is used whenever a player wants to move one of their pieces.
 	// Data parameters are `{src: {x: 3, y: 3}, dst: {x: 5, y: 3}}`
@@ -29,17 +34,18 @@ const (
 	// Data parameters are `{message: "hello world"}`
 	CmdMessage
 )
+*/
 
-var cbs = map[uint8]CommandBallback{
-	CmdPiece: func(c *Client, m Command) error {
+var cbs = map[uint8]CommandCallback{
+	order.Move: func(c *Client, o order.Order) error {
 		g := c.g
 		if !g.IsTurn(c) {
 			return ErrIllegalTurn
 		}
 
-		s := &ModelCmdPiece{}
+		s := &order.MoveModel{}
 
-		err := json.Unmarshal(m.Data, s)
+		err := json.Unmarshal(o.Data, s)
 		if err != nil {
 			return err
 		}
@@ -56,19 +62,20 @@ var cbs = map[uint8]CommandBallback{
 
 		g.SwitchTurn()
 
-		return g.UpdateAll(Update{
-			ID: UpdateBoard,
+		return g.UpdateAll(order.Order{
+			ID:   order.Move,
+			Data: o.Data,
 		})
 	},
-	CmdPromotion: func(c *Client, m Command) error {
+	order.Promote: func(c *Client, o order.Order) error {
 		g := c.g
 		if !g.IsTurn(c) {
 			return ErrIllegalTurn
 		}
 
-		s := &ModelCmdPromotion{}
+		s := &order.PromoteModel{}
 
-		err := json.Unmarshal(m.Data, s)
+		err := json.Unmarshal(o.Data, s)
 		if err != nil {
 			return err
 		}
@@ -88,8 +95,9 @@ var cbs = map[uint8]CommandBallback{
 		p.T = s.Type
 		g.SwitchTurn()
 
-		return g.UpdateAll(Update{
-			ID: UpdateBoard,
+		return g.UpdateAll(order.Order{
+			ID:   order.Promotion,
+			Data: o.Data,
 		})
 	},
 	/* TODO: implement later, specifically after chess is working
@@ -107,20 +115,24 @@ var cbs = map[uint8]CommandBallback{
 		return nil
 	},
 	*/
-	CmdMessage: func(c *Client, m Command) error {
+	order.Message: func(c *Client, o order.Order) error {
 		g := c.g
-		s := &ModelCmdMessage{}
+		s := &order.MessageModel{}
 
-		err := json.Unmarshal(m.Data, s)
+		err := json.Unmarshal(o.Data, s)
 		if err != nil {
 			return err
 		}
 
-		s.Message = fmt.Sprintf("[Player] %d: %s", c.num, s.Message)
+		s.Message = fmt.Sprintf("[Player %d]: %s", c.num, s.Message)
+		data, err := json.Marshal(s)
+		if err != nil {
+			return err
+		}
 
-		return g.UpdateAll(Update{
-			ID:   UpdateMessage,
-			Data: m.Data,
+		return g.UpdateAll(order.Order{
+			ID:   order.Message,
+			Data: data,
 		})
 	},
 }

@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/toms1441/chess-server/internal/game"
+	"github.com/toms1441/chess-server/internal/order"
 )
 
 var (
@@ -111,13 +112,13 @@ func TestUserAcceptInvite(t *testing.T) {
 		t.Fatalf("rd2.Read: %s", err.Error())
 	}
 
-	update := game.Update{}
+	update := order.Order{}
 	err = json.Unmarshal(x, &update)
 	if err != nil {
 		t.Fatalf("json.Unmarshal: %s", err.Error())
 	}
 
-	inv := game.ModelUpdateInvite{}
+	inv := order.InviteModel{}
 	json.Unmarshal(update.Data, &inv)
 	if err != nil {
 		t.Fatalf("json.Unmarshal: %s", err.Error())

@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/toms1441/chess-server/internal/game"
+	"github.com/toms1441/chess-server/internal/order"
 )
 
 func CmdHandler(w http.ResponseWriter, r *http.Request) {
@@ -14,7 +15,7 @@ func CmdHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	cl := u.Client()
 
-	cmd := game.Command{}
+	cmd := order.Order{}
 	err = BindJSON(r, &cmd)
 	if err != nil {
 		RespondError(w, http.StatusBadRequest, err)

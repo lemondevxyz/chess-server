@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/toms1441/chess-server/internal/board"
+	"github.com/toms1441/chess-server/internal/order"
 )
 
 var gGame, _ = NewGame(cl1, cl2)
@@ -25,8 +26,8 @@ func TestTurns(t *testing.T) {
 	case body := <-clientRead(rd1):
 		t.Logf("\n%s", string(body))
 
-		x := &ModelUpdateTurn{}
-		u := &Update{}
+		x := &order.TurnModel{}
+		u := &order.Order{}
 
 		err := json.Unmarshal(body, u)
 		if err != nil {
@@ -47,7 +48,7 @@ func TestTurns(t *testing.T) {
 
 	cherr := make(chan error)
 	go func() {
-		body, err := json.Marshal(ModelCmdPiece{
+		body, err := json.Marshal(order.MoveModel{
 			Src: board.Point{1, 1},
 			Dst: board.Point{2, 1},
 		})
@@ -57,8 +58,8 @@ func TestTurns(t *testing.T) {
 			return
 		}
 
-		c := Command{
-			ID:   CmdPiece,
+		c := order.Order{
+			ID:   order.Move,
 			Data: body,
 		}
 
@@ -91,8 +92,8 @@ func TestTurns(t *testing.T) {
 		case body := <-clientRead(rd1):
 			t.Logf("\n%s", string(body))
 
-			x := &ModelUpdateTurn{}
-			u := &Update{}
+			x := &order.TurnModel{}
+			u := &order.Order{}
 
 			err := json.Unmarshal(body, u)
 			if err != nil {

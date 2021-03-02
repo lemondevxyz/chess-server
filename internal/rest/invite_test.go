@@ -9,7 +9,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/toms1441/chess-server/internal/game"
+	"github.com/toms1441/chess-server/internal/order"
 )
 
 var _inviteCode = ""
@@ -18,7 +18,7 @@ func TestInviteHandler(t *testing.T) {
 	us1.cl.LeaveGame()
 	us2.cl.LeaveGame()
 
-	x := InviteModel{
+	x := order.InviteModel{
 		ID: us2.PublicID,
 	}
 	body, err := json.Marshal(x)
@@ -38,23 +38,23 @@ func TestInviteHandler(t *testing.T) {
 
 	ch := make(chan error)
 	go func() {
-		body := make([]byte, 32)
+		body := make([]byte, 1024)
 		n, err := rd2.Read(body)
 		if err != nil {
 			ch <- fmt.Errorf("rd2.Read: %s", err.Error())
 			return
 		}
-
 		body = body[:n]
+		t.Log(string(body))
 
-		upd := game.Update{}
+		upd := order.Order{}
 		err = json.Unmarshal(body, &upd)
 		if err != nil {
 			ch <- fmt.Errorf("json.Unmarshal: %s", err.Error())
 			return
 		}
 
-		mod := game.ModelUpdateInvite{}
+		mod := order.InviteModel{}
 		err = json.Unmarshal(upd.Data, &mod)
 		if err != nil {
 			ch <- fmt.Errorf("json.Unmarshal: %s", err.Error())
@@ -62,11 +62,13 @@ func TestInviteHandler(t *testing.T) {
 		}
 
 		_inviteCode = mod.ID
-		ch <- nil
+		close(ch)
 	}()
 
+	t.Log("asdads")
 	handle.ServeHTTP(resp, req)
 	rs := resp.Result()
+	t.Log("aft")
 
 	body, err = ioutil.ReadAll(rs.Body)
 	if err != nil {
@@ -85,7 +87,7 @@ func TestInviteHandler(t *testing.T) {
 }
 
 func TestAcceptInviteHandler(t *testing.T) {
-	i := InviteModel{
+	i := order.InviteModel{
 		ID: _inviteCode,
 	}
 
