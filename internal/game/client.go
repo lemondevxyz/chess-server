@@ -49,7 +49,10 @@ func (c *Client) LeaveGame() {
 
 	upd.Parameter = -1
 	c.g.Update(c, upd)
+
 	c.g = nil
+	x.g = nil
+
 }
 
 func (c *Client) Number() uint8 {

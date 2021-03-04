@@ -124,6 +124,22 @@ func TestUserAcceptInvite(t *testing.T) {
 		t.Fatalf("json.Unmarshal: %s", err.Error())
 	}
 
+	go func() {
+		// turn update
+		x := make([]byte, 64)
+		rd1.Read(x)
+
+		x = make([]byte, 64)
+		rd2.Read(x)
+
+		// game update
+		x = make([]byte, 1024)
+		rd2.Read(x)
+
+		x = make([]byte, 1024)
+		rd1.Read(x)
+	}()
+
 	err = us2.AcceptInvite(inv.ID)
 	if err != nil {
 		t.Fatalf("us.AcceptInvite: %s", err.Error())
