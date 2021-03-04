@@ -45,7 +45,6 @@ func TestInviteHandler(t *testing.T) {
 			return
 		}
 		body = body[:n]
-		t.Log(string(body))
 
 		upd := order.Order{}
 		err = json.Unmarshal(body, &upd)
@@ -65,10 +64,8 @@ func TestInviteHandler(t *testing.T) {
 		close(ch)
 	}()
 
-	t.Log("asdads")
 	handle.ServeHTTP(resp, req)
 	rs := resp.Result()
-	t.Log("aft")
 
 	body, err = ioutil.ReadAll(rs.Body)
 	if err != nil {
@@ -115,9 +112,7 @@ func TestAcceptInviteHandler(t *testing.T) {
 		rd1.Read(x)
 	}()
 
-	t.Log("xxx")
 	handle.ServeHTTP(resp, req)
-	t.Log("stacey")
 	rs := resp.Result()
 	body, err = ioutil.ReadAll(rs.Body)
 	if err != nil {

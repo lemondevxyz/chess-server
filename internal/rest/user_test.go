@@ -95,10 +95,11 @@ func TestUserAcceptInvite(t *testing.T) {
 	}
 	// because net.Pipe is synchronous
 	ch := make(chan error)
-	x := make([]byte, 64)
+	x := make([]byte, 128)
+	var n int
 
 	go func() {
-		n, err := rd2.Read(x)
+		n, err = rd2.Read(x)
 		ch <- err
 		x = x[:n]
 	}()
@@ -113,7 +114,7 @@ func TestUserAcceptInvite(t *testing.T) {
 	}
 
 	update := order.Order{}
-	err = json.Unmarshal(x, &update)
+	err = json.Unmarshal(x[:n], &update)
 	if err != nil {
 		t.Fatalf("json.Unmarshal: %s", err.Error())
 	}
@@ -124,23 +125,56 @@ func TestUserAcceptInvite(t *testing.T) {
 		t.Fatalf("json.Unmarshal: %s", err.Error())
 	}
 
+	ch = make(chan error)
 	go func() {
-		// game update
-		x := make([]byte, 1024)
-		rd2.Read(x)
+		err := us2.AcceptInvite(inv.ID)
+		if err != nil {
+			ch <- err
+			return
+		}
 
-		x = make([]byte, 1024)
-		rd1.Read(x)
+		if us1.Client().Game() == nil || us2.Client().Game() == nil {
+			ch <- fmt.Errorf("does not start a new game!")
+		}
 	}()
 
-	err = us2.AcceptInvite(inv.ID)
+	x = make([]byte, 1280)
+	n, err = rd2.Read(x)
 	if err != nil {
-		t.Fatalf("us.AcceptInvite: %s", err.Error())
+		t.Fatalf("rd2.Read: %s", err.Error())
+	}
+	o := order.Order{}
+	err = json.Unmarshal(x[:n], &o)
+	if err != nil {
+		t.Fatalf("json.Unmarshal: %s", err.Error())
+	}
+	gm2 := order.GameModel{}
+	err = json.Unmarshal(o.Data, &gm2)
+	if err != nil {
+		t.Fatalf("json.Unmarshal: %s", err.Error())
 	}
 
-	if us1.Client().Game() == nil || us2.Client().Game() == nil {
-		t.Fatalf("us.AcceptInvite: does not start a new game!")
+	x = make([]byte, 1280)
+	n, err = rd1.Read(x)
+	if err != nil {
+		t.Fatalf("rd1.Read: %s", err.Error())
 	}
+	o = order.Order{}
+	err = json.Unmarshal(x[:n], &o)
+	if err != nil {
+		t.Fatalf("json.Unmarshal: %s", err.Error())
+	}
+	gm1 := order.GameModel{}
+	err = json.Unmarshal(o.Data, &gm1)
+	if err != nil {
+		t.Fatalf("json.Unmarshal: %s", err.Error())
+	}
+
+	if gm1.Player == gm2.Player {
+		t.Fatalf("player numbers are the same")
+	}
+	t.Log(gm1.Player, gm2.Player)
+
 }
 
 func TestGetAvaliableUsersHandler(t *testing.T) {

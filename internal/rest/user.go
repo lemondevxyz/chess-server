@@ -188,7 +188,7 @@ func (u *User) AcceptInvite(tok string) error {
 		return cancel(err)
 	}
 	jsv, err := json.Marshal(order.GameModel{
-		Player: u.Client().Number(),
+		Player: vs.Client().Number(),
 		Board:  &b,
 	})
 	if err != nil {
