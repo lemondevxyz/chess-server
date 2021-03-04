@@ -40,33 +40,36 @@ const (
 */
 
 // redundant updates go here
-// as well as verification
+// as well as verification for certain updates.
 var ubs = map[uint8]UpdateCallback{
 	order.Move: func(c *Client, u *order.Order) error {
-		if c.g == nil {
-			return ErrGameNil
+		x, ok := u.Parameter.([]byte)
+		if !ok {
+			return ErrUpdateParameter
 		}
-
-		body, err := json.Marshal(c.g.b)
-		if err != nil {
-			return err
-		}
-
-		u.Data = body
+		u.Data = x
 
 		return nil
 	},
-	// verification
-	order.Promotion: func(c *Client, u *order.Order) error {
-		x, ok := u.Parameter.(order.PromotionModel)
+	order.Promote: func(c *Client, u *order.Order) error {
+		x, ok := u.Parameter.(order.PromoteModel)
 		if !ok {
 			return ErrUpdateParameter
 		}
 
-		dst := x.Dst
-		p := c.g.b.Get(dst)
-		if p.Player != x.Player {
-			return ErrIllegalPromotion
+		var err error
+		u.Data, err = json.Marshal(x)
+		if err != nil {
+			u.Data = nil
+			return err
+		}
+
+		return nil
+	},
+	order.Promotion: func(c *Client, u *order.Order) error {
+		x, ok := u.Parameter.(order.PromotionModel)
+		if !ok {
+			return ErrUpdateParameter
 		}
 
 		var err error

@@ -35,11 +35,11 @@ type TurnModel struct {
 
 // [U]
 type PromotionModel struct {
-	Player uint8       `json:"player"`
-	Dst    board.Point `json:"dst"`
+	Type uint8       `json:"type"`
+	Dst  board.Point `json:"dst"`
 }
 
-// [C]
+// [O]
 type PromoteModel struct {
 	Src  board.Point `json:"src"`
 	Type uint8       `json:"type"`

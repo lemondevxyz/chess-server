@@ -174,14 +174,14 @@ func TestCommandPromotion(t *testing.T) {
 			t.Fatalf("json.Unmarshal: %s", err.Error())
 		}
 
-		parameter := order.PromotionModel{}
+		parameter := order.PromoteModel{}
 		err = json.Unmarshal(u.Data, &parameter)
 		if err != nil {
 			t.Fatalf("json.Unmarshal: %s", err.Error())
 		}
 
 		x := order.PromoteModel{
-			Src:  parameter.Dst,
+			Src:  parameter.Src,
 			Type: board.Queen,
 		}
 
@@ -198,7 +198,7 @@ func TestCommandPromotion(t *testing.T) {
 			t.Fatalf("cl.Do: %s", err.Error())
 		}
 
-		v := gGame.b.Get(parameter.Dst)
+		v := gGame.b.Get(parameter.Src)
 		if p.T != board.Queen || (v != nil && v.T != board.Queen) {
 			t.Fatalf("promotion dont work")
 		}

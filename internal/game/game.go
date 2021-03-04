@@ -50,10 +50,9 @@ func NewGame(cl1, cl2 *Client) (*Game, error) {
 					c := g.cs[p.Player-1]
 					if c != nil {
 						g.Update(c, order.Order{
-							ID: order.Promotion,
-							Parameter: order.PromotionModel{
-								Player: p.Player,
-								Dst:    dst,
+							ID: order.Promote,
+							Parameter: order.PromoteModel{
+								Src: dst,
 							},
 						})
 					}
@@ -105,23 +104,6 @@ func (g *Game) Update(c *Client, u order.Order) error {
 	if err != nil {
 		return err
 	}
-
-	/*
-		cherr := make(chan error)
-		go func() {
-			_, err = c.W.Write(body)
-			cherr <- err
-		}()
-
-		select {
-		case <-time.After(time.Second * 10):
-			return ErrUpdateTimeout
-		case err := <-cherr:
-			return err
-		}
-
-		return nil
-	*/
 
 	go func() {
 		c.W.Write(body)

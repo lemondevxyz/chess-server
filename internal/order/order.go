@@ -21,11 +21,12 @@ const (
 	Game
 	// Move is sent/received whenever a player's piece moves. [O]
 	Move
-	// Turn is sent whenever a player moves a piece. [U]
+	// Turn is sent whenever a player moves a piece / special cases such as a promotion. [U]
 	Turn
-	// Promotion is sent whenever a player's pawn reaches the end of the board. Where x equals 7 or equals 0. [U]
+	// Promotion is sent whenever a player promotes it's pawn [U]
 	Promotion
-	// Promote is received from a player, to change a pawn that reached the end of the board to a dead piece. [C]
+	// Promote is received from a player, to change a pawn that reached the end of the board to a dead piece. [O]
+	// When sent to a player, it's an indication that he needs to promote his piece. And if the player sends it, we notify both players using Promotion.
 	Promote
 	// Pause is sent/received whenever a player wants to/pauses the game. [O]
 	Pause

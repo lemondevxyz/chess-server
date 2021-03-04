@@ -82,7 +82,6 @@ var cbs = map[uint8]CommandCallback{
 
 		dps := g.b.DeadPieces(c.num)
 		_, ok := dps[s.Type]
-
 		if !ok {
 			return ErrIllegalPromotion
 		}
@@ -93,11 +92,15 @@ var cbs = map[uint8]CommandCallback{
 		}
 
 		p.T = s.Type
+
 		g.SwitchTurn()
 
 		return g.UpdateAll(order.Order{
-			ID:   order.Promotion,
-			Data: o.Data,
+			ID: order.Promotion,
+			Parameter: order.PromotionModel{
+				Dst:  s.Src,
+				Type: s.Type,
+			},
 		})
 	},
 	/* TODO: implement later, specifically after chess is working
