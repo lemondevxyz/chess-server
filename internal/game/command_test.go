@@ -38,7 +38,6 @@ func TestCommandSendMessage(t *testing.T) {
 	}
 
 	// first message is the turn message
-	<-clientRead(rd1)
 
 	select {
 	case <-time.After(time.Millisecond * 10):
@@ -67,8 +66,10 @@ func TestCommandSendMessage(t *testing.T) {
 	}
 }
 
-func TestCommandPiece(t *testing.T) {
+func TestCommandMove(t *testing.T) {
 	defer resetPipe()
+
+	gGame.SwitchTurn()
 
 	do := func(cl *Client, rd *io.PipeReader, src, dst board.Point) error {
 		body, err := json.Marshal(order.MoveModel{
@@ -141,6 +142,7 @@ func TestCommandPromotion(t *testing.T) {
 	defer resetPipe()
 
 	pos := board.Point{X: 1, Y: 5}
+	go gGame.SwitchTurn()
 	p := gGame.b.Get(board.Point{X: 1, Y: 5})
 	go func() {
 
@@ -161,6 +163,8 @@ func TestCommandPromotion(t *testing.T) {
 		gGame.b.Move(p, board.Point{X: pos.X, Y: pos.Y})
 	}()
 
+	<-clientRead(rd1)
+
 	select {
 	case <-time.After(time.Millisecond * 100):
 		t.Fatalf("timeout")
@@ -175,10 +179,14 @@ func TestCommandPromotion(t *testing.T) {
 		}
 
 		parameter := order.PromoteModel{}
+
 		err = json.Unmarshal(u.Data, &parameter)
+		t.Log(string(u.Data))
 		if err != nil {
 			t.Fatalf("json.Unmarshal: %s", err.Error())
 		}
+
+		t.Log("asd", parameter)
 
 		x := order.PromoteModel{
 			Src:  parameter.Src,
@@ -199,6 +207,7 @@ func TestCommandPromotion(t *testing.T) {
 		}
 
 		v := gGame.b.Get(parameter.Src)
+		t.Log(p.Pos, v.Pos)
 		if p.T != board.Queen || (v != nil && v.T != board.Queen) {
 			t.Fatalf("promotion dont work")
 		}

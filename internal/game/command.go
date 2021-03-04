@@ -69,10 +69,6 @@ var cbs = map[uint8]CommandCallback{
 	},
 	order.Promote: func(c *Client, o order.Order) error {
 		g := c.g
-		if !g.IsTurn(c) {
-			return ErrIllegalTurn
-		}
-
 		s := &order.PromoteModel{}
 
 		err := json.Unmarshal(o.Data, s)
@@ -92,7 +88,6 @@ var cbs = map[uint8]CommandCallback{
 		}
 
 		p.T = s.Type
-
 		g.SwitchTurn()
 
 		return g.UpdateAll(order.Order{

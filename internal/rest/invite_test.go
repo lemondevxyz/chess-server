@@ -107,15 +107,8 @@ func TestAcceptInviteHandler(t *testing.T) {
 	handle := http.HandlerFunc(AcceptInviteHandler)
 
 	go func() {
-		// turn update
-		x := make([]byte, 64)
-		rd1.Read(x)
-
-		x = make([]byte, 64)
-		rd2.Read(x)
-
 		// game update
-		x = make([]byte, 1024)
+		x := make([]byte, 1024)
 		rd2.Read(x)
 
 		x = make([]byte, 1024)

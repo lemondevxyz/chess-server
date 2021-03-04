@@ -13,8 +13,8 @@ func Toggle(b, flag uint8) uint8 { return b ^ flag }
 func Has(b, flag uint8) bool     { return b&flag != 0 }
 
 type Point struct {
-	X int
-	Y int
+	X int `json:"x"`
+	Y int `json:"y"`
 }
 
 type Points []Point

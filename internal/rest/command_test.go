@@ -34,22 +34,11 @@ var (
 
 func TestCommandRequest(t *testing.T) {
 
-	byt := make([]byte, 64)
-	_, err := rd1.Read(byt)
-	if err != nil {
-		t.Fatalf("rd1.Read: %s", err.Error())
-	}
-
-	_, err = rd2.Read(byt)
-	if err != nil {
-		t.Fatalf("rdv2.Read: %s", err.Error())
-	}
-
 	x := order.MessageModel{
 		Message: "test",
 	}
 
-	byt, err = json.Marshal(x)
+	byt, err := json.Marshal(x)
 	if err != nil {
 		t.Fatalf("json.Marshal: %s", err.Error())
 	}

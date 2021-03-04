@@ -49,11 +49,13 @@ func NewGame(cl1, cl2 *Client) (*Game, error) {
 				if dst.X == 7 || dst.X == 1 {
 					c := g.cs[p.Player-1]
 					if c != nil {
+						x := order.PromoteModel{
+							Src: dst,
+						}
+
 						g.Update(c, order.Order{
-							ID: order.Promote,
-							Parameter: order.PromoteModel{
-								Src: dst,
-							},
+							ID:        order.Promote,
+							Parameter: x,
 						})
 					}
 				}
@@ -61,7 +63,7 @@ func NewGame(cl1, cl2 *Client) (*Game, error) {
 		}
 	})
 
-	g.SwitchTurn()
+	//g.SwitchTurn()
 
 	return g, nil
 }

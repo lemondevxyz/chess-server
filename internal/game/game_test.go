@@ -16,8 +16,9 @@ func TestTurns(t *testing.T) {
 	cl1.g, cl2.g = nil, nil
 
 	resetPipe()
+	gGame, _ = NewGame(cl1, cl2)
 	go func() {
-		gGame, _ = NewGame(cl1, cl2)
+		gGame.SwitchTurn()
 	}()
 
 	select {

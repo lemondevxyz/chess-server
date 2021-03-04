@@ -211,6 +211,8 @@ func (u *User) AcceptInvite(tok string) error {
 	}
 	vs.Client().W.Write(data)
 
+	g.SwitchTurn()
+
 	u.invite = map[string]*User{}
 
 	return nil
