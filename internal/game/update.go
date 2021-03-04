@@ -77,4 +77,21 @@ var ubs = map[uint8]UpdateCallback{
 
 		return nil
 	},
+	// lamo laziness
+	order.Done: func(c *Client, u *order.Order) error {
+		x, ok := u.Parameter.(int8)
+		if !ok {
+			return ErrUpdateParameter
+		}
+
+		var err error
+		u.Data, err = json.Marshal(order.DoneModel{
+			Result: x,
+		})
+		if err != nil {
+			return err
+		}
+
+		return nil
+	},
 }

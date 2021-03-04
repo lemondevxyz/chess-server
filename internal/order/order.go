@@ -17,9 +17,11 @@ const (
 	Credentials uint8 = iota + 1
 	// Invite is sent whenever a user receives an invite to a game. [U]
 	Invite
+	// Game is sent whenever a game starts. Sent by the invite handler. [U]
+	Game
 	// Move is sent/received whenever a player's piece moves. [O]
 	Move
-	// Turn is received whenever a player moves a piece. [U]
+	// Turn is sent whenever a player moves a piece. [U]
 	Turn
 	// Promotion is sent whenever a player's pawn reaches the end of the board. Where x equals 7 or equals 0. [U]
 	Promotion
@@ -29,4 +31,6 @@ const (
 	Pause
 	// Message is sent/received whenver a player sends/receives a message. [O]
 	Message
+	// Done is sent whenever a game ends. [U]
+	Done
 )

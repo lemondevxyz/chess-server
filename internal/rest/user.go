@@ -2,6 +2,7 @@ package rest
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -21,7 +22,7 @@ type User struct {
 var users = map[string]*User{}
 
 const (
-	InviteLifespan = time.Second * 10
+	InviteLifespan = time.Second * 30
 )
 
 func AddClient(c *game.Client) *User {
@@ -165,10 +166,50 @@ func (u *User) AcceptInvite(tok string) error {
 		return game.ErrClientNil
 	}
 
-	_, err := game.NewGame(u.Client(), vs.Client())
+	g, err := game.NewGame(u.Client(), vs.Client())
 	if err != nil {
 		return err
 	}
+
+	b := g.Board()
+
+	cancel := func(err error) error {
+		u.Client().LeaveGame()
+		vs.Client().LeaveGame()
+
+		return fmt.Errorf("%s | %w", err.Error(), ErrInternal)
+	}
+
+	jsu, err := json.Marshal(order.GameModel{
+		Player: u.Client().Number(),
+		Board:  &b,
+	})
+	if err != nil {
+		return cancel(err)
+	}
+	jsv, err := json.Marshal(order.GameModel{
+		Player: u.Client().Number(),
+		Board:  &b,
+	})
+	if err != nil {
+		return cancel(err)
+	}
+	data, err := json.Marshal(order.Order{
+		ID:   order.Game,
+		Data: jsu,
+	})
+	if err != nil {
+		return cancel(err)
+	}
+	u.Client().W.Write(data)
+	data, err = json.Marshal(order.Order{
+		ID:   order.Game,
+		Data: jsv,
+	})
+	if err != nil {
+		return cancel(err)
+	}
+	vs.Client().W.Write(data)
 
 	u.invite = map[string]*User{}
 

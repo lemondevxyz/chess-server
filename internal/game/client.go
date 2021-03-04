@@ -34,6 +34,24 @@ func (c *Client) Game() *Game {
 }
 
 func (c *Client) LeaveGame() {
-	// TODO: c.Do(CmdForfeit)
+	g := c.g
+	if g == nil {
+		return
+	}
+
+	x := g.cs[0]
+	if x == c {
+		x = g.cs[1]
+	}
+
+	upd := order.Order{ID: order.Done, Parameter: 1}
+	c.g.Update(x, upd)
+
+	upd.Parameter = -1
+	c.g.Update(c, upd)
 	c.g = nil
+}
+
+func (c *Client) Number() uint8 {
+	return c.num
 }

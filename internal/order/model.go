@@ -1,6 +1,8 @@
 package order
 
-import "github.com/toms1441/chess-server/internal/board"
+import (
+	"github.com/toms1441/chess-server/internal/board"
+)
 
 // [U]
 type CredentialsModel struct {
@@ -11,6 +13,13 @@ type CredentialsModel struct {
 // [O]
 type InviteModel struct {
 	ID string `json:"id"`
+}
+
+// [U]
+type GameModel struct {
+	// which pieces are yours
+	Player uint8        `json:"player"`
+	Board  *board.Board `json:"board"`
 }
 
 // [O]
@@ -46,4 +55,12 @@ type PausedModel uint8
 // [O]
 type MessageModel struct {
 	Message string `json:"message"`
+}
+
+// [U]
+type DoneModel struct {
+	Result int8 `json:"result"`
+	// -1 == you lost
+	// 0 == draw/stalemate
+	// 1 == you won
 }
