@@ -15,12 +15,11 @@ func main() {
 
 	rout := mux.NewRouter()
 
-	rout.HandleFunc("/cmd", rest.CmdHandler).Methods("POST")
-	rout.HandleFunc("/invite", rest.InviteHandler).Methods("POST")
-	rout.HandleFunc("/accept", rest.AcceptInviteHandler).Methods("POST")
-	rout.HandleFunc("/ws", rest.WebsocketHandler).Methods("GET")
-	rout.HandleFunc("/invitable", rest.GetAvaliableUsersHandler)
-	rout.HandleFunc("/avali", rest.GetAvaliableUsersHandler)
+	rout.HandleFunc("/cmd", rest.CmdHandler).Methods("POST", "OPTIOS")
+	rout.HandleFunc("/invite", rest.InviteHandler).Methods("POST", "OPTIONS")
+	rout.HandleFunc("/accept", rest.AcceptInviteHandler).Methods("POST", "OPTIONS")
+	rout.HandleFunc("/ws", rest.WebsocketHandler).Methods("GET", "OPTIONS")
+	rout.HandleFunc("/avali", rest.GetAvaliableUsersHandler).Methods("GET", "OPTIONS")
 
 	rout.HandleFunc("/protect", func(w http.ResponseWriter, r *http.Request) {
 		_, err := rest.GetUser(r)
@@ -45,7 +44,14 @@ func main() {
 		method := color.New(color.BgMagenta, color.Bold).Sprint(" " + r.Method + " ")
 		path := color.New(color.BgBlue).Sprint(" " + r.URL.Path + " ")
 
-		rout.ServeHTTP(ctx, r)
+		ctx.Header().Add("Access-Control-Allow-Origin", "*")
+		ctx.Header().Add("Access-Control-Allow-Headers", "Content-Type, Accept, Authorization")
+		ctx.Header().Add("Access-Control-Allow-Methods", "GET, POST")
+		if r.Method == "OPTIONS" {
+			ctx.WriteHeader(http.StatusOK)
+		} else {
+			rout.ServeHTTP(ctx, r)
+		}
 
 		code := ""
 		sta := ctx.GetStatus()

@@ -54,8 +54,19 @@ func GetUser(r *http.Request) (*User, error) {
 // GetAvaliableUsersHandler returns a list of public ids that are looking to play.
 // TODO: exclude this user's public id from the returned value
 func GetAvaliableUsersHandler(w http.ResponseWriter, r *http.Request) {
+	u, err := GetUser(r)
+	if err != nil {
+		RespondError(w, http.StatusUnauthorized, err)
+		return
+	}
+
 	ids := []string{}
 	for _, v := range users {
+		// lamo you can't invite yourself
+		if v.PublicID == u.PublicID {
+			continue
+		}
+
 		if v.Valid() {
 			if v.Client().Game() == nil {
 				ids = append(ids, v.PublicID)
@@ -73,6 +84,9 @@ func (u *User) Client() *game.Client {
 func (u *User) Delete() {
 	u.PublicID = ""
 	u.Token = ""
+	if u.cl.Game() != nil {
+		u.cl.LeaveGame()
+	}
 	u.cl = nil
 	u.invite = nil
 	delete(users, u.Token)
