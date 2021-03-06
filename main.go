@@ -9,13 +9,32 @@ import (
 	"github.com/toms1441/chess-server/internal/rest"
 )
 
+// hello
 const port = ":8080"
 
-func main() {
+func debug_game() {
+	ch := rest.ClientChannel()
+	go func() {
+		for {
+			us1 := <-ch
+			us2 := <-ch
 
+			id, err := us1.Invite(us2.PublicID, rest.InviteLifespan)
+			if err != nil {
+				fmt.Printf("error: %s", err.Error())
+			} else {
+				us2.AcceptInvite(id)
+			}
+		}
+	}()
+}
+
+func main() {
 	rout := mux.NewRouter()
 
-	rout.HandleFunc("/cmd", rest.CmdHandler).Methods("POST", "OPTIOS")
+	debug_game()
+
+	rout.HandleFunc("/cmd", rest.CmdHandler).Methods("POST", "OPTIONS")
 	rout.HandleFunc("/invite", rest.InviteHandler).Methods("POST", "OPTIONS")
 	rout.HandleFunc("/accept", rest.AcceptInviteHandler).Methods("POST", "OPTIONS")
 	rout.HandleFunc("/ws", rest.WebsocketHandler).Methods("GET", "OPTIONS")

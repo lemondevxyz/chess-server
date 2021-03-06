@@ -20,10 +20,19 @@ type User struct {
 }
 
 var users = map[string]*User{}
+var chanuser = make(chan *User)
 
 const (
 	InviteLifespan = time.Second * 30
 )
+
+func AllClients() map[string]*User {
+	return users
+}
+
+func ClientChannel() chan *User {
+	return chanuser
+}
 
 func AddClient(c *game.Client) *User {
 	id := betterguid.New()
@@ -36,6 +45,9 @@ func AddClient(c *game.Client) *User {
 	us.PublicID = randstr.String(4)
 
 	users[id] = us
+	go func() {
+		chanuser <- us
+	}()
 	return us
 }
 
@@ -108,13 +120,13 @@ func (u *User) Valid() bool {
 	return true
 }
 
-func (u *User) Invite(tok string, lifespan time.Duration) error {
+func (u *User) Invite(tok string, lifespan time.Duration) (string, error) {
 	// make sure panic don't happen
 	if !u.Valid() {
-		return game.ErrClientNil
+		return "", game.ErrClientNil
 	}
 	if u.Client().Game() != nil {
-		return game.ErrGameIsNotNil
+		return "", game.ErrGameIsNotNil
 	}
 
 	var vs *User
@@ -126,15 +138,15 @@ func (u *User) Invite(tok string, lifespan time.Duration) error {
 	}
 
 	if vs == nil || !vs.Valid() {
-		return game.ErrClientNil
+		return "", game.ErrClientNil
 	}
 	if vs.Client().Game() != nil {
-		return game.ErrGameIsNotNil
+		return "", game.ErrGameIsNotNil
 	}
 
 	// lamo you though you were slick
 	if vs == u {
-		return game.ErrClientNil
+		return "", game.ErrClientNil
 	}
 
 	id := randstr.String(4)
@@ -144,7 +156,7 @@ func (u *User) Invite(tok string, lifespan time.Duration) error {
 
 	body, err := json.Marshal(param)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	// u invited vs
@@ -155,7 +167,7 @@ func (u *User) Invite(tok string, lifespan time.Duration) error {
 	}
 	send, err := json.Marshal(gu)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	// delete after X amount of time
@@ -166,7 +178,7 @@ func (u *User) Invite(tok string, lifespan time.Duration) error {
 
 	vs.Client().W.Write(send)
 
-	return nil
+	return id, nil
 }
 
 // AcceptInvite accepts the invite from the user.

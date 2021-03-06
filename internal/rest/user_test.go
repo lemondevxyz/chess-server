@@ -74,7 +74,7 @@ func TestUserInvite(t *testing.T) {
 	go func() {
 		rd2.Read(make([]byte, 64))
 	}()
-	err := us1.Invite(us2.PublicID, lifespan)
+	_, err := us1.Invite(us2.PublicID, lifespan)
 	if err != nil {
 		t.Fatalf("us.Invite: %s", err.Error())
 	}
@@ -104,7 +104,7 @@ func TestUserAcceptInvite(t *testing.T) {
 		x = x[:n]
 	}()
 
-	err = us1.Invite(us2.PublicID, InviteLifespan)
+	_, err = us1.Invite(us2.PublicID, InviteLifespan)
 	if err != nil {
 		t.Fatalf("us.Invite: %s", err.Error())
 	}
