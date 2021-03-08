@@ -28,6 +28,16 @@ type MoveModel struct {
 	Dst board.Point `json:"dst"`
 }
 
+// [C]
+type PossibilityModel struct {
+	Src board.Point `json:"src"`
+}
+
+// [U]
+type PossibleModel struct {
+	Points board.Points `json:"points"`
+}
+
 // [U]
 type TurnModel struct {
 	Player uint8 `json:"player"`

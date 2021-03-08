@@ -250,36 +250,73 @@ func TestBoardMoveInTheWay(t *testing.T) {
 
 	// try moving the rook through the pawn
 	p := b.Get(Point{7, 0})
-	t.Log(p)
-	t.Logf("\n%s", b.String())
-	if b.Move(p, Point{3, 0}) || b.Move(p, Point{7, 4}) {
-		t.Fatalf("rook can move over other pieces")
+	// rook should not be able to move one bit if it's in the start
+	for _, v := range p.Possib() {
+		if b.Move(p, v) {
+			t.Logf("%s", v.String())
+			t.Logf("\n%s", b.String())
+			t.Fatalf("rook can move over other pieces")
+		}
 	}
 
 	// try moving knight through pawn
 	p = b.Get(Point{7, 1})
-	t.Log(p)
-	if !b.Move(p, Point{5, 0}) {
-		t.Fatalf("knight cannot move over other pieces")
+	for _, v := range p.Possib() {
+
+		b = NewBoard()
+		p = b.Get(Point{7, 1})
+		if !v.Valid() {
+			continue
+		}
+
+		o := b.Get(v)
+		want := true
+		if o != nil {
+			if o.Player == p.Player {
+				want = false
+			}
+		}
+
+		have := b.Move(p, v)
+		if have != want {
+			t.Logf("%s", v.String())
+			t.Logf("\n%s", b.String())
+			t.Logf("want: %t, have: %t", want, have)
+			if want == false {
+				t.Fatalf("knight can replace nearby pieces")
+			} else {
+				t.Fatalf("knight cannot skip over pieces")
+			}
+		}
 	}
 
 	// try moving bishop through pawn
 	p = b.Get(Point{7, 2})
-	t.Log(p)
-	if b.Move(p, Point{6, 3}) || b.Move(p, Point{6, 1}) {
-		t.Fatalf("bishop can move over other pieces")
+	for _, v := range p.Possib() {
+		if b.Move(p, v) {
+			t.Logf("%s", v.String())
+			t.Logf("\n%s", b.String())
+			t.Fatalf("bishop can move over other pieces")
+		}
 	}
 
 	//p = b.Get(Point{7, })
 	// try moving king through other pieces
 	p = b.Get(Point{7, 3})
-	t.Log(p)
-	if b.Move(p, Point{6, 4}) || b.Move(p, Point{7, 4}) {
-		t.Fatalf("king can move over other pieces")
+	for _, v := range p.Possib() {
+		if b.Move(p, v) {
+			t.Logf("%s", v.String())
+			t.Logf("\n%s", b.String())
+			t.Fatalf("king can move over other pieces")
+		}
 	}
 
 	p = b.Get(Point{7, 4})
-	t.Log(p)
-	if b.Move(p, Point{5, 2}) || b.Move(p, Point{5, 7}) {
+	for _, v := range p.Possib() {
+		if b.Move(p, v) {
+			t.Logf("%s", v.String())
+			t.Logf("\n%s", b.String())
+			t.Fatalf("queen can move over other pieces")
+		}
 	}
 }

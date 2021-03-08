@@ -117,7 +117,7 @@ func (b *Board) Get(src Point) *Piece {
 func (b *Board) Possib(p *Piece) Points {
 	ps := p.Possib()
 	if p.T != Knight && p.T != PawnB && p.T != PawnF {
-		x, y := p.Pos.X, p.Pos.Y
+		orix, oriy := p.Pos.X, p.Pos.Y
 
 		// starting from x, y this function loops through possible points
 		// afterwards it changes the value via op function which receives x, y and modifies them
@@ -129,10 +129,17 @@ func (b *Board) Possib(p *Piece) Points {
 				if !ps.In(pnt) || !pnt.Valid() {
 					break
 				}
-
 				if !rm {
 					// encountered piece in the way
-					if b.Get(pnt) != nil {
+					o := b.Get(pnt)
+					if o != nil {
+						if p.Player == o.Player {
+							index := ps.Index(o.Pos)
+							if index >= 0 {
+								ps[index] = ps[len(ps)-1]
+								ps = ps[:len(ps)-1]
+							}
+						}
 						rm = true
 					} else {
 						// this direction cannot possibly have following points
@@ -150,27 +157,28 @@ func (b *Board) Possib(p *Piece) Points {
 			}
 		}
 
+		x, y := orix, oriy
 		// normal direction
 		{
-			x, y = Up(x, y)
+			x, y = Up(orix, oriy)
 			loop(x, y, Up)
-			x, y = Down(x, y)
+			x, y = Down(orix, oriy)
 			loop(x, y, Down)
-			x, y = Left(x, y)
+			x, y = Left(orix, oriy)
 			loop(x, y, Left)
-			x, y = Right(x, y)
+			x, y = Right(orix, oriy)
 			loop(x, y, Right)
 		}
 
 		// combination direction
 		{
-			x, y = UpLeft(x, y)
+			x, y = UpLeft(orix, oriy)
 			loop(x, y, UpLeft)
-			x, y = UpRight(x, y)
+			x, y = UpRight(orix, oriy)
 			loop(x, y, UpRight)
-			x, y = DownLeft(x, y)
+			x, y = DownLeft(orix, oriy)
 			loop(x, y, DownLeft)
-			x, y = DownRight(x, y)
+			x, y = DownRight(orix, oriy)
 			loop(x, y, DownRight)
 		}
 	}
@@ -269,46 +277,13 @@ func (b *Board) Move(p *Piece, dst Point) (ret bool) {
 				// if it's not pawn and there's a piece in dst.
 				// then kill it
 				// if it's pawn then don't move
-				if p.T != PawnF && p.T != PawnB && p.Player != o.Player {
-					ret = true
+				if p.Player != o.Player {
+					if p.T != PawnF && p.T != PawnB {
+						ret = b.Possib(p).In(dst)
+					}
 				}
 			} else {
 				ret = b.Possib(p).In(dst)
-				// knights don't have to go through this
-				// they can jump over pieces
-				/*
-					if p.T != Knight {
-						d := p.Pos.Direction(dst)
-						x, y := p.Pos.X, p.Pos.Y
-						for i := 0; i < 8; i++ {
-							if Has(d, DirUp) {
-								x--
-							} else if Has(d, DirDown) {
-								x++
-							}
-							if Has(d, DirLeft) {
-								y--
-							} else if Has(d, DirRight) {
-								y++
-							}
-
-							pos := Point{x, y}
-							if !pos.Valid() {
-								break
-							}
-							if pos.Equal(dst) {
-								break
-							} else {
-								o := b.Get(pos)
-								if o != nil && o.T != Empty {
-									// there's a piece in the way
-									ret = false
-									break
-								}
-							}
-						}
-					}
-				*/
 			}
 		} else {
 			if p.T == PawnB || p.T == PawnF {
