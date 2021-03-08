@@ -15,11 +15,12 @@ import (
 
 type WsClient struct {
 	net.Conn
-	W      chan []byte
-	r      []chan []byte
-	c      []chan bool
-	u      *User
-	closed bool
+	W        chan []byte
+	r        []chan []byte
+	c        []chan bool
+	pingPong chan struct{}
+	u        *User
+	closed   bool
 }
 
 const (
@@ -43,14 +44,20 @@ func (cl *WsClient) ClosedChannel() chan bool {
 	return x
 }
 
-func (cl *WsClient) Close() error {
+// Close closes the underlying websocket connection. Sudden determines if the websocket connection closed due to an unreceived pong frame, or if it wasn't sudden
+func (cl *WsClient) Close(status ws.StatusCode, reason string) error {
 	if cl.closed {
 		return nil
 	}
 
 	cl.closed = true
-	wsutil.WriteServerMessage(cl.Conn, ws.OpClose, nil)
 
+	load := ws.NewCloseFrameBody(status, reason)
+	wsutil.WriteServerMessage(cl.Conn, ws.OpClose, load)
+
+	for _, v := range cl.r {
+		close(v)
+	}
 	for _, v := range cl.c {
 		close(v)
 	}
@@ -76,34 +83,42 @@ func UpgradeConn(conn net.Conn) (*WsClient, error) {
 		Conn: conn,
 		W:    make(chan []byte, 8),
 		c:    []chan bool{},
+		r:    []chan []byte{},
 	}
 
 	// read any close messages
 	go func() {
-		defer cl.Close()
-
-		for {
-			body, opcode, err := wsutil.ReadClientData(cl.Conn)
-			//fmt.Println(string(body), opcode, err)
-			if err != nil || opcode == ws.OpClose {
+		for !cl.closed {
+			header, err := ws.ReadHeader(conn)
+			if err != nil {
+				fmt.Println(err)
+				cl.Close(ws.StatusProtocolError, "")
 				return
-			} else if opcode == ws.OpText {
-				for _, v := range cl.r {
-					v <- body
-				}
+			}
+
+			if header.OpCode == ws.OpClose {
+				cl.Close(ws.StatusGoingAway, "")
+				return
+			}
+
+			cl.Conn.SetReadDeadline(time.Now().Add(pongWait))
+			if header.OpCode == ws.OpPong {
+				continue
 			}
 		}
 	}()
 
 	go func() {
 		defer func() {
-			cl.Close()
+			cl.Close(ws.StatusAbnormalClosure, "cannot send data")
 		}()
 
 		ticker := time.NewTicker(pingPeriod)
-		for {
+		for !cl.closed {
 			select {
 			case message := <-cl.W:
+				cl.Conn.SetWriteDeadline(time.Now().Add(writeWait))
+
 				writer := wsutil.NewWriter(conn, ws.StateServerSide, ws.OpText)
 				_, err := writer.Write(message)
 				if err != nil {
@@ -124,7 +139,7 @@ func UpgradeConn(conn net.Conn) (*WsClient, error) {
 					}
 				}
 			case <-ticker.C:
-				cl.Conn.SetReadDeadline(time.Now().Add(writeWait))
+				cl.Conn.SetWriteDeadline(time.Now().Add(writeWait))
 				if err := wsutil.WriteServerMessage(cl.Conn, ws.OpPing, nil); err != nil {
 					return
 				}

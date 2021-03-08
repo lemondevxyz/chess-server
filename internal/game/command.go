@@ -56,7 +56,7 @@ var cbs = map[uint8]CommandCallback{
 		}
 
 		ret := g.b.Move(p, s.Dst)
-		if ret == false {
+		if ret == false || p.Player != c.num {
 			return ErrIllegalMove
 		}
 

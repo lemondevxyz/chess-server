@@ -212,37 +212,39 @@ func (b *Board) Move(p *Piece, dst Point) (ret bool) {
 				ret = true
 				// knights don't have to go through this
 				// they can jump over pieces
-				if p.T != Knight {
-					d := p.Pos.Direction(dst)
-					x, y := p.Pos.X, p.Pos.Y
-					for i := 0; i < 8; i++ {
-						if Has(d, DirUp) {
-							x--
-						} else if Has(d, DirDown) {
-							x++
-						}
-						if Has(d, DirLeft) {
-							y--
-						} else if Has(d, DirRight) {
-							y++
-						}
+				/*
+					if p.T != Knight {
+						d := p.Pos.Direction(dst)
+						x, y := p.Pos.X, p.Pos.Y
+						for i := 0; i < 8; i++ {
+							if Has(d, DirUp) {
+								x--
+							} else if Has(d, DirDown) {
+								x++
+							}
+							if Has(d, DirLeft) {
+								y--
+							} else if Has(d, DirRight) {
+								y++
+							}
 
-						pos := Point{x, y}
-						if !pos.Valid() {
-							break
-						}
-						if pos.Equal(dst) {
-							break
-						} else {
-							o := b.Get(pos)
-							if o != nil && o.T != Empty {
-								// there's a piece in the way
-								ret = false
+							pos := Point{x, y}
+							if !pos.Valid() {
 								break
+							}
+							if pos.Equal(dst) {
+								break
+							} else {
+								o := b.Get(pos)
+								if o != nil && o.T != Empty {
+									// there's a piece in the way
+									ret = false
+									break
+								}
 							}
 						}
 					}
-				}
+				*/
 			}
 		} else {
 			if p.T == PawnB || p.T == PawnF {
