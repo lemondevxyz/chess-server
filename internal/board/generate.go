@@ -69,13 +69,17 @@ func (ps Points) Merge(all ...Points) (ret Points) {
 
 // In checks if dst is in ps
 func (ps Points) In(dst Point) bool {
-	for _, v := range ps {
+	return ps.Index(dst) != -1
+}
+
+func (ps Points) Index(dst Point) int {
+	for k, v := range ps {
 		if v.Equal(dst) {
-			return true
+			return k
 		}
 	}
 
-	return false
+	return -1
 }
 
 // Outside generates points that are outside of ps
@@ -301,6 +305,18 @@ func (p Point) Increase(dir uint8) Point {
 
 	return Point{x, y}
 }
+
+// The following is a collection of generic functions, that start from x,y and return a new point from that perspective.
+// Also the use of x, y values(instead of Point) makes these more comprehensible
+func UpLeft(x, y int) (int, int)    { return x - 1, y - 1 }
+func UpRight(x, y int) (int, int)   { return x - 1, y + 1 }
+func DownLeft(x, y int) (int, int)  { return x + 1, y - 1 }
+func DownRight(x, y int) (int, int) { return x + 1, y + 1 }
+
+func Up(x, y int) (int, int)    { return x - 1, y }
+func Down(x, y int) (int, int)  { return x + 1, y }
+func Left(x, y int) (int, int)  { return x, y - 1 }
+func Right(x, y int) (int, int) { return x, y + 1 }
 
 // Smaller returns true if dst is smaller than src. Smaller compares x to x, and then y to y.
 /*

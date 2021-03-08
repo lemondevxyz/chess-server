@@ -251,6 +251,7 @@ func TestBoardMoveInTheWay(t *testing.T) {
 	// try moving the rook through the pawn
 	p := b.Get(Point{7, 0})
 	t.Log(p)
+	t.Logf("\n%s", b.String())
 	if b.Move(p, Point{3, 0}) || b.Move(p, Point{7, 4}) {
 		t.Fatalf("rook can move over other pieces")
 	}

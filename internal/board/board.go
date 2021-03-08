@@ -114,6 +114,70 @@ func (b *Board) Get(src Point) *Piece {
 }
 
 // Possib is the same as Piece.Possib, but with removal of illegal moves.
+func (b *Board) Possib(p *Piece) Points {
+	ps := p.Possib()
+	if p.T != Knight && p.T != PawnB && p.T != PawnF {
+		x, y := p.Pos.X, p.Pos.Y
+
+		// starting from x, y this function loops through possible points
+		// afterwards it changes the value via op function which receives x, y and modifies them
+		// in-case it encountered a piece in the way it wait to finish and removes all the following points
+		loop := func(x, y int, op func(int, int) (int, int)) {
+			rm := false
+			for i := 0; i < 8; i++ {
+				pnt := Point{x, y}
+				if !ps.In(pnt) || !pnt.Valid() {
+					break
+				}
+
+				if !rm {
+					// encountered piece in the way
+					if b.Get(pnt) != nil {
+						rm = true
+					} else {
+						// this direction cannot possibly have following points
+						break
+					}
+				} else {
+					// start deleting following points, cause we reached a piece in the way
+					index := ps.Index(pnt)
+					if index >= 0 {
+						ps[index] = ps[len(ps)-1]
+						ps = ps[:len(ps)-1]
+					}
+				}
+				x, y = op(x, y)
+			}
+		}
+
+		// normal direction
+		{
+			x, y = Up(x, y)
+			loop(x, y, Up)
+			x, y = Down(x, y)
+			loop(x, y, Down)
+			x, y = Left(x, y)
+			loop(x, y, Left)
+			x, y = Right(x, y)
+			loop(x, y, Right)
+		}
+
+		// combination direction
+		{
+			x, y = UpLeft(x, y)
+			loop(x, y, UpLeft)
+			x, y = UpRight(x, y)
+			loop(x, y, UpRight)
+			x, y = DownLeft(x, y)
+			loop(x, y, DownLeft)
+			x, y = DownRight(x, y)
+			loop(x, y, DownRight)
+		}
+	}
+
+	return ps
+}
+
 /*
 func (b *Board) Possib(p *Piece) Points {
 	ps := p.Possib()
@@ -209,7 +273,7 @@ func (b *Board) Move(p *Piece, dst Point) (ret bool) {
 					ret = true
 				}
 			} else {
-				ret = true
+				ret = b.Possib(p).In(dst)
 				// knights don't have to go through this
 				// they can jump over pieces
 				/*
