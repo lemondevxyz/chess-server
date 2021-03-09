@@ -320,3 +320,22 @@ func TestBoardMoveInTheWay(t *testing.T) {
 		}
 	}
 }
+
+// while above makes sure that no "special" piece can move over from it's starting position, this one tests past bugs.
+func TestBoardPieceBugInTheWay(t *testing.T) {
+	{ // bishop skipping over enemy pawn and killing knight
+		brd := NewBoard()
+		pec := brd.Get(Point{6, 4})
+		pec.T = Empty
+		brd.Set(pec)
+		brd.Set(&Piece{
+			Pos: Point{4, 2},
+			T:   Bishop,
+		})
+
+		t.Log(brd.Possib(brd.Get(Point{4, 2})))
+		if brd.Move(brd.Get(Point{4, 2}), Point{0, 6}) {
+			t.Fatalf("bishop can skip enemy pawn and kill knight")
+		}
+	}
+}

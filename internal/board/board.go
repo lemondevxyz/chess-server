@@ -129,6 +129,7 @@ func (b *Board) Possib(p *Piece) Points {
 				if !ps.In(pnt) || !pnt.Valid() {
 					break
 				}
+
 				if !rm {
 					// encountered piece in the way
 					o := b.Get(pnt)
@@ -141,10 +142,11 @@ func (b *Board) Possib(p *Piece) Points {
 							}
 						}
 						rm = true
-					} else {
+					} /*else {
 						// this direction cannot possibly have following points
+						fmt.Println("broke")
 						break
-					}
+					}*/
 				} else {
 					// start deleting following points, cause we reached a piece in the way
 					index := ps.Index(pnt)
@@ -272,17 +274,20 @@ func (b *Board) Move(p *Piece, dst Point) (ret bool) {
 		}
 
 		o := b.Get(dst)
+		// can we legally go there, i.e is it in the possible combinations??
+		// so for example bishop cannot go horizontally
 		if p.CanGo(dst) {
+			// is there a piece in the destination??
 			if o != nil && o.T != Empty {
-				// if it's not pawn and there's a piece in dst.
-				// then kill it
-				// if it's pawn then don't move
+				// is the piece's an enemy
 				if p.Player != o.Player {
+					// is it not a pawn(cause pawns cannot enemy forward or backward of them)
 					if p.T != PawnF && p.T != PawnB {
 						ret = b.Possib(p).In(dst)
 					}
 				}
 			} else {
+				// no piece in the destination
 				ret = b.Possib(p).In(dst)
 			}
 		} else {
