@@ -46,9 +46,10 @@ func NewGame(cl1, cl2 *Client) (*Game, error) {
 	g.b.Listen(func(p *board.Piece, src board.Point, dst board.Point, ret bool) {
 		if ret {
 			if p.T == board.PawnB || p.T == board.PawnF {
-				if dst.X == 7 || dst.X == 1 {
+				if dst.X == 7 || dst.X == 0 {
 					c := g.cs[p.Player-1]
 					if c != nil {
+
 						x := order.PromoteModel{
 							Src: dst,
 						}
@@ -76,7 +77,6 @@ func (g *Game) SwitchTurn() {
 		g.turn = 1
 	}
 	t := g.turn
-	// TODO: make this not byte me in the ass
 	x, _ := json.Marshal(order.TurnModel{
 		Player: t,
 	})
@@ -107,9 +107,7 @@ func (g *Game) Update(c *Client, u order.Order) error {
 		return err
 	}
 
-	go func() {
-		c.W.Write(body)
-	}()
+	c.W.Write(body)
 
 	return nil
 }

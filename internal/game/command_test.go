@@ -32,43 +32,46 @@ func TestCommandSendMessage(t *testing.T) {
 		cherr <- cl1.Do(c)
 	}()
 
+	body = <-clientRead(rd1)
+
+	x := order.MessageModel{}
+
+	u := order.Order{}
+
+	err = json.Unmarshal(body, &u)
+	if err != nil {
+		t.Fatalf("json.Unmarshal: %s", err.Error())
+	}
+
+	t.Logf("%s", string(body))
+
+	err = json.Unmarshal(u.Data, &x)
+	if err != nil {
+		t.Fatalf("json.Unmarshal: %s", err.Error())
+	}
+
+	if x.Message != "[Player 1]: test" {
+		t.Fatalf("json.Unmarshal: unwanted result")
+	}
+
+	<-clientRead(rd2)
+
 	err = <-cherr
 	if err != nil {
 		t.Fatalf("cl.Do: %s", err.Error())
-	}
-
-	// first message is the turn message
-
-	select {
-	case <-time.After(time.Millisecond * 10):
-		t.Fatalf("timeout")
-	case body := <-clientRead(rd1):
-
-		x := order.MessageModel{}
-
-		u := order.Order{}
-
-		err := json.Unmarshal(body, &u)
-		if err != nil {
-			t.Fatalf("json.Unmarshal: %s", err.Error())
-		}
-
-		t.Logf("%s", string(body))
-
-		err = json.Unmarshal(u.Data, &x)
-		if err != nil {
-			t.Fatalf("json.Unmarshal: %s", err.Error())
-		}
-
-		if x.Message != "[Player 1]: test" {
-			t.Fatalf("json.Unmarshal: unwanted result")
-		}
 	}
 }
 
 func TestCommandMove(t *testing.T) {
 	defer resetPipe()
 
+	cl1.g, cl2.g = nil, nil
+	gGame, _ = NewGame(cl1, cl2)
+
+	go func() {
+		<-clientRead(rd1)
+		<-clientRead(rd2)
+	}()
 	gGame.SwitchTurn()
 
 	do := func(cl *Client, rd *io.PipeReader, src, dst board.Point) error {
@@ -91,13 +94,10 @@ func TestCommandMove(t *testing.T) {
 			cherr <- cl.Do(c)
 		}()
 
-		err = <-cherr
-		if err != nil {
-			return fmt.Errorf("cl.Do: %s", err.Error())
-		}
-
 		// turn message
 		<-clientRead(rd1)
+		<-clientRead(rd2)
+
 		select {
 		case <-time.After(time.Millisecond * 10):
 			return fmt.Errorf("timeout")
@@ -121,17 +121,24 @@ func TestCommandMove(t *testing.T) {
 			return fmt.Errorf("piece is nil")
 		}
 
+		<-clientRead(rd2)
+
+		err = <-cherr
+		if err != nil {
+			return fmt.Errorf("cl.Do: %s", err.Error())
+		}
+
 		return nil
 	}
 
-	err := do(cl1, rd1, board.Point{X: 1, Y: 1}, board.Point{X: 3, Y: 1})
+	err := do(cl1, rd1, board.Point{X: 6, Y: 1}, board.Point{X: 4, Y: 1})
 	if err != nil {
 		t.Fatalf("client 1 : %v", err)
 	}
 
 	resetPipe()
 
-	err = do(cl2, rd2, board.Point{X: 6, Y: 1}, board.Point{X: 4, Y: 1})
+	err = do(cl2, rd2, board.Point{X: 1, Y: 1}, board.Point{X: 3, Y: 1})
 	if err != nil {
 		t.Fatalf("client 2 : %v", err)
 	}
@@ -139,78 +146,82 @@ func TestCommandMove(t *testing.T) {
 }
 
 func TestCommandPromotion(t *testing.T) {
+	resetPipe()
 	defer resetPipe()
 
-	pos := board.Point{X: 1, Y: 5}
-	go gGame.SwitchTurn()
-	p := gGame.b.Get(board.Point{X: 1, Y: 5})
+	cl1.g, cl2.g = nil, nil
+	gGame, _ = NewGame(cl1, cl2)
+
+	pec := gGame.b.Get(board.Point{6, 3})
+	pos := pec.Pos
+
+	ch := make(chan error)
 	go func() {
+		pos.X -= 2
+		if !gGame.b.Move(pec, pos) {
+			fmt.Println("error 1")
+			ch <- fmt.Errorf("cannot move from %v to %v", pec.Pos, pos)
+			return
+		}
 
-		pos.X += 2
-		gGame.b.Move(p, pos)
+		gGame.b.Set(&board.Piece{Pos: board.Point{1, 3}, T: board.Empty})
+		gGame.b.Set(&board.Piece{Pos: board.Point{0, 3}, T: board.Empty})
 
-		gGame.b.Set(&board.Piece{T: board.Empty, Pos: board.Point{X: 0, Y: 4}})
-		gGame.b.Set(&board.Piece{T: board.Empty, Pos: board.Point{X: 6, Y: 5}})
-		gGame.b.Set(&board.Piece{T: board.Empty, Pos: board.Point{X: 7, Y: 5}})
+		for i := 0; i < 4; i++ {
+			pos.X -= 1
+			if !gGame.b.Move(pec, pos) {
+				fmt.Println("error 2")
+				ch <- fmt.Errorf("cannot move from %v to %v", pec.Pos, pos)
+				return
+			}
+		}
 
-		pos.X++
-		gGame.b.Move(p, board.Point{X: pos.X, Y: pos.Y})
-		pos.X++
-		gGame.b.Move(p, board.Point{X: pos.X, Y: pos.Y})
-		pos.X++
-		gGame.b.Move(p, board.Point{X: pos.X, Y: pos.Y})
-		pos.X++
-		gGame.b.Move(p, board.Point{X: pos.X, Y: pos.Y})
+		close(ch)
 	}()
-
-	<-clientRead(rd1)
 
 	select {
 	case <-time.After(time.Millisecond * 100):
 		t.Fatalf("timeout")
 	case body := <-clientRead(rd1):
-		t.Logf("\n%s", gGame.b.String())
-		t.Log(string(body))
-
-		u := order.Order{}
-		err := json.Unmarshal(body, &u)
-		if err != nil {
+		upd := &order.Order{}
+		if err := json.Unmarshal(body, &upd); err != nil {
 			t.Fatalf("json.Unmarshal: %s", err.Error())
 		}
-
-		parameter := order.PromoteModel{}
-
-		err = json.Unmarshal(u.Data, &parameter)
-		t.Log(string(u.Data))
-		if err != nil {
+		promote := &order.PromoteModel{}
+		if err := json.Unmarshal(upd.Data, &promote); err != nil {
 			t.Fatalf("json.Unmarshal: %s", err.Error())
 		}
-
-		t.Log("asd", parameter)
-
-		x := order.PromoteModel{
-			Src:  parameter.Src,
-			Type: board.Queen,
+		if !promote.Src.Equal(pos) {
+			t.Fatalf("promote coordinates aren't at x=7|x=1")
 		}
 
-		data, err := json.Marshal(x)
+		promote.Type = board.Queen
+		body, err := json.Marshal(promote)
 		if err != nil {
 			t.Fatalf("json.Marshal: %s", err.Error())
 		}
 
-		err = cl1.Do(order.Order{
+		cmd := &order.Order{
 			ID:   order.Promote,
-			Data: data,
-		})
-		if err != nil {
-			t.Fatalf("cl.Do: %s", err.Error())
+			Data: body,
 		}
 
-		v := gGame.b.Get(parameter.Src)
-		t.Log(p.Pos, v.Pos)
-		if p.T != board.Queen || (v != nil && v.T != board.Queen) {
-			t.Fatalf("promotion dont work")
+		go func() {
+			// turn
+			<-clientRead(rd1)
+			<-clientRead(rd2)
+			<-clientRead(rd1)
+			<-clientRead(rd2)
+		}()
+
+		err = cl1.Do(*cmd)
+		if err != nil {
+			t.Fatalf("cl1.Do: %s", err.Error())
 		}
-		t.Logf("\n%s", gGame.b.String())
+	}
+
+	err := <-ch
+	if err != nil {
+		t.Fatalf("%v", err)
 	}
 }

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/toms1441/chess-server/internal/board"
 	"github.com/toms1441/chess-server/internal/order"
 )
 
@@ -108,15 +109,24 @@ var cbs = map[uint8]CommandCallback{
 			return err
 		}
 
+		if s.Src.X != 0 && s.Src.X != 7 {
+			return ErrIllegalPromotion
+		}
+
+		/* i'm not yet sure about this part
 		dps := g.b.DeadPieces(c.num)
 		_, ok := dps[s.Type]
 		if !ok {
 			return ErrIllegalPromotion
 		}
+		*/
 
 		p := g.b.Get(s.Src)
 		if p == nil {
 			return ErrPieceNil
+		}
+		if p.T != board.PawnF && p.T != board.PawnB {
+			return ErrIllegalPromotion
 		}
 
 		p.T = s.Type

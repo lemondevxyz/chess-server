@@ -134,7 +134,7 @@ func TestWsClose(t *testing.T) {
 	x := wcl.ClosedChannel()
 
 	go func() {
-		wcl.Close()
+		wcl.Close(ws.StatusNormalClosure, "")
 	}()
 
 	select {

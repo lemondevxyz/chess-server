@@ -190,6 +190,8 @@ func TestGetAvaliableUsersHandler(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	req.Header.Add("Authorization", us1.Token)
+
 	avali := []string{}
 
 	handle.ServeHTTP(resp, req)
@@ -202,8 +204,8 @@ func TestGetAvaliableUsersHandler(t *testing.T) {
 		t.Fatalf("json.Unmarshal: %s", err.Error())
 	}
 
-	if len(avali) != 2 {
-		t.Fatalf("len(avali): %d - want: 2", len(avali))
+	if len(avali) != 1 {
+		t.Fatalf("len(avali): %d - want: 1", len(avali))
 	}
 
 	game.NewGame(cl1, cl2)

@@ -4,6 +4,7 @@ import (
 	"io"
 )
 
+// Note: Future contributors beware of io.Pipe freezing the entire test, wrapping Write operations around a goroutine would make the tests unpredictable
 var (
 	rd1, wr1 = io.Pipe()
 	rd2, wr2 = io.Pipe()

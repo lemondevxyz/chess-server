@@ -13,13 +13,13 @@ import (
 var gGame, _ = NewGame(cl1, cl2)
 
 func TestTurns(t *testing.T) {
-	cl1.g, cl2.g = nil, nil
-
 	resetPipe()
+
+	cl1.g, cl2.g = nil, nil
 	gGame, _ = NewGame(cl1, cl2)
-	go func() {
-		gGame.SwitchTurn()
-	}()
+	go gGame.SwitchTurn()
+
+	time.Sleep(time.Millisecond * 10)
 
 	select {
 	case <-time.After(time.Millisecond * 100):
@@ -50,8 +50,8 @@ func TestTurns(t *testing.T) {
 	cherr := make(chan error)
 	go func() {
 		body, err := json.Marshal(order.MoveModel{
-			Src: board.Point{1, 1},
-			Dst: board.Point{2, 1},
+			Src: board.Point{6, 1},
+			Dst: board.Point{5, 1},
 		})
 
 		if err != nil {
@@ -75,39 +75,43 @@ func TestTurns(t *testing.T) {
 			cherr <- err
 			return
 		}
-
-		cherr <- nil
+		//cherr <- nil
+		close(cherr)
 	}()
 
 	select {
 	case <-time.After(time.Millisecond * 100):
 		t.Fatalf("timeout")
-	case err := <-cherr:
+	case body := <-clientRead(rd1):
+		t.Logf("\n%s", string(body))
+
+		x := &order.TurnModel{}
+		u := &order.Order{}
+
+		err := json.Unmarshal(body, u)
 		if err != nil {
-			t.Fatalf("err: %s", err.Error())
+			t.Fatalf("json.Unmarshal: %s", err.Error())
 		}
+
+		err = json.Unmarshal(u.Data, x)
+		if err != nil {
+			t.Fatalf("json.Unmarshal: %s", err.Error())
+		}
+
+		if x.Player != 2 {
+			t.Fatalf("player is not two: %d", x.Player)
+		}
+
+		<-clientRead(rd2)
+		<-clientRead(rd1)
+		<-clientRead(rd2)
 
 		select {
 		case <-time.After(time.Millisecond * 100):
 			t.Fatalf("timeout")
-		case body := <-clientRead(rd1):
-			t.Logf("\n%s", string(body))
-
-			x := &order.TurnModel{}
-			u := &order.Order{}
-
-			err := json.Unmarshal(body, u)
+		case err := <-cherr:
 			if err != nil {
-				t.Fatalf("json.Unmarshal: %s", err.Error())
-			}
-
-			err = json.Unmarshal(u.Data, x)
-			if err != nil {
-				t.Fatalf("json.Unmarshal: %s", err.Error())
-			}
-
-			if x.Player != 2 {
-				t.Fatalf("player is not two: %d", x.Player)
+				t.Fatalf("err: %s", err.Error())
 			}
 		}
 	}

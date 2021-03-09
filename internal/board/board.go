@@ -48,7 +48,7 @@ func NewBoard() *Board {
 			// x := k + 6
 			b.data[x][y] = &Piece{
 				T:      v,
-				Player: 1,
+				Player: 2,
 				Pos:    Point{x, y},
 			}
 		}
@@ -64,7 +64,7 @@ func NewBoard() *Board {
 			x := k + 6
 			b.data[x][y] = &Piece{
 				T:      v,
-				Player: 2,
+				Player: 1,
 				Pos:    Point{x, y},
 			}
 		}

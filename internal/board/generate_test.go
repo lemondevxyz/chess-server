@@ -206,6 +206,7 @@ func TestDiagonal(t *testing.T) {
 		{2, 7},
 	})
 
+	p = Point{3, 3}
 }
 
 func TestHorizontal(t *testing.T) {
