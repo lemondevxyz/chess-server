@@ -9,33 +9,9 @@ import (
 )
 
 // Command is a communication structure sent from the client to the server.
-// Data should be encoded in JSON, and each command has it's own parameters.
-/*
-type Command struct {
-	ID   uint8           `validate:"required" json:"id"`
-	Data json.RawMessage `validate:"required" json:"data"`
-}
-*/
+// Data needs to be encoded in JSON, and each command has it's own parameters. Defined in order/model.go
 
 type CommandCallback func(c *Client, o order.Order) error
-
-/*
-const (
-	// CmdPiece is used whenever a player wants to move one of their pieces.
-	// Data parameters are `{src: {x: 3, y: 3}, dst: {x: 5, y: 3}}`
-	CmdPiece uint8 = iota + 1
-	// CmdPromotion is what happens when a pawn reaches the end of the board, allowing the player to replace the pawn with a dead piece.
-	// Data parameters are `{id: 1}` - for example pawn
-	// Piece IDs are stored in the board package
-	CmdPromotion
-	// CmdPauseGame is used to pause the game, the other player has to also send it to confirm.
-	// Data parameters are `` - well, empty.
-	CmdPauseGame
-	// CmdSendMessage is used to send chat messages to the other player.
-	// Data parameters are `{message: "hello world"}`
-	CmdMessage
-)
-*/
 
 var cbs = map[uint8]CommandCallback{
 	order.Move: func(c *Client, o order.Order) error {
@@ -108,21 +84,6 @@ var cbs = map[uint8]CommandCallback{
 			},
 		})
 	},
-	/* TODO: implement later, specifically after chess is working
-	CmdPauseGame: func(c *Client, m *Command) error {
-		g := c.g
-		if g == nil {
-			return ErrGameNil
-		}
-
-		s := []struct {
-			Player1 bool
-			Player2 bool
-		}{}
-
-		return nil
-	},
-	*/
 	order.Message: func(c *Client, o order.Order) error {
 		g := c.g
 		s := &order.MessageModel{}
@@ -141,6 +102,84 @@ var cbs = map[uint8]CommandCallback{
 		return g.UpdateAll(order.Order{
 			ID:   order.Message,
 			Data: data,
+		})
+	},
+	order.Castling: func(c *Client, o order.Order) error {
+		g := c.g
+		if !g.canCastle[c.num] {
+			//fmt.Println("here 1")
+			return ErrIllegalCastling
+		}
+
+		x := 7
+		if c.num == 2 {
+			x = 0
+		}
+
+		//fmt.Println("xxx", x)
+
+		kingy := 4
+		for y := 1; y < 7; y++ {
+			// king's position
+			if y == kingy {
+				continue
+			}
+
+			pec := g.b.Get(board.Point{x, y})
+			// pieces that are in the way
+			if pec != nil && pec.T != board.Empty {
+				//fmt.Println(pec, pec.Pos, "here 2")
+				return ErrIllegalCastling
+			}
+		}
+
+		cast := &order.CastlingModel{}
+		err := json.Unmarshal(o.Data, cast)
+		if err != nil {
+			//fmt.Println("here 3")
+			return err
+		}
+
+		dst := cast.Dst
+		if dst.X != x || (dst.Y != 0 && dst.Y != 7) {
+			//fmt.Println("here 4")
+			return ErrIllegalCastling
+		}
+
+		rooky := dst.Y
+
+		rook, king := g.b.Get(board.Point{x, rooky}), g.b.Get(board.Point{x, kingy})
+		if rook == nil || king == nil || rook.T != board.Rook || king.T != board.King { // somehow ??
+			//fmt.Println("here 5")
+			return ErrIllegalCastling
+		}
+
+		g.b.Set(&board.Piece{
+			Pos: board.Point{x, rooky},
+			T:   board.Empty,
+		})
+		g.b.Set(&board.Piece{
+			Pos: board.Point{x, kingy},
+			T:   board.Empty,
+		})
+
+		if rooky == 0 {
+			kingy = 2
+			rooky = 3
+		} else if rooky == 7 {
+			kingy = 6
+			rooky = 5
+		}
+
+		king.Pos.Y = kingy
+		rook.Pos.Y = rooky
+
+		g.b.Set(king)
+		g.b.Set(rook)
+
+		return g.UpdateAll(order.Order{
+			ID:   order.Castling,
+			Data: o.Data,
 		})
 	},
 }

@@ -8,7 +8,7 @@ import (
 // placement test
 func TestNewBoard(t *testing.T) {
 	u := [2][8]uint8{
-		{Rook, Knight, Bishop, King, Queen, Bishop, Knight, Rook},
+		{Rook, Knight, Bishop, Queen, King, Bishop, Knight, Rook},
 		{PawnB, PawnB, PawnB, PawnB, PawnB, PawnB, PawnB, PawnB},
 	}
 
@@ -323,19 +323,83 @@ func TestBoardMoveInTheWay(t *testing.T) {
 
 // while above makes sure that no "special" piece can move over from it's starting position, this one tests past bugs.
 func TestBoardPieceBugInTheWay(t *testing.T) {
-	{ // bishop skipping over enemy pawn and killing knight
+	{ // bishop shouldn't skip over enemy pawn and killing knight
 		brd := NewBoard()
 		pec := brd.Get(Point{6, 4})
+
 		pec.T = Empty
+		pos := Point{4, 2}
+
 		brd.Set(pec)
 		brd.Set(&Piece{
-			Pos: Point{4, 2},
 			T:   Bishop,
+			Pos: pos,
 		})
 
+		t.Logf("bishop possible moves: %s", pos.String())
 		t.Log(brd.Possib(brd.Get(Point{4, 2})))
 		if brd.Move(brd.Get(Point{4, 2}), Point{0, 6}) {
 			t.Fatalf("bishop can skip enemy pawn and kill knight")
+		}
+	}
+	{ // knight cannot override nearby pawn, but it's in the possible moves
+		brd := NewBoard()
+
+		pos := Point{7, 6}
+		pec := brd.Get(pos)
+
+		t.Logf("knight possible moves: %s", pos.String())
+		possib := brd.Possib(pec)
+		t.Log(possib)
+
+		if possib.In(Point{6, 4}) {
+			t.Fatalf("knight possible moves is killing nearby pawn")
+		}
+	}
+	{ // pawn possiblity needs to include killable pieces
+		brd := NewBoard()
+
+		pos := Point{6, 4}
+		pec := brd.Get(pos)
+
+		pos.X -= 2
+		if !brd.Move(pec, pos) {
+			t.Fatalf("major fault within move")
+		}
+
+		pos = Point{1, 3}
+		pec = brd.Get(pos)
+
+		pos.X += 2
+		if !brd.Move(pec, pos) {
+			t.Fatalf("major fault within move")
+		}
+
+		pos = Point{4, 4}
+		pec = brd.Get(pos)
+		if !brd.Possib(pec).In(Point{3, 3}) {
+			t.Fatalf("pawn does not include killable pieces")
+		}
+	}
+	{ // queen possible moves should not include it's fellow allies
+		brd := NewBoard()
+
+		pos := Point{7, 4}
+		pec := brd.Get(pos)
+
+		sp := Points{
+			{7, 3},
+			{7, 5},
+			{6, 4},
+			{6, 3},
+			{6, 5},
+		}
+
+		ps := brd.Possib(pec)
+		for _, v := range sp {
+			if ps.In(v) {
+				t.Fatalf("queen possible moves includes it's fellow allies. point: %s", v.String())
+			}
 		}
 	}
 }

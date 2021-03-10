@@ -21,7 +21,7 @@ const (
 	Game
 	// Move is sent/received whenever a player's piece moves. [O]
 	Move
-	// Possible is sent to view which moves are avaliable. It uses http instead of websocket to receive the update via it's own handler.
+	// Possible is sent to view which moves are avaliable. It uses http instead of websocket to receive the update via it's own handler. [O]
 	Possible
 	// Turn is sent whenever a player moves a piece / special cases such as a promotion. [U]
 	Turn
@@ -30,8 +30,8 @@ const (
 	Promote
 	// Promotion is sent whenever a player promotes it's pawn [U]
 	Promotion
-	// Pause is sent/received whenever a player wants to/pauses the game. [O]
-	Pause
+	// Castling is the act of switching the king and the rook's positions. This is only legal when the king and the rook haven't moved, and nothing is in between them. [O]
+	Castling
 	// Message is sent/received whenver a player sends/receives a message. [O]
 	Message
 	// Done is sent whenever a game ends. [U]

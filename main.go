@@ -9,7 +9,6 @@ import (
 	"github.com/toms1441/chess-server/internal/rest"
 )
 
-// hello
 const port = ":8080"
 
 func debug_game() {
@@ -39,6 +38,7 @@ func main() {
 	rout.HandleFunc("/accept", rest.AcceptInviteHandler).Methods("POST", "OPTIONS")
 	rout.HandleFunc("/ws", rest.WebsocketHandler).Methods("GET", "OPTIONS")
 	rout.HandleFunc("/avali", rest.GetAvaliableUsersHandler).Methods("GET", "OPTIONS")
+	rout.HandleFunc("/possib", rest.PossibHandler).Methods("POST", "OPTIONS")
 
 	rout.HandleFunc("/protect", func(w http.ResponseWriter, r *http.Request) {
 		_, err := rest.GetUser(r)

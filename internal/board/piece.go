@@ -112,7 +112,7 @@ func (p *Piece) Possib() Points {
 	case Queen:
 		return src.Horizontal().
 			Merge(src.Vertical()).
-			Merge(src.Square()).
+			//Merge(src.Square()). no need vertical|horizontal|diagonal includes square
 			Merge(src.Diagonal())
 	// move within square
 	case King:

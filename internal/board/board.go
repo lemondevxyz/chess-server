@@ -25,8 +25,8 @@ func NewBoard() *Board {
 			Rook,
 			Knight,
 			Bishop,
-			King,
 			Queen,
+			King,
 			Bishop,
 			Knight,
 			Rook,
@@ -114,10 +114,10 @@ func (b Board) Get(src Point) *Piece {
 }
 
 // Possib is the same as Piece.Possib, but with removal of illegal moves.
-func (b Board) Possib(p *Piece) Points {
-	ps := p.Possib()
-	if p.T != Knight && p.T != PawnB && p.T != PawnF {
-		orix, oriy := p.Pos.X, p.Pos.Y
+func (b Board) Possib(pec *Piece) Points {
+	ps := pec.Possib()
+	if pec.T != Knight && pec.T != PawnB && pec.T != PawnF {
+		orix, oriy := pec.Pos.X, pec.Pos.Y
 
 		// starting from x, y this function loops through possible points
 		// afterwards it changes the value via op function which receives x, y and modifies them
@@ -132,10 +132,10 @@ func (b Board) Possib(p *Piece) Points {
 
 				if !rm {
 					// encountered piece in the way
-					o := b.Get(pnt)
-					if o != nil {
-						if p.Player == o.Player {
-							index := ps.Index(o.Pos)
+					cep := b.Get(pnt)
+					if cep != nil {
+						if pec.Player == cep.Player {
+							index := ps.Index(cep.Pos)
 							if index >= 0 {
 								ps[index] = ps[len(ps)-1]
 								ps = ps[:len(ps)-1]
@@ -144,7 +144,6 @@ func (b Board) Possib(p *Piece) Points {
 						rm = true
 					} /*else {
 						// this direction cannot possibly have following points
-						fmt.Println("broke")
 						break
 					}*/
 				} else {
@@ -183,72 +182,55 @@ func (b Board) Possib(p *Piece) Points {
 			x, y = DownRight(orix, oriy)
 			loop(x, y, DownRight)
 		}
+	} else if pec.T == Knight {
+		for i := len(ps) - 1; i >= 0; i-- {
+
+			v := ps[i]
+			cep := b.Get(v)
+			if cep != nil {
+				if cep.Player == pec.Player {
+					ps[i] = ps[len(ps)-1]
+					ps = ps[:len(ps)-1]
+				}
+			}
+		}
+	} else if pec.T == PawnF || pec.T == PawnB {
+		x := pec.Pos.X - 1
+		if pec.T == PawnB {
+			x = pec.Pos.X + 1
+		}
+
+		sp := Points{
+			{x, pec.Pos.Y - 1},
+			{x, pec.Pos.Y + 1},
+		}
+		sp = sp.Clean()
+
+		for i := len(sp) - 1; i >= 0; i-- {
+			v := sp[i]
+
+			cep := b.Get(v)
+			// is there a piece
+			if cep != nil {
+				// is it the enemy's
+				if cep.Player != pec.Player {
+					// then don't remove this move from the possible moves
+					continue
+				}
+			}
+
+			// empty piece or piece is ours
+			// so remove it
+			// pawn cannot kill it's friend
+			sp[i] = sp[len(sp)-1]
+			sp = sp[:len(sp)-1]
+		}
+
+		ps = ps.Merge(ps, sp)
 	}
 
 	return ps.Clean()
 }
-
-/*
-func (b *Board) Possib(p *Piece) Points {
-	ps := p.Possib()
-	if p.T != Knight && p.T != PawnB && p.T != PawnF {
-		dir := p.Pos.Direction(dst)
-
-		x, y := p.Pos.X, p.Pos.Y
-		stopat := Point{-1, -1}
-
-		// here we see if there's a piece in the way..
-		// if so then we remove that point from the possible points we could go through
-		for i := 0; i < 8; i++ {
-			// direction movement
-
-			pos := Point{x, y}
-			if !pos.Valid() {
-				break
-			}
-			if pos.Equal(dst) {
-				break
-			} else {
-				o := b.Get(pos)
-				if o != nil && o.T != Empty {
-					// there's a piece in the way
-					stopat = pos
-					break
-				}
-			}
-		}
-
-		// this means there was a piece in the way
-		if stopat.Valid() {
-			// start from the piece in the way, and cancel all the "next" moves
-			x, y = stopat.X, stopat.Y
-			// so for example, if we want to go to (4, 3) and there is a piece in (2, 1) - (3, 2) would not be possible
-			// as well as (4,3) and so on.
-
-			// therefore we don't really need
-			var fn func(Point) bool
-			if Has(dir, DirDown) {
-				fn = stopat.Bigger
-			} else if Has(dir, DirUp) {
-				fn = stopat.Smaller
-			} else if Has(dir, DirLeft) {
-				fn = stopat.Smaller
-			} else if Has(dir, DirRight) {
-				fn = stopat.Bigger
-			}
-
-			for i := len(ps) - 1; i >= 0; i-- {
-				v := ps[i]
-				if fn(v) {
-					ps = append(ps[:i], ps[i+1:]...)
-				}
-			}
-		}
-	}
-
-	return ps
-}
-*/
 
 // Move moves a piece from it's original position to the destination. Returns true if it did, or false if it didn't.
 func (b *Board) Move(p *Piece, dst Point) (ret bool) {

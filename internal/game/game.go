@@ -9,12 +9,12 @@ import (
 )
 
 type Game struct {
-	id   string
-	cs   [2]*Client
-	turn uint8
-	done bool
-	b    *board.Board
-	cmd  map[string]interface{} // command-specific data
+	id        string
+	cs        [2]*Client
+	turn      uint8
+	done      bool
+	b         *board.Board
+	canCastle map[uint8]bool
 }
 
 func NewGame(cl1, cl2 *Client) (*Game, error) {
@@ -36,7 +36,10 @@ func NewGame(cl1, cl2 *Client) (*Game, error) {
 	g := &Game{
 		cs:   [2]*Client{cl1, cl2},
 		turn: 0,
-		cmd:  map[string]interface{}{},
+		canCastle: map[uint8]bool{
+			1: true,
+			2: true,
+		},
 	}
 
 	cl1.g, cl2.g = g, g
@@ -60,6 +63,8 @@ func NewGame(cl1, cl2 *Client) (*Game, error) {
 						})
 					}
 				}
+			} else if p.T == board.King || p.T == board.Rook {
+				g.canCastle[p.Player] = false
 			}
 		}
 	})

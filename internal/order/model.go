@@ -28,7 +28,7 @@ type MoveModel struct {
 	Dst board.Point `json:"dst"`
 }
 
-// [U] sent as response to http
+// [O] sent as response to http
 type PossibleModel struct {
 	Src    *board.Point  `json:"src,omitempty"`    // [C]
 	Points *board.Points `json:"points,omitempty"` // [U]
@@ -39,24 +39,22 @@ type TurnModel struct {
 	Player uint8 `json:"player"`
 }
 
-// [U]
-type PromotionModel struct {
-	Type uint8       `json:"type"`
-	Dst  board.Point `json:"dst"`
-}
-
 // [O]
 type PromoteModel struct {
 	Src  board.Point `json:"src"`
 	Type uint8       `json:"type"`
 }
 
-// [C]
-type PauseModel bool
+// [U]
+type PromotionModel struct {
+	Type uint8       `json:"type"`
+	Dst  board.Point `json:"dst"`
+}
 
-// PausedModel equals to 0 when a single player wants to pause.
-// Or equals to 1 when the other player declines. If the other player accepts it equals 2.
-type PausedModel uint8
+type CastlingModel struct {
+	Src board.Point `json:"src"`
+	Dst board.Point `json:"dst"`
+}
 
 // [O]
 type MessageModel struct {
