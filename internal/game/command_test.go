@@ -11,6 +11,15 @@ import (
 	"github.com/toms1441/chess-server/internal/order"
 )
 
+var kingmap = map[int]int{
+	7: 6,
+	0: 2,
+}
+var rookmap = map[int]int{
+	7: 5,
+	0: 3,
+}
+
 func TestCommandSendMessage(t *testing.T) {
 	defer resetPipe()
 
@@ -230,15 +239,7 @@ func TestCommandCastling(t *testing.T) {
 
 	defer resetPipe()
 
-	kingmap := map[int]int{
-		7: 6,
-		0: 2,
-	}
-	rookmap := map[int]int{
-		7: 5,
-		0: 3,
-	}
-
+	id := order.Castling
 	do := func(x int, rook int, cl *Client) {
 		resetPipe()
 		cl1.g, cl2.g = nil, nil
@@ -246,10 +247,17 @@ func TestCommandCastling(t *testing.T) {
 
 		go func() {
 			gGame.SwitchTurn()
+			if x == 0 {
+				gGame.SwitchTurn()
+			}
 		}()
 
 		<-clientRead(rd1)
 		<-clientRead(rd2)
+		if x == 0 {
+			<-clientRead(rd1)
+			<-clientRead(rd2)
+		}
 
 		for y := 1; y < 7; y++ {
 			if y == 4 {
@@ -265,7 +273,7 @@ func TestCommandCastling(t *testing.T) {
 		t.Logf("\n%s", gGame.b.String())
 
 		body, err := json.Marshal(order.CastlingModel{
-			Src: board.Point{x, 3},
+			Src: board.Point{x, 4},
 			Dst: board.Point{x, rook},
 		})
 		if err != nil {
@@ -274,12 +282,15 @@ func TestCommandCastling(t *testing.T) {
 
 		x1, x2 := make(chan []byte), make(chan []byte)
 		go func() {
+			<-clientRead(rd1)
+			<-clientRead(rd2)
 			x1 = clientRead(rd1)
 			x2 = clientRead(rd2)
 		}()
 
+		t.Logf(string(body))
 		err = cl.Do(order.Order{
-			ID:   order.Castling,
+			ID:   id,
 			Data: body,
 		})
 		if err != nil {
@@ -300,5 +311,8 @@ func TestCommandCastling(t *testing.T) {
 
 	do(0, 7, cl2)
 	do(0, 0, cl2)
+
+	id = order.Move
+	do(7, 7, cl1)
 
 }

@@ -13,173 +13,210 @@ import (
 
 type CommandCallback func(c *Client, o order.Order) error
 
-var cbs = map[uint8]CommandCallback{
-	order.Move: func(c *Client, o order.Order) error {
-		g := c.g
-		if !g.IsTurn(c) {
-			return ErrIllegalTurn
-		}
+var cbs map[uint8]CommandCallback
 
-		s := &order.MoveModel{}
-
-		err := json.Unmarshal(o.Data, s)
-		if err != nil {
-			return err
-		}
-
-		p := g.b.Get(s.Src)
-		if p == nil {
-			return ErrPieceNil
-		}
-
-		ret := g.b.Move(p, s.Dst)
-		if ret == false || p.Player != c.num {
-			return ErrIllegalMove
-		}
-
-		g.SwitchTurn()
-
-		return g.UpdateAll(order.Order{
-			ID:   order.Move,
-			Data: o.Data,
-		})
-	},
-	order.Promote: func(c *Client, o order.Order) error {
-		g := c.g
-		s := &order.PromoteModel{}
-
-		err := json.Unmarshal(o.Data, s)
-		if err != nil {
-			return err
-		}
-
-		if s.Src.X != 0 && s.Src.X != 7 {
-			return ErrIllegalPromotion
-		}
-
-		/* i'm not yet sure about this part
-		dps := g.b.DeadPieces(c.num)
-		_, ok := dps[s.Type]
-		if !ok {
-			return ErrIllegalPromotion
-		}
-		*/
-
-		p := g.b.Get(s.Src)
-		if p == nil {
-			return ErrPieceNil
-		}
-		if p.T != board.PawnF && p.T != board.PawnB {
-			return ErrIllegalPromotion
-		}
-
-		p.T = s.Type
-		g.SwitchTurn()
-
-		return g.UpdateAll(order.Order{
-			ID: order.Promotion,
-			Parameter: order.PromotionModel{
-				Dst:  s.Src,
-				Type: s.Type,
-			},
-		})
-	},
-	order.Message: func(c *Client, o order.Order) error {
-		g := c.g
-		s := &order.MessageModel{}
-
-		err := json.Unmarshal(o.Data, s)
-		if err != nil {
-			return err
-		}
-
-		s.Message = fmt.Sprintf("[Player %d]: %s", c.num, s.Message)
-		data, err := json.Marshal(s)
-		if err != nil {
-			return err
-		}
-
-		return g.UpdateAll(order.Order{
-			ID:   order.Message,
-			Data: data,
-		})
-	},
-	order.Castling: func(c *Client, o order.Order) error {
-		g := c.g
-		if !g.canCastle[c.num] {
-			//fmt.Println("here 1")
-			return ErrIllegalCastling
-		}
-
-		x := 7
-		if c.num == 2 {
-			x = 0
-		}
-
-		//fmt.Println("xxx", x)
-
-		kingy := 4
-		for y := 1; y < 7; y++ {
-			// king's position
-			if y == kingy {
-				continue
+func init() {
+	cbs = map[uint8]CommandCallback{
+		order.Move: func(c *Client, o order.Order) error {
+			g := c.g
+			if !g.IsTurn(c) {
+				return ErrIllegalTurn
 			}
 
-			pec := g.b.Get(board.Point{x, y})
-			// pieces that are in the way
-			if pec != nil && pec.T != board.Empty {
-				//fmt.Println(pec, pec.Pos, "here 2")
+			s := &order.MoveModel{}
+
+			err := json.Unmarshal(o.Data, s)
+			if err != nil {
+				return err
+			}
+
+			pec := g.b.Get(s.Src)
+			if pec == nil {
+				fmt.Println(pec, string(o.Data))
+				return ErrPieceNil
+			}
+
+			if pec.Player != c.num {
+				return ErrIllegalMove
+			}
+
+			cep := g.b.Get(s.Dst)
+			// if the destination contains a piece
+			if cep != nil {
+				// if it's in the same team as a the player
+				if cep.Player == pec.Player {
+					// if one is a king, and the other is rook
+					if (cep.T == board.King && pec.T == board.Rook) || (cep.T == board.Rook || pec.T == board.King) {
+						//fn := cbs[order.Castling]
+
+						return c.Do(order.Order{
+							ID:   order.Castling,
+							Data: o.Data,
+						})
+					}
+				}
+			}
+
+			ret := g.b.Move(pec, s.Dst)
+			if ret == false {
+				return ErrIllegalMove
+			}
+
+			g.SwitchTurn()
+
+			return g.UpdateAll(order.Order{
+				ID:   order.Move,
+				Data: o.Data,
+			})
+		},
+		order.Promote: func(c *Client, o order.Order) error {
+			g := c.g
+			s := &order.PromoteModel{}
+
+			err := json.Unmarshal(o.Data, s)
+			if err != nil {
+				return err
+			}
+
+			if s.Src.X != 0 && s.Src.X != 7 {
+				return ErrIllegalPromotion
+			}
+
+			/* i'm not yet sure about this part
+			dps := g.b.DeadPieces(c.num)
+			_, ok := dps[s.Type]
+			if !ok {
+				return ErrIllegalPromotion
+			}
+			*/
+
+			p := g.b.Get(s.Src)
+			if p == nil {
+				return ErrPieceNil
+			}
+			if p.T != board.PawnF && p.T != board.PawnB {
+				return ErrIllegalPromotion
+			}
+
+			p.T = s.Type
+			g.SwitchTurn()
+
+			return g.UpdateAll(order.Order{
+				ID: order.Promotion,
+				Parameter: order.PromotionModel{
+					Dst:  s.Src,
+					Type: s.Type,
+				},
+			})
+		},
+		order.Message: func(c *Client, o order.Order) error {
+			g := c.g
+			s := &order.MessageModel{}
+
+			err := json.Unmarshal(o.Data, s)
+			if err != nil {
+				return err
+			}
+
+			s.Message = fmt.Sprintf("[Player %d]: %s", c.num, s.Message)
+			data, err := json.Marshal(s)
+			if err != nil {
+				return err
+			}
+
+			return g.UpdateAll(order.Order{
+				ID:   order.Message,
+				Data: data,
+			})
+		},
+		order.Castling: func(c *Client, o order.Order) error {
+			g := c.g
+			if !g.IsTurn(c) {
+				return ErrIllegalTurn
+			}
+			if !g.canCastle[c.num] {
+				//fmt.Println("here 1")
 				return ErrIllegalCastling
 			}
-		}
 
-		cast := &order.CastlingModel{}
-		err := json.Unmarshal(o.Data, cast)
-		if err != nil {
-			//fmt.Println("here 3")
-			return err
-		}
+			x := 7
+			if c.num == 2 {
+				x = 0
+			}
 
-		dst := cast.Dst
-		if dst.X != x || (dst.Y != 0 && dst.Y != 7) {
-			//fmt.Println("here 4")
-			return ErrIllegalCastling
-		}
+			//fmt.Println("xxx", x)
 
-		rooky := dst.Y
+			kingy := 4
+			for y := 1; y < 7; y++ {
+				// king's position
+				if y == kingy {
+					continue
+				}
 
-		rook, king := g.b.Get(board.Point{x, rooky}), g.b.Get(board.Point{x, kingy})
-		if rook == nil || king == nil || rook.T != board.Rook || king.T != board.King { // somehow ??
-			//fmt.Println("here 5")
-			return ErrIllegalCastling
-		}
+				pec := g.b.Get(board.Point{x, y})
+				// pieces that are in the way
+				if pec != nil && pec.T != board.Empty {
+					//fmt.Println(pec, pec.Pos, "here 2")
+					return ErrIllegalCastling
+				}
+			}
 
-		g.b.Set(&board.Piece{
-			Pos: board.Point{x, rooky},
-			T:   board.Empty,
-		})
-		g.b.Set(&board.Piece{
-			Pos: board.Point{x, kingy},
-			T:   board.Empty,
-		})
+			cast := &order.CastlingModel{}
+			err := json.Unmarshal(o.Data, cast)
+			if err != nil {
+				//fmt.Println("here 3")
+				return err
+			}
 
-		if rooky == 0 {
-			kingy = 2
-			rooky = 3
-		} else if rooky == 7 {
-			kingy = 6
-			rooky = 5
-		}
+			src := cast.Src
+			if src.X != x || src.Y != kingy {
+				return ErrIllegalCastling
+			}
 
-		king.Pos.Y = kingy
-		rook.Pos.Y = rooky
+			dst := cast.Dst
+			if dst.X != x || (dst.Y != 0 && dst.Y != 7) {
+				//fmt.Println("here 4")
+				return ErrIllegalCastling
+			}
 
-		g.b.Set(king)
-		g.b.Set(rook)
+			rooky := dst.Y
 
-		return g.UpdateAll(order.Order{
-			ID:   order.Castling,
-			Data: o.Data,
-		})
-	},
+			rook, king := g.b.Get(board.Point{x, rooky}), g.b.Get(board.Point{x, kingy})
+			if rook == nil || king == nil || rook.T != board.Rook || king.T != board.King { // somehow ??
+				//fmt.Println("here 5")
+				return ErrIllegalCastling
+			}
+
+			g.b.Set(&board.Piece{
+				Pos: board.Point{x, rooky},
+				T:   board.Empty,
+			})
+			g.b.Set(&board.Piece{
+				Pos: board.Point{x, kingy},
+				T:   board.Empty,
+			})
+
+			if rooky == 0 {
+				kingy = 2
+				rooky = 3
+			} else if rooky == 7 {
+				kingy = 6
+				rooky = 5
+			}
+
+			king.Pos.Y = kingy
+			rook.Pos.Y = rooky
+
+			g.b.Set(king)
+			g.b.Set(rook)
+
+			g.SwitchTurn()
+
+			return g.UpdateAll(order.Order{
+				ID:   order.Castling,
+				Data: o.Data,
+			})
+		},
+	}
+
 }

@@ -51,10 +51,10 @@ type PromotionModel struct {
 	Dst  board.Point `json:"dst"`
 }
 
-type CastlingModel struct {
+type CastlingModel MoveModel /*struct {
 	Src board.Point `json:"src"`
 	Dst board.Point `json:"dst"`
-}
+}*/
 
 // [O]
 type MessageModel struct {

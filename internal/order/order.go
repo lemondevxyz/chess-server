@@ -19,7 +19,7 @@ const (
 	Invite
 	// Game is sent whenever a game starts. Sent by the invite handler. [U]
 	Game
-	// Move is sent/received whenever a player's piece moves. [O]
+	// Move is sent/received whenever a player's piece moves. If the src is from the king/rook, if the dst is from the rook/king. And both src and dst belong to the player then Castling is called. So it's sort  [O]
 	Move
 	// Possible is sent to view which moves are avaliable. It uses http instead of websocket to receive the update via it's own handler. [O]
 	Possible
@@ -31,6 +31,7 @@ const (
 	// Promotion is sent whenever a player promotes it's pawn [U]
 	Promotion
 	// Castling is the act of switching the king and the rook's positions. This is only legal when the king and the rook haven't moved, and nothing is in between them. [O]
+	// Can be used as a command(or move instead), but it's required as an Update.
 	Castling
 	// Message is sent/received whenver a player sends/receives a message. [O]
 	Message
