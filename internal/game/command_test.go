@@ -240,7 +240,7 @@ func TestCommandCastling(t *testing.T) {
 	defer resetPipe()
 
 	id := order.Castling
-	do := func(x int, rook int, cl *Client) {
+	do := func(x int, rooky int, kingy int, cl *Client) {
 		resetPipe()
 		cl1.g, cl2.g = nil, nil
 		gGame, _ = NewGame(cl1, cl2)
@@ -272,10 +272,12 @@ func TestCommandCastling(t *testing.T) {
 
 		t.Logf("\n%s", gGame.b.String())
 
-		body, err := json.Marshal(order.CastlingModel{
-			Src: board.Point{x, 4},
-			Dst: board.Point{x, rook},
-		})
+		cast := order.CastlingModel{
+			Src: board.Point{x, kingy},
+			Dst: board.Point{x, rooky},
+		}
+
+		body, err := json.Marshal(cast)
 		if err != nil {
 			t.Fatalf("json.Marshal: %s", err.Error())
 		}
@@ -300,19 +302,27 @@ func TestCommandCastling(t *testing.T) {
 		b1, b2 := <-x1, <-x2
 		t.Log(string(b1), string(b2))
 
-		pecrook, pecking := gGame.b.Get(board.Point{x, rookmap[rook]}), gGame.b.Get(board.Point{x, kingmap[rook]})
+		if kingy != 4 {
+			rooky, kingy = kingy, rooky
+		}
+
+		pecrook, pecking := gGame.b.Get(board.Point{x, rookmap[rooky]}), gGame.b.Get(board.Point{x, kingmap[rooky]})
 		if pecrook == nil || pecking == nil || pecrook.T != board.Rook || pecking.T != board.King {
 			t.Fatalf("unpredictable results. %s: %s | %s: %s", pecrook.Pos, pecrook, pecking.Pos, pecking)
 		}
 	}
 
-	do(7, 7, cl1)
-	do(7, 0, cl1)
+	do(7, 7, 4, cl1)
+	do(7, 0, 4, cl1)
+	do(7, 4, 7, cl1)
+	do(7, 4, 0, cl1)
 
-	do(0, 7, cl2)
-	do(0, 0, cl2)
+	do(0, 7, 4, cl2)
+	do(0, 0, 4, cl2)
+	do(0, 4, 7, cl2)
+	do(0, 4, 7, cl2)
 
 	id = order.Move
-	do(7, 7, cl1)
+	do(7, 7, 4, cl1)
 
 }

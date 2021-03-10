@@ -135,7 +135,7 @@ func init() {
 				return ErrIllegalTurn
 			}
 			if !g.canCastle[c.num] {
-				//fmt.Println("here 1")
+				fmt.Println("here 1")
 				return ErrIllegalCastling
 			}
 
@@ -144,10 +144,49 @@ func init() {
 				x = 0
 			}
 
-			//fmt.Println("xxx", x)
-
 			kingy := 4
-			for y := 1; y < 7; y++ {
+
+			cast := &order.CastlingModel{}
+			err := json.Unmarshal(o.Data, cast)
+			if err != nil {
+				fmt.Println("here 2")
+				return err
+			}
+
+			src := cast.Src
+			dst := cast.Dst
+
+			ok := func() bool {
+				if src.X != x || src.Y != kingy {
+					return false
+				}
+				if dst.X != x || (dst.Y != 0 && dst.Y != 7) {
+					fmt.Println("here 3")
+					return false
+				}
+
+				return true
+			}
+
+			if !ok() {
+				src, dst = dst, src
+				if !ok() {
+					// neither is a king or a rook
+					return ErrIllegalCastling
+				}
+			}
+
+			miny := dst.Y
+			if miny == kingy {
+				miny = src.Y
+			}
+
+			maxy := kingy
+			if miny > maxy {
+				miny, maxy = maxy, miny
+			}
+
+			for y := miny; y < miny; y++ {
 				// king's position
 				if y == kingy {
 					continue
@@ -156,34 +195,16 @@ func init() {
 				pec := g.b.Get(board.Point{x, y})
 				// pieces that are in the way
 				if pec != nil && pec.T != board.Empty {
-					//fmt.Println(pec, pec.Pos, "here 2")
+					fmt.Println(pec, pec.Pos, "here 4")
 					return ErrIllegalCastling
 				}
-			}
-
-			cast := &order.CastlingModel{}
-			err := json.Unmarshal(o.Data, cast)
-			if err != nil {
-				//fmt.Println("here 3")
-				return err
-			}
-
-			src := cast.Src
-			if src.X != x || src.Y != kingy {
-				return ErrIllegalCastling
-			}
-
-			dst := cast.Dst
-			if dst.X != x || (dst.Y != 0 && dst.Y != 7) {
-				//fmt.Println("here 4")
-				return ErrIllegalCastling
 			}
 
 			rooky := dst.Y
 
 			rook, king := g.b.Get(board.Point{x, rooky}), g.b.Get(board.Point{x, kingy})
 			if rook == nil || king == nil || rook.T != board.Rook || king.T != board.King { // somehow ??
-				//fmt.Println("here 5")
+				fmt.Println("here 5")
 				return ErrIllegalCastling
 			}
 
