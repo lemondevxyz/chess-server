@@ -91,7 +91,6 @@ func UpgradeConn(conn net.Conn) (*WsClient, error) {
 		for !cl.closed {
 			header, err := ws.ReadHeader(conn)
 			if err != nil {
-				fmt.Println(err)
 				cl.Close(ws.StatusProtocolError, "")
 				return
 			}

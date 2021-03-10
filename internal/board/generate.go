@@ -53,10 +53,23 @@ func abs(i int) int {
 // Clean removes all out of bounds points
 func (ps Points) Clean() (ret Points) {
 	ret = ps
+	// remove invalid poitns
 	for i := len(ps) - 1; i >= 0; i-- {
 		p := ret[i]
 		if !p.Valid() {
 			ret = append(ret[:i], ret[i+1:]...)
+		}
+	}
+
+	exist := map[string]struct{}{}
+	for i := len(ret) - 1; i >= 0; i-- {
+		p := ret[i]
+
+		_, ok := exist[p.String()]
+		if ok {
+			ret = append(ret[:i], ret[i+1:]...)
+		} else {
+			exist[p.String()] = struct{}{}
 		}
 	}
 

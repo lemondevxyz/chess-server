@@ -21,9 +21,7 @@ const (
 	Game
 	// Move is sent/received whenever a player's piece moves. [O]
 	Move
-	// Possibility is received whenever a player wants to know their possible moves. [C]
-	Possibility
-	// Possible is sent whenever a player requests it via Possibility. [U]
+	// Possible is sent to view which moves are avaliable. It uses http instead of websocket to receive the update via it's own handler.
 	Possible
 	// Turn is sent whenever a player moves a piece / special cases such as a promotion. [U]
 	Turn

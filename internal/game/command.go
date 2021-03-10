@@ -68,38 +68,6 @@ var cbs = map[uint8]CommandCallback{
 			Data: o.Data,
 		})
 	},
-	order.Possibility: func(c *Client, o order.Order) error {
-		g := c.g
-		if !g.IsTurn(c) {
-			return ErrIllegalTurn
-		}
-
-		s := &order.PossibilityModel{}
-		err := json.Unmarshal(o.Data, s)
-		if err != nil {
-			return err
-		}
-
-		p := g.b.Get(s.Src)
-		if p == nil || p.Player != c.num {
-			return ErrPieceNil
-		}
-
-		ps := g.b.Possib(p)
-
-		model := order.PossibleModel{
-			Points: ps,
-		}
-		data, err := json.Marshal(model)
-		if err != nil {
-			return err
-		}
-
-		return g.Update(c, order.Order{
-			ID:   order.Possible,
-			Data: data,
-		})
-	},
 	order.Promote: func(c *Client, o order.Order) error {
 		g := c.g
 		s := &order.PromoteModel{}

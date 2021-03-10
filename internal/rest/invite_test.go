@@ -103,16 +103,27 @@ func TestAcceptInviteHandler(t *testing.T) {
 	status := http.StatusOK
 	handle := http.HandlerFunc(AcceptInviteHandler)
 
+	done := make(chan struct{})
 	go func() {
-		// game update
-		x := make([]byte, 1024)
-		rd2.Read(x)
-
-		x = make([]byte, 1024)
-		rd1.Read(x)
+		handle.ServeHTTP(resp, req)
+		close(done)
 	}()
 
-	handle.ServeHTTP(resp, req)
+	// game update
+	x := make([]byte, 1024)
+	rd2.Read(x)
+
+	x = make([]byte, 1024)
+	rd1.Read(x)
+
+	x = make([]byte, 1024)
+	rd2.Read(x)
+
+	x = make([]byte, 1024)
+	rd1.Read(x)
+
+	<-done
+
 	rs := resp.Result()
 	body, err = ioutil.ReadAll(rs.Body)
 	if err != nil {

@@ -28,14 +28,10 @@ type MoveModel struct {
 	Dst board.Point `json:"dst"`
 }
 
-// [C]
-type PossibilityModel struct {
-	Src board.Point `json:"src"`
-}
-
-// [U]
+// [U] sent as response to http
 type PossibleModel struct {
-	Points board.Points `json:"points"`
+	Src    *board.Point  `json:"src,omitempty"`    // [C]
+	Points *board.Points `json:"points,omitempty"` // [U]
 }
 
 // [U]

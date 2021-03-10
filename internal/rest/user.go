@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/kjk/betterguid"
@@ -20,6 +21,8 @@ type User struct {
 }
 
 var users = map[string]*User{}
+var usermtx = sync.Mutex{}
+
 var chanuser = make(chan *User)
 
 const (
@@ -35,6 +38,8 @@ func ClientChannel() chan *User {
 }
 
 func AddClient(c *game.Client) *User {
+	usermtx.Lock()
+
 	id := betterguid.New()
 	us := &User{
 		invite: map[string]*User{},
@@ -48,6 +53,9 @@ func AddClient(c *game.Client) *User {
 	go func() {
 		chanuser <- us
 	}()
+
+	usermtx.Unlock()
+
 	return us
 }
 
@@ -101,7 +109,9 @@ func (u *User) Delete() {
 	}
 	u.cl = nil
 	u.invite = nil
+	usermtx.Lock()
 	delete(users, u.Token)
+	usermtx.Unlock()
 }
 
 func (u *User) Valid() bool {

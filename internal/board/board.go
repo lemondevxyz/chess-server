@@ -109,12 +109,12 @@ func (b *Board) Set(p *Piece) {
 }
 
 // Get returns a piece
-func (b *Board) Get(src Point) *Piece {
+func (b Board) Get(src Point) *Piece {
 	return b.data[src.X][src.Y]
 }
 
 // Possib is the same as Piece.Possib, but with removal of illegal moves.
-func (b *Board) Possib(p *Piece) Points {
+func (b Board) Possib(p *Piece) Points {
 	ps := p.Possib()
 	if p.T != Knight && p.T != PawnB && p.T != PawnF {
 		orix, oriy := p.Pos.X, p.Pos.Y
@@ -185,7 +185,7 @@ func (b *Board) Possib(p *Piece) Points {
 		}
 	}
 
-	return ps
+	return ps.Clean()
 }
 
 /*
@@ -316,7 +316,7 @@ func (b *Board) Move(p *Piece, dst Point) (ret bool) {
 }
 
 // MarshalJSON json.Marshaler
-func (b *Board) MarshalJSON() ([]byte, error) {
+func (b Board) MarshalJSON() ([]byte, error) {
 	body, err := json.Marshal(b.data)
 	if err != nil {
 		return nil, err
