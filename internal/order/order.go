@@ -33,6 +33,8 @@ const (
 	// Castling is the act of switching the king and the rook's positions. This is only legal when the king and the rook haven't moved, and nothing is in between them. [O]
 	// Can be used as a command(or move instead), but it's required as an Update.
 	Castling
+	// Checkmate is sent whenever the king is in danger and needs to move.
+	Checkmate
 	// Message is sent/received whenver a player sends/receives a message. [O]
 	Message
 	// Done is sent whenever a game ends. [U]

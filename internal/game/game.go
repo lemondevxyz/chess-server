@@ -127,7 +127,7 @@ func (g *Game) UpdateAll(o order.Order) error {
 	return g.Update(g.cs[1], o)
 }
 
-// Board returns a board copy.
-func (g *Game) Board() board.Board {
-	return *g.b
+// Board returns the actual board.
+func (g *Game) Board() *board.Board {
+	return g.b
 }

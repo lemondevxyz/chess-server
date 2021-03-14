@@ -84,6 +84,7 @@ func (p *Piece) Possib() Points {
 	// Only horizontally, can't move back
 	// 2 points at start, 1 point after that
 	case PawnF, PawnB:
+		// i plan to depecrate this
 		ps := Points{}
 		if p.T == PawnF {
 			ps = src.Forward()
@@ -91,13 +92,14 @@ func (p *Piece) Possib() Points {
 			ps = src.Backward()
 		}
 		if src.X == 1 || src.X == 6 {
-			ps = append(ps, Point{X: src.X - 2, Y: src.Y})
-			ps = append(ps, Point{X: src.X + 2, Y: src.Y})
-
-			ps.Clean()
+			if p.T == PawnF {
+				ps = append(ps, Point{X: src.X - 2, Y: src.Y})
+			} else if p.T == PawnB {
+				ps = append(ps, Point{X: src.X + 2, Y: src.Y})
+			}
 		}
 
-		return ps
+		return ps.Clean()
 	// Only diagonal
 	case Bishop:
 		return src.Diagonal()

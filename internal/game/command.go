@@ -32,7 +32,6 @@ func init() {
 
 			pec := g.b.Get(s.Src)
 			if pec == nil {
-				fmt.Println(pec, string(o.Data))
 				return ErrPieceNil
 			}
 
@@ -62,7 +61,14 @@ func init() {
 				return ErrIllegalMove
 			}
 
-			g.SwitchTurn()
+			if !(s.Dst.X == 7 || s.Dst.X == 0) {
+				// promotion
+				g.SwitchTurn()
+			} else {
+				if pec.T != board.PawnF && pec.T != board.PawnB {
+					g.SwitchTurn()
+				}
+			}
 
 			return g.UpdateAll(order.Order{
 				ID:   order.Move,
@@ -135,7 +141,7 @@ func init() {
 				return ErrIllegalTurn
 			}
 			if !g.canCastle[c.num] {
-				fmt.Println("here 1")
+				//fmt.Println("here 1")
 				return ErrIllegalCastling
 			}
 
@@ -149,7 +155,7 @@ func init() {
 			cast := &order.CastlingModel{}
 			err := json.Unmarshal(o.Data, cast)
 			if err != nil {
-				fmt.Println("here 2")
+				//fmt.Println("here 2")
 				return err
 			}
 
@@ -161,7 +167,7 @@ func init() {
 					return false
 				}
 				if dst.X != x || (dst.Y != 0 && dst.Y != 7) {
-					fmt.Println("here 3")
+					//fmt.Println("here 3")
 					return false
 				}
 
@@ -195,7 +201,7 @@ func init() {
 				pec := g.b.Get(board.Point{x, y})
 				// pieces that are in the way
 				if pec != nil && pec.T != board.Empty {
-					fmt.Println(pec, pec.Pos, "here 4")
+					//fmt.Println(pec, pec.Pos, "here 4")
 					return ErrIllegalCastling
 				}
 			}
@@ -204,7 +210,7 @@ func init() {
 
 			rook, king := g.b.Get(board.Point{x, rooky}), g.b.Get(board.Point{x, kingy})
 			if rook == nil || king == nil || rook.T != board.Rook || king.T != board.King { // somehow ??
-				fmt.Println("here 5")
+				//fmt.Println("here 5")
 				return ErrIllegalCastling
 			}
 

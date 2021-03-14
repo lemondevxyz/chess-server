@@ -38,30 +38,6 @@ func TestNewBoard(t *testing.T) {
 	t.Logf("\n%s", b.String())
 }
 
-/*
- somethings do not need tests
-func TestBoardString(t *testing.T) {
-	str := `R N B K Q B N R
-P P P P P P P P
-
-
-
-
-P P P P P P P P
-R N B K Q B N R`
-
-	x, y := NewBoard().String(), str
-
-	fmt.Println(x)
-	fmt.Println(y)
-	fmt.Println(strings.Compare(x, y))
-
-	if x != y {
-		t.Fatalf("strings are layoutted wrong")
-	}
-}
-*/
-
 func TestBoardListen(t *testing.T) {
 	b := NewBoard()
 
@@ -400,6 +376,30 @@ func TestBoardPieceBugInTheWay(t *testing.T) {
 			if ps.In(v) {
 				t.Fatalf("queen possible moves includes it's fellow allies. point: %s", v.String())
 			}
+		}
+	}
+	{ // pawn backward shouldn't have X-2 at X = 1, pawn forward shouldn't have X+2 at X = 6
+		brd := NewBoard()
+
+		pawnf := &Piece{
+			Pos:    Point{1, 1},
+			T:      PawnF,
+			Player: 1,
+		}
+		pawnb := &Piece{
+			Pos:    Point{6, 1},
+			T:      PawnB,
+			Player: 2,
+		}
+
+		brd.Set(pawnb)
+		brd.Set(pawnf)
+
+		if brd.Possib(pawnb).In(Point{4, 1}) {
+			t.Fatalf("backward pawn can go to 4, 1")
+		}
+		if brd.Possib(pawnf).In(Point{3, 1}) {
+			t.Fatalf("backward pawn can go to 3, 1")
 		}
 	}
 }

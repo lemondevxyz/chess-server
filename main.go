@@ -11,7 +11,7 @@ import (
 
 const port = ":8080"
 
-func debug_game() {
+func debug_game(debugValue Debug) {
 	ch := rest.ClientChannel()
 	go func() {
 		for {
@@ -24,6 +24,13 @@ func debug_game() {
 			} else {
 				us2.AcceptInvite(id)
 			}
+
+			switch debugValue {
+			case debugCastling:
+				castlingDebug(us1, us2)
+			case debugPromote:
+				promotionDebug(us1, us2)
+			}
 		}
 	}()
 }
@@ -31,7 +38,7 @@ func debug_game() {
 func main() {
 	rout := mux.NewRouter()
 
-	debug_game()
+	debug_game(debugPromote)
 
 	rout.HandleFunc("/cmd", rest.CmdHandler).Methods("POST", "OPTIONS")
 	rout.HandleFunc("/invite", rest.InviteHandler).Methods("POST", "OPTIONS")

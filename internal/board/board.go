@@ -195,6 +195,16 @@ func (b Board) Possib(pec *Piece) Points {
 			}
 		}
 	} else if pec.T == PawnF || pec.T == PawnB {
+		for i := len(ps) - 1; i >= 0; i-- {
+			pnt := ps[i]
+			if b.Get(pnt) != nil { // piece in the way ...
+				ps[i] = ps[len(ps)-1]
+				ps = ps[:len(ps)-1]
+			}
+		}
+
+		// if our move has a piece in the way then cancel
+		// also if we're at 6 or 1, then allow movement to 4 or 3
 		x := pec.Pos.X - 1
 		if pec.T == PawnB {
 			x = pec.Pos.X + 1
@@ -273,23 +283,8 @@ func (b *Board) Move(p *Piece, dst Point) (ret bool) {
 				ret = b.Possib(p).In(dst)
 			}
 		} else {
-			if p.T == PawnB || p.T == PawnF {
-				x := p.Pos.X
-				if p.T == PawnB {
-					x++
-				} else if p.T == PawnF {
-					x--
-				}
-
-				ps := Points{
-					{x, p.Pos.Y + 1},
-					{x, p.Pos.Y - 1},
-				}
-				if ps.In(dst) {
-					if o != nil && o.T != Empty && o.Player != p.Player {
-						ret = true
-					}
-				}
+			if p.T == PawnF || p.T == PawnB {
+				ret = b.Possib(p).In(dst)
 			}
 		}
 	}
