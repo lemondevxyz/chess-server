@@ -403,3 +403,72 @@ func TestBoardPieceBugInTheWay(t *testing.T) {
 		}
 	}
 }
+
+func TestBoardCheckmate(t *testing.T) {
+	// testing top 10 fast checkmates: https://www.chess.com/article/view/fastest-chess-checkmates
+	// black always wins
+	try := func(brd *Board, src Point, pnt Point) {
+		pec := brd.Get(src)
+		if pec == nil {
+			t.Fatalf("invalid piece at point: %s", src.String())
+		}
+
+		if !brd.Move(pec, pnt) {
+			t.Fatalf("perfectly legal move is failing. piece: %s | src: %s - dst: %s", pec.String(), pec.Pos.String(), pnt.String())
+		}
+	}
+	{ // fool's pawn
+		brd := NewBoard()
+
+		try(brd, Point{6, 5}, Point{5, 5})
+		try(brd, Point{1, 4}, Point{3, 4})
+		try(brd, Point{6, 6}, Point{4, 6})
+		try(brd, Point{0, 3}, Point{4, 7})
+
+		/*
+			R N B   K B N R
+			P P P P   P P P
+
+			        P
+			            P Q
+			          P
+			P P P P P     P
+			R N B Q K B N R
+
+			t.Logf("\n%s", brd)
+		*/
+		if !brd.Checkmate(1) {
+			t.Fatalf("no checkmate")
+		}
+	}
+	{
+		brd := NewBoard()
+
+		try(brd, Point{6, 4}, Point{4, 4})
+		try(brd, Point{1, 4}, Point{3, 4})
+		try(brd, Point{6, 2}, Point{4, 2})
+		try(brd, Point{0, 5}, Point{3, 2})
+		try(brd, Point{7, 1}, Point{5, 2})
+		try(brd, Point{0, 3}, Point{4, 7})
+		try(brd, Point{7, 6}, Point{5, 5})
+		try(brd, Point{4, 7}, Point{6, 5})
+
+		/*
+			R N B   K   N R
+			P P P P   P P P
+
+			    B   P
+			    P   P
+			    N     N
+			P P   P   Q P P
+			R   B Q K B   R
+
+			t.Logf("\n%s", brd)
+		*/
+
+		if !brd.Checkmate(1) {
+			t.Fatalf("no checkmate")
+		}
+	}
+	// TODO: implement the rest
+}

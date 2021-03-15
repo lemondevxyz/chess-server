@@ -38,7 +38,7 @@ func debug_game(debugValue Debug) {
 func main() {
 	rout := mux.NewRouter()
 
-	debug_game(debugPromote)
+	debug_game(0)
 
 	rout.HandleFunc("/cmd", rest.CmdHandler).Methods("POST", "OPTIONS")
 	rout.HandleFunc("/invite", rest.InviteHandler).Methods("POST", "OPTIONS")

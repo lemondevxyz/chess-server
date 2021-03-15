@@ -116,7 +116,63 @@ func (b Board) Get(src Point) *Piece {
 // Possib is the same as Piece.Possib, but with removal of illegal moves.
 func (b Board) Possib(pec *Piece) Points {
 	ps := pec.Possib()
-	if pec.T != Knight && pec.T != PawnB && pec.T != PawnF {
+	switch pec.T {
+	case Knight: // disallow movement to allies
+		for i := len(ps) - 1; i >= 0; i-- {
+
+			v := ps[i]
+			cep := b.Get(v)
+			if cep != nil {
+				if cep.Player == pec.Player {
+					ps[i] = ps[len(ps)-1]
+					ps = ps[:len(ps)-1]
+				}
+			}
+		}
+	case PawnF, PawnB: // disallow movement in front of piece
+		for i := len(ps) - 1; i >= 0; i-- {
+			pnt := ps[i]
+			if b.Get(pnt) != nil { // piece in the way ...
+				ps[i] = ps[len(ps)-1]
+				ps = ps[:len(ps)-1]
+			}
+		}
+
+		// if our move has a piece in the way then cancel
+		// also if we're at 6 or 1, then allow movement to 4 or 3
+		x := pec.Pos.X - 1
+		if pec.T == PawnB {
+			x = pec.Pos.X + 1
+		}
+
+		sp := Points{
+			{x, pec.Pos.Y - 1},
+			{x, pec.Pos.Y + 1},
+		}
+		sp = sp.Clean()
+
+		for i := len(sp) - 1; i >= 0; i-- {
+			v := sp[i]
+
+			cep := b.Get(v)
+			// is there a piece
+			if cep != nil {
+				// is it the enemy's
+				if cep.Player != pec.Player {
+					// then don't remove this move from the possible moves
+					continue
+				}
+			}
+
+			// empty piece or piece is ours
+			// so remove it
+			// pawn cannot kill it's friend
+			sp[i] = sp[len(sp)-1]
+			sp = sp[:len(sp)-1]
+		}
+
+		ps = ps.Merge(ps, sp)
+	default:
 		orix, oriy := pec.Pos.X, pec.Pos.Y
 
 		// starting from x, y this function loops through possible points
@@ -182,64 +238,39 @@ func (b Board) Possib(pec *Piece) Points {
 			x, y = DownRight(orix, oriy)
 			loop(x, y, DownRight)
 		}
-	} else if pec.T == Knight {
-		for i := len(ps) - 1; i >= 0; i-- {
 
-			v := ps[i]
-			cep := b.Get(v)
-			if cep != nil {
-				if cep.Player == pec.Player {
-					ps[i] = ps[len(ps)-1]
-					ps = ps[:len(ps)-1]
-				}
-			}
-		}
-	} else if pec.T == PawnF || pec.T == PawnB {
-		for i := len(ps) - 1; i >= 0; i-- {
-			pnt := ps[i]
-			if b.Get(pnt) != nil { // piece in the way ...
-				ps[i] = ps[len(ps)-1]
-				ps = ps[:len(ps)-1]
-			}
-		}
-
-		// if our move has a piece in the way then cancel
-		// also if we're at 6 or 1, then allow movement to 4 or 3
-		x := pec.Pos.X - 1
-		if pec.T == PawnB {
-			x = pec.Pos.X + 1
-		}
-
-		sp := Points{
-			{x, pec.Pos.Y - 1},
-			{x, pec.Pos.Y + 1},
-		}
-		sp = sp.Clean()
-
-		for i := len(sp) - 1; i >= 0; i-- {
-			v := sp[i]
-
-			cep := b.Get(v)
-			// is there a piece
-			if cep != nil {
-				// is it the enemy's
-				if cep.Player != pec.Player {
-					// then don't remove this move from the possible moves
-					continue
-				}
-			}
-
-			// empty piece or piece is ours
-			// so remove it
-			// pawn cannot kill it's friend
-			sp[i] = sp[len(sp)-1]
-			sp = sp[:len(sp)-1]
-		}
-
-		ps = ps.Merge(ps, sp)
 	}
 
 	return ps.Clean()
+}
+
+func (b Board) Checkmate(player uint8) bool {
+	var king *Piece
+	for _, s := range b.data {
+		for _, v := range s {
+			if v != nil {
+				if v.T == King && v.Player == player {
+					king = v
+					break
+				}
+			}
+		}
+	}
+
+	for _, s := range b.data {
+		for _, v := range s {
+			if v != nil {
+				if v.Player != player {
+					possib := v.Possib()
+					if possib.In(king.Pos) {
+						return true
+					}
+				}
+			}
+		}
+	}
+
+	return false
 }
 
 // Move moves a piece from it's original position to the destination. Returns true if it did, or false if it didn't.
