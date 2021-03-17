@@ -171,7 +171,7 @@ func TestDiagonal(t *testing.T) {
 	})
 
 	p = Point{5, 4}
-	generate_test(t, "diagonal center", p, p.Diagonal(), []Point{
+	generate_test(t, "diagonal right", p, p.Diagonal(), []Point{
 		// +, +
 		{7, 6},
 		{6, 5},

@@ -38,6 +38,20 @@ func TestNewBoard(t *testing.T) {
 	t.Logf("\n%s", b.String())
 }
 
+func TestBoardCopy(t *testing.T) {
+	brd := NewBoard()
+	drb := brd.Copy()
+
+	if brd.String() != drb.String() {
+		t.Fatalf("board.Copy doesnt copy well")
+	}
+
+	brd.Move(brd.Get(Point{6, 3}), Point{4, 3})
+	if brd.String() == drb.String() {
+		t.Fatalf("board.Copy original move applies to copy of board")
+	}
+}
+
 func TestBoardListen(t *testing.T) {
 	b := NewBoard()
 
@@ -295,6 +309,22 @@ func TestBoardMoveInTheWay(t *testing.T) {
 			t.Fatalf("queen can move over other pieces")
 		}
 	}
+
+	// try moving king to a threatened
+	{
+		brd := NewBoard()
+		for i := 0; i < 8; i++ {
+			brd.Set(&Piece{Pos: Point{1, i}, T: Empty})
+			brd.Set(&Piece{Pos: Point{6, i}, T: Empty})
+		}
+
+		pec := brd.Get(Point{7, 4})
+		brd.Set(&Piece{Pos: Point{7, 4}, T: Empty})
+		brd.Set(&Piece{Pos: Point{6, 3}, T: King})
+		t.Log(brd.Possib(pec))
+
+		t.Logf("\n%s", brd)
+	}
 }
 
 // while above makes sure that no "special" piece can move over from it's starting position, this one tests past bugs.
@@ -417,6 +447,53 @@ func TestBoardCheckmate(t *testing.T) {
 			t.Fatalf("perfectly legal move is failing. piece: %s | src: %s - dst: %s", pec.String(), pec.Pos.String(), pnt.String())
 		}
 	}
+	{ // BUG: checkmate works through other pieces
+		brd := NewBoard()
+
+		try(brd, Point{6, 5}, Point{5, 5})
+		try(brd, Point{1, 4}, Point{3, 4})
+		try(brd, Point{6, 6}, Point{5, 6})
+		try(brd, Point{0, 3}, Point{4, 7})
+		// R N B   K B N R
+		// P P P P   P P P
+		//
+		//         P
+		//               Q
+		//           P P
+		// P P P P P     P
+		// R N B Q K B N R
+		// t.Logf("\n%s", brd)
+
+		if brd.Checkmate(1) {
+			t.Fatalf("bad checkmate, over other piece")
+		}
+	}
+	{ // checkmate but not a final checkmate
+		brd := NewBoard()
+
+		try(brd, Point{6, 5}, Point{5, 5})
+		try(brd, Point{1, 4}, Point{3, 4})
+		try(brd, Point{6, 0}, Point{4, 0})
+		try(brd, Point{0, 3}, Point{4, 7})
+
+		if !brd.Checkmate(1) {
+			t.Fatalf("no checkmate")
+		}
+		// R N B   K B N R
+		// P P P P   P P P
+		//
+		//         P
+		// P             Q
+		//           P
+		//   P P P P   P P
+		// R N B Q K B N R
+		// t.Logf("\n%s", brd)
+		try(brd, Point{6, 6}, Point{5, 6})
+
+		if brd.FinalCheckmate(1) {
+			t.Fatalf("somehow final checkmate")
+		}
+	}
 	{ // fool's pawn
 		brd := NewBoard()
 
@@ -425,23 +502,24 @@ func TestBoardCheckmate(t *testing.T) {
 		try(brd, Point{6, 6}, Point{4, 6})
 		try(brd, Point{0, 3}, Point{4, 7})
 
-		/*
-			R N B   K B N R
-			P P P P   P P P
+		// R N B   K B N R
+		// P P P P   P P P
+		//
+		//         P
+		//             P Q
+		//           P
+		// P P P P P     P
+		// R N B Q K B N R
+		// t.Logf("\n%s", brd)
 
-			        P
-			            P Q
-			          P
-			P P P P P     P
-			R N B Q K B N R
-
-			t.Logf("\n%s", brd)
-		*/
 		if !brd.Checkmate(1) {
 			t.Fatalf("no checkmate")
 		}
+		if !brd.FinalCheckmate(1) {
+			t.Fatalf("no final checkmate")
+		}
 	}
-	{
+	{ // scholar's mate
 		brd := NewBoard()
 
 		try(brd, Point{6, 4}, Point{4, 4})
@@ -453,21 +531,94 @@ func TestBoardCheckmate(t *testing.T) {
 		try(brd, Point{7, 6}, Point{5, 5})
 		try(brd, Point{4, 7}, Point{6, 5})
 
-		/*
-			R N B   K   N R
-			P P P P   P P P
+		//  R N B   K   N R
+		//  P P P P   P P P
+		//
+		//      B   P
+		//      P   P
+		//      N     N
+		//  P P   P   Q P P
+		//  R   B Q K B   R
+		//
+		//  t.Logf("\n%s", brd)
+		if !brd.Checkmate(1) {
+			t.Fatalf("no checkmate")
+		}
 
-			    B   P
-			    P   P
-			    N     N
-			P P   P   Q P P
-			R   B Q K B   R
+		if !brd.FinalCheckmate(1) {
+			t.Fatalf("no final checkmate")
+		}
+	}
+	{ // bird's opening
+		brd := NewBoard()
 
-			t.Logf("\n%s", brd)
-		*/
+		try(brd, Point{6, 5}, Point{4, 5})
+		try(brd, Point{1, 4}, Point{3, 4})
+		try(brd, Point{4, 5}, Point{3, 4})
+		try(brd, Point{1, 3}, Point{2, 3})
+		try(brd, Point{3, 4}, Point{2, 3})
+		try(brd, Point{0, 5}, Point{2, 3})
+		try(brd, Point{7, 1}, Point{5, 2})
+		try(brd, Point{0, 3}, Point{4, 7})
+
+		// R N B   K   N R
+		// P P P     P P P
+		//       B
+		//
+		//               Q
+		//     N
+		// P P P P P   P P
+		// R   B Q K B N R
+		// t.Logf("\n%s", brd)
+
+		// this one requires seeing 4 moves ahead
+		// technically it's not a final checkmate, but if the player knows this strat then it is.
+		// this could be a future enhancement, for the server to memorize all these strategies and stuff, but for now it should fail.
 
 		if !brd.Checkmate(1) {
 			t.Fatalf("no checkmate")
+		}
+
+		if brd.FinalCheckmate(1) {
+			t.Fatalf("no final checkmate")
+		}
+	}
+	{ // italian game smothered mate
+		brd := NewBoard()
+
+		try(brd, Point{6, 4}, Point{4, 4})
+		try(brd, Point{1, 4}, Point{3, 4})
+		try(brd, Point{7, 6}, Point{5, 5})
+		try(brd, Point{0, 1}, Point{2, 2})
+		try(brd, Point{7, 5}, Point{4, 2})
+		try(brd, Point{2, 2}, Point{4, 3})
+		try(brd, Point{5, 5}, Point{3, 4})
+		try(brd, Point{0, 3}, Point{3, 6})
+		try(brd, Point{3, 4}, Point{1, 5})
+		try(brd, Point{3, 6}, Point{6, 6})
+		try(brd, Point{7, 7}, Point{7, 5})
+		try(brd, Point{6, 6}, Point{4, 4})
+		try(brd, Point{4, 2}, Point{6, 4})
+		try(brd, Point{4, 3}, Point{5, 5})
+
+		// R   B   K B N R
+		// P P P P   N P P
+		//
+		//
+		//         Q
+		//           N
+		// P P P P B P   P
+		// R N B Q K R
+		// t.Logf("\n%s", brd)
+
+		// this once also requires seeing more than 1 move ahead.
+
+		if !brd.Checkmate(1) {
+			t.Fatalf("no checkmate")
+		}
+
+		if brd.FinalCheckmate(1) {
+			t.Fatalf("no final checkmate")
 		}
 	}
 	// TODO: implement the rest

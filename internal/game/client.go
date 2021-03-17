@@ -44,14 +44,13 @@ func (c *Client) LeaveGame() {
 		x = g.cs[1]
 	}
 
-	upd := order.Order{ID: order.Done, Parameter: 1}
+	upd := order.Order{ID: order.Done, Parameter: int8(1)}
 	c.g.Update(x, upd)
 
-	upd.Parameter = -1
+	upd.Parameter = int8(-1)
 	c.g.Update(c, upd)
 
-	c.g = nil
-	x.g = nil
+	c.g.Close()
 
 }
 

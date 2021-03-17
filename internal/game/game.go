@@ -76,14 +76,33 @@ func NewGame(cl1, cl2 *Client) (*Game, error) {
 
 // SwitchTurn called after a player ends their turn, to notify the other player.
 func (g *Game) SwitchTurn() {
+
+	bef := g.turn
+	aft := g.turn
 	if g.turn == 1 {
-		g.turn = 2
+		aft = 2
 	} else {
-		g.turn = 1
+		aft = 1
 	}
-	t := g.turn
+	if g.b.FinalCheckmate(aft) {
+		fmt.Println("final checkmate")
+
+		upd := order.Order{ID: order.Done, Parameter: int8(1)}
+		g.Update(g.cs[bef-1], upd)
+
+		upd.Parameter = int8(-1)
+		g.Update(g.cs[aft-1], upd)
+
+		g.Close()
+
+		fmt.Println("returning")
+		return
+	}
+
+	g.turn = aft
+
 	x, _ := json.Marshal(order.TurnModel{
-		Player: t,
+		Player: aft,
 	})
 
 	g.UpdateAll(order.Order{ID: order.Turn, Data: x})
@@ -130,4 +149,16 @@ func (g *Game) UpdateAll(o order.Order) error {
 // Board returns the actual board.
 func (g *Game) Board() *board.Board {
 	return g.b
+}
+
+func (g *Game) Close() {
+	if g.cs[0] != nil {
+		g.cs[0].g = nil
+		g.cs[0] = nil
+	}
+	if g.cs[1] != nil {
+		g.cs[1].g = nil
+		g.cs[1] = nil
+	}
+
 }

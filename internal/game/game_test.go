@@ -116,3 +116,65 @@ func TestTurns(t *testing.T) {
 		}
 	}
 }
+
+func TestGameDone(t *testing.T) {
+	resetPipe()
+
+	cl1.g = nil
+	cl2.g = nil
+
+	gGame, _ = NewGame(cl1, cl2)
+	go gGame.SwitchTurn()
+
+	by1 := <-clientRead(rd1)
+	by2 := <-clientRead(rd2)
+
+	done := false
+
+	doMove := func(src, dst board.Point) {
+		cl := gGame.cs[gGame.turn-1]
+
+		x, err := json.Marshal(order.MoveModel{
+			Src: src,
+			Dst: dst,
+		})
+		if err != nil {
+			t.Fatalf("json.Marshal: %s", err)
+		}
+
+		if !done {
+			go func() {
+				by1 := <-clientRead(rd1)
+				by2 := <-clientRead(rd2)
+				fmt.Println("bc", string(by1), "|", string(by2))
+				by1 = <-clientRead(rd1)
+				by2 = <-clientRead(rd2)
+				fmt.Println("yz", string(by1), "|", string(by2))
+			}()
+		}
+
+		err = cl.Do(order.Order{
+			ID:   order.Move,
+			Data: x,
+		})
+		if err != nil {
+			t.Fatalf("cl.Do: %s", err)
+		}
+	}
+
+	doMove(board.Point{6, 5}, board.Point{5, 5})
+	doMove(board.Point{1, 4}, board.Point{3, 4})
+	doMove(board.Point{6, 6}, board.Point{4, 6})
+	done = true
+	go func() {
+		by2 = <-clientRead(rd2)
+		by1 = <-clientRead(rd1)
+		fmt.Println("kxxx", string(by1), "|", string(by2))
+	}()
+	fmt.Println("xxx")
+	doMove(board.Point{0, 3}, board.Point{4, 7})
+	fmt.Println("adsdas")
+
+	t.Logf("\n%s", gGame.b.String())
+
+}
