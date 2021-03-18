@@ -15,8 +15,12 @@ import (
 var _inviteCode = ""
 
 func TestInviteHandler(t *testing.T) {
+	go func() {
+		<-read(rd2)
+		<-read(rd1)
+	}()
 	us1.cl.LeaveGame()
-	us2.cl.LeaveGame()
+	//us2.cl.LeaveGame()
 
 	x := order.InviteModel{
 		ID: us2.PublicID,
@@ -137,7 +141,10 @@ func TestAcceptInviteHandler(t *testing.T) {
 		t.Fatalf("AcceptInvite does not start a new game")
 	}
 
+	go func() {
+		<-read(rd2)
+		<-read(rd1)
+	}()
 	us1.Client().LeaveGame()
-	us2.Client().LeaveGame()
 
 }

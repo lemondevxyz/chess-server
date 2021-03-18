@@ -178,9 +178,16 @@ func TestUserAcceptInvite(t *testing.T) {
 }
 
 func TestGetAvaliableUsersHandler(t *testing.T) {
-
+	go func() {
+		// turn update
+		<-read(rd2)
+		<-read(rd1)
+		// game done update
+		<-read(rd2)
+		<-read(rd1)
+	}()
 	us1.Client().LeaveGame()
-	us2.Client().LeaveGame()
+	//us2.Client().LeaveGame()
 
 	handle := http.HandlerFunc(GetAvaliableUsersHandler)
 
