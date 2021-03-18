@@ -47,11 +47,14 @@ func init() {
 					// if one is a king, and the other is rook
 					if (cep.T == board.King && pec.T == board.Rook) || (cep.T == board.Rook || pec.T == board.King) {
 						//fn := cbs[order.Castling]
-
+						/* mtx.Lock freezes this
 						return c.Do(order.Order{
 							ID:   order.Castling,
 							Data: o.Data,
 						})
+						*/
+
+						return cbs[order.Castling](c, o)
 					}
 				}
 			}
@@ -61,6 +64,7 @@ func init() {
 				return ErrIllegalMove
 			}
 
+			//fmt.Println("switch turn")
 			if !(s.Dst.X == 7 || s.Dst.X == 0) {
 				// promotion
 				g.SwitchTurn()

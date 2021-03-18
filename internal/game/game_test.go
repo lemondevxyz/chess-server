@@ -118,6 +118,7 @@ func TestTurns(t *testing.T) {
 }
 
 func TestGameDone(t *testing.T) {
+
 	resetPipe()
 
 	cl1.g = nil
@@ -128,6 +129,7 @@ func TestGameDone(t *testing.T) {
 
 	by1 := <-clientRead(rd1)
 	by2 := <-clientRead(rd2)
+	t.Log(string(by1), string(by2))
 
 	done := false
 
@@ -144,12 +146,10 @@ func TestGameDone(t *testing.T) {
 
 		if !done {
 			go func() {
-				by1 := <-clientRead(rd1)
-				by2 := <-clientRead(rd2)
-				fmt.Println("bc", string(by1), "|", string(by2))
-				by1 = <-clientRead(rd1)
-				by2 = <-clientRead(rd2)
-				fmt.Println("yz", string(by1), "|", string(by2))
+				<-clientRead(rd1)
+				<-clientRead(rd2)
+				<-clientRead(rd1)
+				<-clientRead(rd2)
 			}()
 		}
 
@@ -166,14 +166,21 @@ func TestGameDone(t *testing.T) {
 	doMove(board.Point{1, 4}, board.Point{3, 4})
 	doMove(board.Point{6, 6}, board.Point{4, 6})
 	done = true
+	resetPipe()
 	go func() {
-		by2 = <-clientRead(rd2)
-		by1 = <-clientRead(rd1)
-		fmt.Println("kxxx", string(by1), "|", string(by2))
+		<-clientRead(rd2)
+		<-clientRead(rd1)
+		<-clientRead(rd1)
+		<-clientRead(rd2)
 	}()
-	fmt.Println("xxx")
 	doMove(board.Point{0, 3}, board.Point{4, 7})
-	fmt.Println("adsdas")
+	//
+
+	lc1 := gGame.cs[0]
+	lc2 := gGame.cs[1]
+	if lc1 != nil || lc2 != nil {
+		t.Fatalf("gGame cs: %v | %v", lc1, lc2)
+	}
 
 	t.Logf("\n%s", gGame.b.String())
 

@@ -168,7 +168,7 @@ func TestCommandPromotion(t *testing.T) {
 	go func() {
 		pos.X -= 2
 		if !gGame.b.Move(pec, pos) {
-			fmt.Println("error 1")
+			//fmt.Println("error 1")
 			ch <- fmt.Errorf("cannot move from %v to %v", pec.Pos, pos)
 			return
 		}
@@ -179,7 +179,7 @@ func TestCommandPromotion(t *testing.T) {
 		for i := 0; i < 4; i++ {
 			pos.X -= 1
 			if !gGame.b.Move(pec, pos) {
-				fmt.Println("error 2")
+				//fmt.Println("error 2")
 				ch <- fmt.Errorf("cannot move from %v to %v", pec.Pos, pos)
 				return
 			}
@@ -323,6 +323,7 @@ func TestCommandCastling(t *testing.T) {
 	do(0, 4, 7, cl2)
 
 	id = order.Move
+	t.Log("henlo")
 	do(7, 7, 4, cl1)
 
 }

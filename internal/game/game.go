@@ -85,17 +85,14 @@ func (g *Game) SwitchTurn() {
 		aft = 1
 	}
 	if g.b.FinalCheckmate(aft) {
-		fmt.Println("final checkmate")
-
 		upd := order.Order{ID: order.Done, Parameter: int8(1)}
 		g.Update(g.cs[bef-1], upd)
 
 		upd.Parameter = int8(-1)
 		g.Update(g.cs[aft-1], upd)
 
-		g.Close()
+		g.done = true
 
-		fmt.Println("returning")
 		return
 	}
 
@@ -114,6 +111,10 @@ func (g *Game) IsTurn(c *Client) bool {
 
 // Update is used to send updates to the client, such as a movement of a piece.
 func (g *Game) Update(c *Client, u order.Order) error {
+	if c == nil {
+		return ErrClientNil
+	}
+
 	if u.Data == nil {
 		x, ok := ubs[u.ID]
 		if !ok {
@@ -152,13 +153,18 @@ func (g *Game) Board() *board.Board {
 }
 
 func (g *Game) Close() {
+	do := func(cl *Client) {
+		cl.mtx.Lock()
+		cl.g = nil
+		cl.mtx.Unlock()
+	}
+
 	if g.cs[0] != nil {
-		g.cs[0].g = nil
+		do(g.cs[0])
 		g.cs[0] = nil
 	}
 	if g.cs[1] != nil {
-		g.cs[1].g = nil
+		do(g.cs[1])
 		g.cs[1] = nil
 	}
-
 }
