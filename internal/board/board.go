@@ -391,10 +391,22 @@ func (b Board) FinalCheckmate(player uint8) bool {
 		return false
 	}
 
+	exist := false
+	ret := true
+
 	for _, v := range b.data {
 		for _, s := range v {
 			if s != nil {
 				if s.Player == player {
+					if s.T == King {
+						exist = true
+						continue
+					}
+
+					if !ret {
+						continue
+					}
+
 					oldpos := s.Pos
 					b.Set(&Piece{Pos: oldpos, T: Empty}) // erase the old piece
 
@@ -402,7 +414,7 @@ func (b Board) FinalCheckmate(player uint8) bool {
 						s.Pos = v
 						b.Set(s)
 						if !b.Checkmate(player) {
-							return false
+							ret = false
 						} else {
 							b.Set(&Piece{Pos: s.Pos, T: Empty})
 						}
@@ -417,7 +429,11 @@ func (b Board) FinalCheckmate(player uint8) bool {
 		}
 	}
 
-	return true
+	if !exist {
+		return true
+	}
+
+	return ret
 }
 
 // Checkmate returns true if the player has been checkmatted

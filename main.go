@@ -3,34 +3,45 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/fatih/color"
 	"github.com/gorilla/mux"
 	"github.com/toms1441/chess-server/internal/rest"
+	"github.com/toms1441/chess-server/internal/rest/headless"
 )
 
 const port = ":8080"
 
-func debug_game(debugValue Debug) {
+func debug_game(debugValue Debug, solo bool) {
 	ch := rest.ClientChannel()
 	go func() {
-		for {
-			us1 := <-ch
-			us2 := <-ch
+		var us2 *rest.User
 
-			id, err := us1.Invite(us2.PublicID, rest.InviteLifespan)
-			if err != nil {
-				fmt.Printf("error: %s", err.Error())
-			} else {
-				us2.AcceptInvite(id)
-			}
+		us1 := <-ch
+		if solo {
+			go headless.NewClient("ws://localhost" + port + "/ws")
+		}
 
-			switch debugValue {
-			case debugCastling:
-				castlingDebug(us1, us2)
-			case debugPromote:
-				promotionDebug(us1, us2)
-			}
+		us2 = <-ch
+
+		id, err := us1.Invite(us2.PublicID, rest.InviteLifespan)
+		if err != nil {
+			fmt.Printf("error: %s", err.Error())
+		} else {
+			us2.AcceptInvite(id)
+		}
+
+		// sometimes flutter complains because of how many redraws we request
+		// so let's slow it down
+		time.Sleep(time.Second)
+		switch debugValue {
+		case debugCastling:
+			castlingDebug(us1, us2)
+		case debugPromote:
+			promotionDebug(us1, us2)
+		case debugCheckmate:
+			checkmateDebug(us1, us2)
 		}
 	}()
 }
@@ -38,7 +49,7 @@ func debug_game(debugValue Debug) {
 func main() {
 	rout := mux.NewRouter()
 
-	debug_game(0)
+	debug_game(debugCheckmate, true)
 
 	rout.HandleFunc("/cmd", rest.CmdHandler).Methods("POST", "OPTIONS")
 	rout.HandleFunc("/invite", rest.InviteHandler).Methods("POST", "OPTIONS")

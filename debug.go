@@ -14,6 +14,7 @@ const (
 	debugInvite Debug = iota + 1
 	debugCastling
 	debugPromote
+	debugCheckmate
 )
 
 func getMoveData(src board.Point, dst board.Point) []byte {
