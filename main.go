@@ -13,6 +13,10 @@ import (
 
 const port = ":8080"
 
+// just to build without debug
+// via build.sh
+var debug = "yes"
+
 func debug_game(debugValue Debug, solo bool) {
 	ch := rest.ClientChannel()
 	go func() {
@@ -25,23 +29,23 @@ func debug_game(debugValue Debug, solo bool) {
 
 		us2 = <-ch
 
-		id, err := us1.Invite(us2.PublicID, rest.InviteLifespan)
+		id, err := us2.Invite(us1.PublicID, rest.InviteLifespan)
 		if err != nil {
-			fmt.Printf("error: %s", err.Error())
+			fmt.Printf("error: %s\n", err.Error())
 		} else {
-			us2.AcceptInvite(id)
+			us1.AcceptInvite(id)
 		}
 
-		// sometimes flutter complains because of how many redraws we request
-		// so let's slow it down
-		time.Sleep(time.Second)
+		// a little delay isn't bad
+		time.Sleep(time.Second * 1)
+
 		switch debugValue {
 		case debugCastling:
-			castlingDebug(us1, us2)
+			castlingDebug(us2, us1)
 		case debugPromote:
-			promotionDebug(us1, us2)
+			promotionDebug(us2, us1)
 		case debugCheckmate:
-			checkmateDebug(us1, us2)
+			checkmateDebug(us2, us1)
 		}
 	}()
 }
@@ -49,7 +53,9 @@ func debug_game(debugValue Debug, solo bool) {
 func main() {
 	rout := mux.NewRouter()
 
-	debug_game(debugCheckmate, true)
+	if debug == "yes" {
+		debug_game(debugPromote, true)
+	}
 
 	rout.HandleFunc("/cmd", rest.CmdHandler).Methods("POST", "OPTIONS")
 	rout.HandleFunc("/invite", rest.InviteHandler).Methods("POST", "OPTIONS")

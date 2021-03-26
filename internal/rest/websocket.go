@@ -55,12 +55,14 @@ func (cl *WsClient) Close(status ws.StatusCode, reason string) error {
 	load := ws.NewCloseFrameBody(status, reason)
 	wsutil.WriteServerMessage(cl.Conn, ws.OpClose, load)
 
-	for _, v := range cl.r {
-		close(v)
-	}
-	for _, v := range cl.c {
-		close(v)
-	}
+	go func() {
+		for _, v := range cl.r {
+			close(v)
+		}
+		for _, v := range cl.c {
+			close(v)
+		}
+	}()
 
 	cl.u.Delete()
 	cl.Conn.Close()
