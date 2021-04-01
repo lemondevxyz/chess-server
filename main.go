@@ -24,7 +24,7 @@ func debug_game(debugValue Debug, solo bool) {
 
 		us1 := <-ch
 		if solo {
-			go headless.NewClient("ws://localhost" + port + "/ws")
+			go headless.NewClient("ws://localhost" + port + "/api/" + apiver + "/ws")
 		}
 
 		us2 = <-ch
