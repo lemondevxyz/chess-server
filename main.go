@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"net"
 	"net/http"
 	"time"
 
@@ -10,8 +11,6 @@ import (
 	"github.com/toms1441/chess-server/internal/rest"
 	"github.com/toms1441/chess-server/internal/rest/headless"
 )
-
-const port = ":8080"
 
 // just to build without debug
 // via build.sh
@@ -24,7 +23,7 @@ func debug_game(debugValue Debug, solo bool) {
 
 		us1 := <-ch
 		if solo {
-			go headless.NewClient("ws://localhost" + port + "/api/" + apiver + "/ws")
+			go headless.NewClient("ws://localhost" + ":8080" + "/api/" + apiver + "/ws")
 		}
 
 		us2 = <-ch
@@ -83,9 +82,24 @@ func main() {
 		rout.PathPrefix("/").Handler(http.StripPrefix("/", http.FileServer(http.Dir("./pub/"))))
 	}
 
-	color.New(color.FgBlue).Println("Listening on port", port)
+	var proto string
+	var port string
+	if debug == "yes" {
+		proto = "tcp"
+		port = ":8080"
+	} else {
+		proto = "unix"
+		port = "bin.sock"
+	}
 
-	http.ListenAndServe(port, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	color.New(color.FgBlue).Println("Listening on", port)
+
+	listen, err := net.Listen(proto, port)
+	if err != nil {
+		panic(err)
+	}
+
+	http.Serve(listen, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := &rest.Context{
 			ResponseWriter: w,
 		}
