@@ -79,6 +79,8 @@ func TestTurns(t *testing.T) {
 		close(cherr)
 	}()
 
+	<-clientRead(rd1)
+	<-clientRead(rd2)
 	select {
 	case <-time.After(time.Millisecond * 100):
 		t.Fatalf("timeout")
@@ -98,12 +100,11 @@ func TestTurns(t *testing.T) {
 			t.Fatalf("json.Unmarshal: %s", err.Error())
 		}
 
+		t.Log(x)
 		if x.Player != 2 {
 			t.Fatalf("player is not two: %d", x.Player)
 		}
 
-		<-clientRead(rd2)
-		<-clientRead(rd1)
 		<-clientRead(rd2)
 
 		select {
@@ -125,6 +126,7 @@ func TestGameDone(t *testing.T) {
 	cl2.g = nil
 
 	gGame, _ = NewGame(cl1, cl2)
+
 	go gGame.SwitchTurn()
 
 	by1 := <-clientRead(rd1)
@@ -158,23 +160,27 @@ func TestGameDone(t *testing.T) {
 			Data: x,
 		})
 		if err != nil {
-			t.Fatalf("cl.Do: %s", err)
+			t.Fatalf("cl.Do: %s", err.Error())
 		}
-	}
 
+	}
+	t.Log("first move")
 	doMove(board.Point{6, 5}, board.Point{5, 5})
+	t.Log("second move")
 	doMove(board.Point{1, 4}, board.Point{3, 4})
+	t.Log("third move")
 	doMove(board.Point{6, 6}, board.Point{4, 6})
 	done = true
 	resetPipe()
 	go func() {
-		<-clientRead(rd2)
-		<-clientRead(rd1)
 		<-clientRead(rd1)
 		<-clientRead(rd2)
+		<-clientRead(rd2)
+		<-clientRead(rd1)
 	}()
+	t.Log("fourth move")
 	doMove(board.Point{0, 3}, board.Point{4, 7})
-	//
+	t.Log("after fourth move")
 
 	lc1 := gGame.cs[0]
 	lc2 := gGame.cs[1]

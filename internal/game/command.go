@@ -64,7 +64,15 @@ func init() {
 				return ErrIllegalMove
 			}
 
-			//fmt.Println("switch turn")
+			// first off update about the move...
+			err = g.UpdateAll(order.Order{
+				ID:   order.Move,
+				Data: o.Data,
+			})
+			if err != nil {
+				return err
+			}
+
 			if !(s.Dst.X == 7 || s.Dst.X == 0) {
 				// promotion
 				g.SwitchTurn()
@@ -74,10 +82,7 @@ func init() {
 				}
 			}
 
-			return g.UpdateAll(order.Order{
-				ID:   order.Move,
-				Data: o.Data,
-			})
+			return nil
 		},
 		order.Promote: func(c *Client, o order.Order) error {
 			g := c.g

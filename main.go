@@ -54,7 +54,7 @@ func main() {
 	rout := mux.NewRouter()
 
 	if debug == "yes" {
-		debug_game(debugPromote, true)
+		debug_game(debugCheckmate, true)
 	}
 
 	rout.HandleFunc("/cmd", rest.CmdHandler).Methods("POST", "OPTIONS")

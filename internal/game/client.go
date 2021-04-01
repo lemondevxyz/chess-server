@@ -19,7 +19,6 @@ type Client struct {
 }
 
 func (c *Client) Do(cmd order.Order) error {
-	//fmt.Println("lock")
 	c.mtx.Lock()
 
 	if c.g == nil {
