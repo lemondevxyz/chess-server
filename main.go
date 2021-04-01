@@ -50,32 +50,38 @@ func debug_game(debugValue Debug, solo bool) {
 	}()
 }
 
-func main() {
-	rout := mux.NewRouter()
+const apiver = "v0"
 
+func main() {
 	if debug == "yes" {
 		debug_game(debugCheckmate, true)
 	}
 
-	rout.HandleFunc("/cmd", rest.CmdHandler).Methods("POST", "OPTIONS")
-	rout.HandleFunc("/invite", rest.InviteHandler).Methods("POST", "OPTIONS")
-	rout.HandleFunc("/accept", rest.AcceptInviteHandler).Methods("POST", "OPTIONS")
-	rout.HandleFunc("/ws", rest.WebsocketHandler).Methods("GET", "OPTIONS")
-	rout.HandleFunc("/avali", rest.GetAvaliableUsersHandler).Methods("GET", "OPTIONS")
-	rout.HandleFunc("/possib", rest.PossibHandler).Methods("POST", "OPTIONS")
+	rout := mux.NewRouter()
+	{ // api routes
+		api := rout.PathPrefix("/api/" + apiver).Subrouter()
 
-	rout.HandleFunc("/protect", func(w http.ResponseWriter, r *http.Request) {
-		_, err := rest.GetUser(r)
-		if err != nil {
-			w.WriteHeader(http.StatusForbidden)
+		api.HandleFunc("/cmd", rest.CmdHandler).Methods("POST", "OPTIONS")
+		api.HandleFunc("/invite", rest.InviteHandler).Methods("POST", "OPTIONS")
+		api.HandleFunc("/accept", rest.AcceptInviteHandler).Methods("POST", "OPTIONS")
+		api.HandleFunc("/ws", rest.WebsocketHandler).Methods("GET", "OPTIONS")
+		api.HandleFunc("/avali", rest.GetAvaliableUsersHandler).Methods("GET", "OPTIONS")
+		api.HandleFunc("/possib", rest.PossibHandler).Methods("POST", "OPTIONS")
+
+		api.HandleFunc("/protect", func(w http.ResponseWriter, r *http.Request) {
+			_, err := rest.GetUser(r)
+			if err != nil {
+				w.WriteHeader(http.StatusForbidden)
+				w.Write(nil)
+			}
+
+			w.WriteHeader(http.StatusOK)
 			w.Write(nil)
-		}
-
-		w.WriteHeader(http.StatusOK)
-		w.Write(nil)
-	}).Methods("GET")
-
-	rout.PathPrefix("/pub").Handler(http.StripPrefix("/pub", http.FileServer(http.Dir("./static/"))))
+		}).Methods("GET")
+	}
+	{ // static
+		rout.PathPrefix("/").Handler(http.StripPrefix("/", http.FileServer(http.Dir("./pub/"))))
+	}
 
 	color.New(color.FgBlue).Println("Listening on port", port)
 
@@ -87,9 +93,11 @@ func main() {
 		method := color.New(color.BgMagenta, color.Bold).Sprint(" " + r.Method + " ")
 		path := color.New(color.BgBlue).Sprint(" " + r.URL.Path + " ")
 
-		ctx.Header().Add("Access-Control-Allow-Origin", "*")
-		ctx.Header().Add("Access-Control-Allow-Headers", "Content-Type, Accept, Authorization")
-		ctx.Header().Add("Access-Control-Allow-Methods", "GET, POST")
+		if debug == "yes" {
+			ctx.Header().Add("Access-Control-Allow-Origin", "*")
+			ctx.Header().Add("Access-Control-Allow-Headers", "Content-Type, Accept, Authorization")
+			ctx.Header().Add("Access-Control-Allow-Methods", "GET, POST")
+		}
 		if r.Method == "OPTIONS" {
 			ctx.WriteHeader(http.StatusOK)
 		} else {
