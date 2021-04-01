@@ -114,15 +114,20 @@ func init() {
 			}
 
 			p.T = s.Type
-			g.SwitchTurn()
 
-			return g.UpdateAll(order.Order{
+			err = g.UpdateAll(order.Order{
 				ID: order.Promotion,
 				Parameter: order.PromotionModel{
 					Dst:  s.Src,
 					Type: s.Type,
 				},
 			})
+			if err != nil {
+				return err
+			}
+
+			g.SwitchTurn()
+			return nil
 		},
 		order.Message: func(c *Client, o order.Order) error {
 			g := c.g
