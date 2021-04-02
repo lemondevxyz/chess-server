@@ -194,3 +194,20 @@ func WebsocketHandler(w http.ResponseWriter, r *http.Request) {
 
 	UpgradeConn(conn)
 }
+
+func WebsocketServe(ln net.Listener) {
+
+	for {
+		conn, err := ln.Accept()
+		if err != nil {
+			continue
+		}
+
+		_, err = ws.DefaultUpgrader.Upgrade(conn)
+		if err != nil {
+			continue
+		}
+
+		UpgradeConn(conn)
+	}
+}

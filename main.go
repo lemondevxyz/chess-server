@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/fatih/color"
@@ -78,9 +79,11 @@ func main() {
 			w.Write(nil)
 		}).Methods("GET")
 	}
-	{ // static
-		rout.PathPrefix("/").Handler(http.StripPrefix("/", http.FileServer(http.Dir("./pub/"))))
-	}
+	/*
+		{ // static
+			rout.PathPrefix("/").Handler(http.StripPrefix("/", http.FileServer(http.Dir("./pub/"))))
+		}
+	*/
 
 	var proto string
 	var port string
@@ -89,7 +92,10 @@ func main() {
 		port = ":8080"
 	} else {
 		proto = "unix"
-		port = "bin.sock"
+		port = "http.sock"
+
+		os.Remove(port)
+		os.Remove("ws.sock")
 	}
 
 	color.New(color.FgBlue).Println("Listening on", port)
@@ -98,6 +104,20 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
+	if proto == "unix" {
+		ws, err := net.Listen("unix", "ws.sock")
+		if err != nil {
+			panic(err)
+		}
+
+		go rest.WebsocketServe(ws)
+
+		os.Chmod("ws.sock", 0777)
+		os.Chmod("http.sock", 0777)
+	}
+
+	defer listen.Close()
 
 	http.Serve(listen, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := &rest.Context{
