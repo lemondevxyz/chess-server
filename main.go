@@ -54,7 +54,7 @@ const apiver = "v0"
 
 func main() {
 	if debug == "yes" {
-		debug_game(debugCheckmate, true)
+		// debug_game(debugCheckmate, true)
 	}
 
 	rout := mux.NewRouter()

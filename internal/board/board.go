@@ -400,7 +400,8 @@ func (b Board) FinalCheckmate(player uint8) bool {
 				if s.Player == player {
 					if s.T == King {
 						exist = true
-						continue
+						// continue
+						// this prevents the king from defending itself
 					}
 
 					if !ret {
@@ -429,6 +430,7 @@ func (b Board) FinalCheckmate(player uint8) bool {
 		}
 	}
 
+	//fmt.Println(exist, ret)
 	if !exist {
 		return true
 	}

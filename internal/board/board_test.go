@@ -622,4 +622,39 @@ func TestBoardCheckmate(t *testing.T) {
 		}
 	}
 	// TODO: implement the rest
+
+	// this section tests previous bugs
+	// and if they still exist
+	{
+		// queen at 6,5
+		// and king at 6,4
+		// but somehow it's final
+
+		brd := NewBoard()
+
+		brd.Set(&Piece{
+			Pos: Point{6, 4},
+			T:   Empty,
+		})
+		brd.Set(&Piece{
+			Pos: Point{6, 5},
+			T:   Empty,
+		})
+		brd.Set(&Piece{
+			Pos: Point{1, 4},
+			T:   Empty,
+		})
+
+		queen := brd.Get(Point{0, 3})
+		brd.Move(queen, Point{4, 7})
+		king := brd.Get(Point{7, 4})
+		brd.Move(king, Point{6, 4})
+		brd.Move(queen, Point{6, 5})
+
+		if brd.FinalCheckmate(king.Player) {
+			t.Fatalf("queen at 6:5, king at 6:4. but somehow final checkmate")
+		}
+
+		t.Logf("\n%s", brd.String())
+	}
 }
