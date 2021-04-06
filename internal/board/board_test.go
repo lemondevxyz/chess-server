@@ -437,6 +437,9 @@ func TestBoardPieceBugInTheWay(t *testing.T) {
 func TestBoardCheckmate(t *testing.T) {
 	// testing top 10 fast checkmates: https://www.chess.com/article/view/fastest-chess-checkmates
 	// black always wins
+	empty := func(brd *Board, src Point) {
+		brd.Set(&Piece{Pos: src, T: Empty})
+	}
 	try := func(brd *Board, src Point, pnt Point) {
 		pec := brd.Get(src)
 		if pec == nil {
@@ -631,19 +634,9 @@ func TestBoardCheckmate(t *testing.T) {
 		// but somehow it's final
 
 		brd := NewBoard()
-
-		brd.Set(&Piece{
-			Pos: Point{6, 4},
-			T:   Empty,
-		})
-		brd.Set(&Piece{
-			Pos: Point{6, 5},
-			T:   Empty,
-		})
-		brd.Set(&Piece{
-			Pos: Point{1, 4},
-			T:   Empty,
-		})
+		empty(brd, Point{1, 4})
+		empty(brd, Point{6, 4})
+		empty(brd, Point{6, 5})
 
 		queen := brd.Get(Point{0, 3})
 		brd.Move(queen, Point{4, 7})
@@ -651,8 +644,49 @@ func TestBoardCheckmate(t *testing.T) {
 		brd.Move(king, Point{6, 4})
 		brd.Move(queen, Point{6, 5})
 
+		// R N B   K B N R
+		// P P P P   P P P
+		//
+		//
+		//
+		//
+		// P P P P K Q P P
+		// R N B Q   B N R
+		// t.Logf("\n%s", brd.String())
+
 		if brd.FinalCheckmate(king.Player) {
 			t.Fatalf("queen at 6:5, king at 6:4. but somehow final checkmate")
+		}
+	}
+	{ // somehow king can end the game by checkmating king
+		// even if the king can escape
+		brd := NewBoard()
+
+		empty(brd, Point{0, 1})
+		empty(brd, Point{0, 2})
+		empty(brd, Point{0, 3})
+		empty(brd, Point{1, 3})
+		empty(brd, Point{1, 4})
+
+		try(brd, Point{0, 4}, Point{1, 4})
+		try(brd, Point{1, 4}, Point{2, 4})
+
+		empty(brd, Point{7, 3})
+		empty(brd, Point{7, 5})
+		//empty(brd, Point{7, 6})
+		empty(brd, Point{6, 4})
+
+		brd.Set(&Piece{
+			Pos:    Point{2, 2},
+			T:      PawnF,
+			Player: 1,
+		})
+
+		try(brd, Point{7, 6}, Point{5, 5})
+		try(brd, Point{5, 5}, Point{3, 6})
+
+		if brd.FinalCheckmate(2) {
+			t.Fatalf("knight can final checkmate escapable king")
 		}
 
 		t.Logf("\n%s", brd.String())
