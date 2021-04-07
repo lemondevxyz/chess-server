@@ -37,6 +37,6 @@ const (
 	Checkmate
 	// Message is sent/received whenver a player sends/receives a message. Deprecated
 	// Message
-	// Done is sent whenever a game ends. [U]
+	// Done is sent whenever a game ends, or when the player wants to leave the game. [O]
 	Done
 )

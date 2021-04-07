@@ -69,7 +69,7 @@ type MessageModel struct {
 }
 */
 
-// [U]
+// [O]
 type DoneModel struct {
 	// Result represents the result of the match
 	// it equal to the winning player's number
