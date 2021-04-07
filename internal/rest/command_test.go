@@ -47,11 +47,15 @@ func read(r io.Reader) chan []byte {
 	return ch
 }
 
-/*
 func TestCommandRequest(t *testing.T) {
 
-	x := order.MessageModel{
-		Message: "test",
+	go gGame.SwitchTurn()
+	<-read(rd1)
+	<-read(rd2)
+
+	x := order.MoveModel{
+		Src: board.Point{6, 1},
+		Dst: board.Point{4, 1},
 	}
 
 	byt, err := json.Marshal(x)
@@ -60,7 +64,7 @@ func TestCommandRequest(t *testing.T) {
 	}
 
 	cmd := order.Order{
-		ID:   order.Message,
+		ID:   order.Move,
 		Data: byt,
 	}
 
@@ -75,7 +79,6 @@ func TestCommandRequest(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
 	handle := http.HandlerFunc(CmdHandler)
 
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", us1.Token))
@@ -86,22 +89,13 @@ func TestCommandRequest(t *testing.T) {
 		done <- struct{}{}
 	}()
 
-	b := make([]byte, 64)
-	n, err := rd1.Read(b)
-	if err != nil {
-		t.Fatalf("rd1.Read: %s", err.Error())
-	}
-	t.Log(string(b), n)
-
-	b = make([]byte, 64)
-	n, err = rd2.Read(b)
-	if err != nil {
-		t.Fatalf("rd1.Read: %s", err.Error())
-	}
-
-	t.Log(string(b), n)
+	<-read(rd1)
+	<-read(rd2)
+	<-read(rd1)
+	<-read(rd2)
 
 	<-done
+	t.Log(resp.Body.String())
 	hh := resp.Header()
 	if hh.Get("Content-Type") != "application/json" {
 		t.Fatalf("bad content type")
@@ -126,7 +120,6 @@ func TestCommandRequest(t *testing.T) {
 	}
 
 }
-*/
 
 func TestPossibleRequest(t *testing.T) {
 
