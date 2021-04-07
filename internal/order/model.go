@@ -71,8 +71,7 @@ type MessageModel struct {
 
 // [U]
 type DoneModel struct {
-	Result int8 `json:"result"`
-	// -1 == you lost
-	// 0 == draw/stalemate
-	// 1 == you won
+	// Result represents the result of the match
+	// it equal to the winning player's number
+	Result uint8 `json:"result"`
 }

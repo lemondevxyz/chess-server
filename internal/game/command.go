@@ -259,6 +259,21 @@ func init() {
 				Data: o.Data,
 			})
 		},
+		order.Done: func(c *Client, o order.Order) error {
+			oth := c.Number()
+			if oth == 1 {
+				oth = 2
+			} else if oth == 2 {
+				oth = 1
+			}
+
+			c.g.done = true
+
+			return c.g.UpdateAll(order.Order{
+				ID:        order.Done,
+				Parameter: oth,
+			})
+		},
 	}
 
 }

@@ -80,7 +80,7 @@ var ubs = map[uint8]UpdateCallback{
 	},
 	// lamo laziness
 	order.Done: func(c *Client, u *order.Order) error {
-		x, ok := u.Parameter.(int8)
+		x, ok := u.Parameter.(uint8)
 		if !ok {
 			return ErrUpdateParameter
 		}

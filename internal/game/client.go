@@ -13,11 +13,12 @@ type Client struct {
 	W   io.Writer
 	num uint8 // player 1 or 2??
 	id  string
-	// G the underlying game
 	g   *Game
 	mtx sync.Mutex
 }
 
+// Do executes a command. It automatically checks if the player is in a game, or if the command's ID is invalid.
+// Use of cbs[cmd.ID] is discouraged.
 func (c *Client) Do(cmd order.Order) error {
 	c.mtx.Lock()
 
@@ -36,17 +37,20 @@ func (c *Client) Do(cmd order.Order) error {
 	if c.g != nil {
 		if c.g.done { // we cannot do this in switch turn
 			// cause it would freeze the program if testing
-			c.g.Close()
+			c.g.close()
 		}
 	}
 
 	return err
 }
 
+// Game returns the pointer to client's game
 func (c *Client) Game() *Game {
 	return c.g
 }
 
+// LeaveGame leaves the game for client. It's generally used for testing, and doesn't send a order.Done message after it finishes.
+// Use of this function in production is generally discouraged, as it could freeze the game
 func (c *Client) LeaveGame() {
 	g := c.g
 	if g == nil {
@@ -58,16 +62,11 @@ func (c *Client) LeaveGame() {
 		x = g.cs[1]
 	}
 
-	upd := order.Order{ID: order.Done, Parameter: int8(1)}
-	c.g.Update(x, upd)
-
-	upd.Parameter = int8(-1)
-	c.g.Update(c, upd)
-
-	c.g.Close()
-
+	c.g = nil
+	x.g = nil
 }
 
+// Number returns the number for that client. Either 1 or 2.
 func (c *Client) Number() uint8 {
 	return c.num
 }

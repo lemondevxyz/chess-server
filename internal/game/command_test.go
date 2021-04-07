@@ -329,3 +329,48 @@ func TestCommandCastling(t *testing.T) {
 	do(7, 7, 4, cl1)
 
 }
+
+func TestCommandDone(t *testing.T) {
+
+	defer resetPipe()
+
+	cl1.LeaveGame()
+	cl2.LeaveGame()
+
+	var err error
+	gGame, err = NewGame(cl1, cl2)
+	if err != nil {
+		t.Fatalf("NewGame: %s", err.Error())
+	}
+
+	done := make(chan map[string]interface{})
+	go func() {
+		b := <-clientRead(rd1)
+		<-clientRead(rd2)
+		pam := map[string]interface{}{}
+
+		json.Unmarshal(b, &pam)
+
+		done <- pam
+	}()
+	err = cl1.Do(order.Order{
+		ID:   order.Done,
+		Data: nil,
+	})
+	if err != nil {
+		t.Fatalf("cl.Do: %s", err.Error())
+	}
+
+	pam := <-done
+	data := pam["data"].(map[string]interface{})
+
+	won := uint8(data["result"].(float64))
+
+	if cl1.Number() == won {
+		t.Fatalf("cl1 should be the one who's losing, not winning")
+	}
+	if cl2.Number() != won {
+		t.Fatalf("cl2 should be the one who won, not losing..")
+	}
+
+}

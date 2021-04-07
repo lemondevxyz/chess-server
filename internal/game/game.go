@@ -17,6 +17,8 @@ type Game struct {
 	canCastle map[uint8]bool
 }
 
+// NewGame creates a game for client 1 and client 2(cl1, cl2). It fails whenever the clients are already in a game, or one of them is nil.
+// Note: you need to call game.SwitchTurn() to get an actual game going, as NewGame does not update the clients with the player turn.
 func NewGame(cl1, cl2 *Client) (*Game, error) {
 
 	if cl1 == nil || cl2 == nil || cl1.W == nil || cl2.W == nil {
@@ -115,6 +117,7 @@ func (g *Game) SwitchTurn() {
 	g.UpdateAll(order.Order{ID: order.Turn, Data: x})
 }
 
+// IsTurn returns if it's the client's turn this time
 func (g *Game) IsTurn(c *Client) bool {
 	return c.num == g.turn
 }
@@ -148,13 +151,32 @@ func (g *Game) Update(c *Client, u order.Order) error {
 }
 
 // UpdateAll sends the update to all of the players.
-func (g *Game) UpdateAll(o order.Order) error {
-	err := g.Update(g.cs[0], o)
+func (g *Game) UpdateAll(u order.Order) error {
+	if g.cs[0] == nil || g.cs[1] == nil {
+		return ErrClientNil
+	}
+
+	if u.Data == nil {
+		x, ok := ubs[u.ID]
+		if !ok {
+			return ErrUpdateNil
+		}
+
+		err := x(g.cs[0], &u)
+		if err != nil {
+			return err
+		}
+	}
+
+	body, err := json.Marshal(u)
 	if err != nil {
 		return err
 	}
 
-	return g.Update(g.cs[1], o)
+	g.cs[0].W.Write(body)
+	g.cs[1].W.Write(body)
+
+	return nil
 }
 
 // Board returns the actual board.
@@ -162,7 +184,8 @@ func (g *Game) Board() *board.Board {
 	return g.b
 }
 
-func (g *Game) Close() {
+// Close closes the game, and cleans up the clients
+func (g *Game) close() {
 	do := func(cl *Client) {
 		cl.mtx.Lock()
 		cl.g = nil
