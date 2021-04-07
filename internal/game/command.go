@@ -2,6 +2,7 @@ package game
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/toms1441/chess-server/internal/board"
 	"github.com/toms1441/chess-server/internal/order"
@@ -267,6 +268,7 @@ func init() {
 				oth = 1
 			}
 
+			fmt.Println("game/command.go", oth)
 			c.g.done = true
 
 			return c.g.UpdateAll(order.Order{

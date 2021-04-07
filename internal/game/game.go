@@ -86,16 +86,6 @@ func (g *Game) SwitchTurn() {
 	} else {
 		aft = 1
 	}
-	if g.b.Checkmate(aft) {
-		g.Update(g.cs[aft-1], order.Order{
-			ID:        order.Checkmate,
-			Parameter: aft,
-		})
-		g.Update(g.cs[bef-1], order.Order{
-			ID:        order.Checkmate,
-			Parameter: aft,
-		})
-	}
 	if g.b.FinalCheckmate(aft) {
 		upd := order.Order{ID: order.Done, Parameter: int8(1)}
 		g.Update(g.cs[bef-1], upd)
@@ -115,6 +105,16 @@ func (g *Game) SwitchTurn() {
 	})
 
 	g.UpdateAll(order.Order{ID: order.Turn, Data: x})
+	if g.b.Checkmate(aft) {
+		g.Update(g.cs[aft-1], order.Order{
+			ID:        order.Checkmate,
+			Parameter: aft,
+		})
+		g.Update(g.cs[bef-1], order.Order{
+			ID:        order.Checkmate,
+			Parameter: aft,
+		})
+	}
 }
 
 // IsTurn returns if it's the client's turn this time
