@@ -35,8 +35,8 @@ const (
 	Castling
 	// Checkmate is sent whenever the king is in danger and needs to move.
 	Checkmate
-	// Message is sent/received whenver a player sends/receives a message. [O]
-	Message
+	// Message is sent/received whenver a player sends/receives a message. Deprecated
+	// Message
 	// Done is sent whenever a game ends. [U]
 	Done
 )

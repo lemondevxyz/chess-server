@@ -63,9 +63,11 @@ type CheckmateModel TurnModel /* struct {
 }*/
 
 // [O]
+/*
 type MessageModel struct {
 	Message string `json:"message"`
 }
+*/
 
 // [U]
 type DoneModel struct {
