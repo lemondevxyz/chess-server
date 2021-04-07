@@ -20,24 +20,6 @@ type Update struct {
 type UpdateCallback func(c *Client, u *order.Order) error
 
 // Tests are bundled with command tests.
-/*
-const (
-	// UpdateBoard is an update for the board, this happens whenever a player moves a piece.
-	UpdateBoard uint8 = iota + 1
-	// UpdatePromotion happens whenever a pawn reaches the end of their board.
-	UpdatePromotion
-	// UpdatePause is sent whenever one of the players wants to pause the game for the other player to confirm, and sent another time to confirm game pause or opposite.
-	UpdatePause
-	// UpdateMessage whenever a player sends a message
-	UpdateMessage
-	// UpdateTurn it's your turn pal
-	UpdateTurn
-	// UpdateInvite sent whenever a player recieved an invite.
-	UpdateInvite
-	// UpdateCredentials sent whenever a player connects to websocket
-	UpdateCredentials
-)
-*/
 
 // redundant updates go here
 // as well as verification for certain updates.

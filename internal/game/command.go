@@ -2,7 +2,6 @@ package game
 
 import (
 	"encoding/json"
-	"fmt"
 
 	"github.com/toms1441/chess-server/internal/board"
 	"github.com/toms1441/chess-server/internal/order"
@@ -129,26 +128,28 @@ func init() {
 			g.SwitchTurn()
 			return nil
 		},
-		order.Message: func(c *Client, o order.Order) error {
-			g := c.g
-			s := &order.MessageModel{}
+		/*
+			order.Message: func(c *Client, o order.Order) error {
+				g := c.g
+				s := &order.MessageModel{}
 
-			err := json.Unmarshal(o.Data, s)
-			if err != nil {
-				return err
-			}
+				err := json.Unmarshal(o.Data, s)
+				if err != nil {
+					return err
+				}
 
-			s.Message = fmt.Sprintf("[Player %d]: %s", c.num, s.Message)
-			data, err := json.Marshal(s)
-			if err != nil {
-				return err
-			}
+				s.Message = fmt.Sprintf("[Player %d]: %s", c.num, s.Message)
+				data, err := json.Marshal(s)
+				if err != nil {
+					return err
+				}
 
-			return g.UpdateAll(order.Order{
-				ID:   order.Message,
-				Data: data,
-			})
-		},
+				return g.UpdateAll(order.Order{
+					ID:   order.Message,
+					Data: data,
+				})
+			},
+		*/
 		order.Castling: func(c *Client, o order.Order) error {
 			g := c.g
 			if !g.IsTurn(c) {

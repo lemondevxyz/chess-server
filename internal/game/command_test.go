@@ -20,6 +20,7 @@ var rookmap = map[int]int{
 	0: 3,
 }
 
+/*
 func TestCommandSendMessage(t *testing.T) {
 	defer resetPipe()
 
@@ -70,6 +71,7 @@ func TestCommandSendMessage(t *testing.T) {
 		t.Fatalf("cl.Do: %s", err.Error())
 	}
 }
+*/
 
 func TestCommandMove(t *testing.T) {
 	defer resetPipe()
