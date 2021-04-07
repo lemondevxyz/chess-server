@@ -47,6 +47,7 @@ func read(r io.Reader) chan []byte {
 	return ch
 }
 
+/*
 func TestCommandRequest(t *testing.T) {
 
 	x := order.MessageModel{
@@ -125,6 +126,7 @@ func TestCommandRequest(t *testing.T) {
 	}
 
 }
+*/
 
 func TestPossibleRequest(t *testing.T) {
 
