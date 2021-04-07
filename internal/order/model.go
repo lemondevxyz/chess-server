@@ -51,9 +51,15 @@ type PromotionModel struct {
 	Dst  board.Point `json:"dst"`
 }
 
+// [O]
 type CastlingModel MoveModel /*struct {
 	Src board.Point `json:"src"`
 	Dst board.Point `json:"dst"`
+}*/
+
+// [U]
+type CheckmateModel TurnModel /* struct {
+	Player uint8 `json:"player"`
 }*/
 
 // [O]

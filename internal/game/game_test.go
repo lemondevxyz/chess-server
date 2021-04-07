@@ -175,12 +175,26 @@ func TestGameDone(t *testing.T) {
 	go func() {
 		<-clientRead(rd1)
 		<-clientRead(rd2)
+		<-clientRead(rd1)
+		<-clientRead(rd2)
 		<-clientRead(rd2)
 		<-clientRead(rd1)
 	}()
 	t.Log("fourth move")
 	doMove(board.Point{0, 3}, board.Point{4, 7})
 	t.Log("after fourth move")
+
+	/*
+		R N B   K B N R
+		P P P P   P P P
+
+		        P
+		            P Q
+		          P
+		P P P P P     P
+		R N B Q K B N R
+		t.Logf("\n%s", gGame.b)
+	*/
 
 	lc1 := gGame.cs[0]
 	lc2 := gGame.cs[1]

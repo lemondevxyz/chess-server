@@ -80,6 +80,22 @@ var ubs = map[uint8]UpdateCallback{
 
 		return nil
 	},
+	order.Checkmate: func(c *Client, u *order.Order) error {
+		x, ok := u.Parameter.(uint8)
+		if !ok {
+			return ErrUpdateParameter
+		}
+
+		body, err := json.Marshal(order.CheckmateModel{
+			Player: x,
+		})
+		if err != nil {
+			return err
+		}
+
+		u.Data = body
+		return nil
+	},
 	// lamo laziness
 	order.Done: func(c *Client, u *order.Order) error {
 		x, ok := u.Parameter.(int8)
