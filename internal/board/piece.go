@@ -2,6 +2,7 @@ package board
 
 import (
 	"encoding/json"
+	"fmt"
 )
 
 const (
@@ -28,7 +29,9 @@ const (
 )
 
 type Piece struct {
-	// Player could be any number, but mostly [1, 2]
+	// Player false if it's dark. true if it's light.
+	// false == 0 which equals(OLD API) to 1
+	// true == 1 which equals(OLD API) to 2
 	Player uint8 `json:"player"`
 	// T the piece type
 	T uint8 `json:"type"`
@@ -36,7 +39,12 @@ type Piece struct {
 	Pos Point
 }
 
-func (p *Piece) Valid() bool {
+// Valid returns true if the piece is true. This basically checks if the type is in bound, if the point valid
+func (p Piece) Valid() bool {
+	if p.Pos.Valid() {
+		return true
+	}
+
 	if p.T >= PawnF && p.T <= King {
 		return true
 	}
@@ -45,7 +53,7 @@ func (p *Piece) Valid() bool {
 }
 
 // ShortString produces a one-character string to represent the piece. Used for debugging.
-func (p *Piece) ShortString() string {
+func (p Piece) ShortString() string {
 	strings := map[uint8]string{
 		Empty:  " ",
 		PawnF:  "P",
@@ -61,7 +69,7 @@ func (p *Piece) ShortString() string {
 }
 
 // String representation of the type
-func (p *Piece) String() string {
+func (p Piece) String() string {
 	strings := map[uint8]string{
 		Empty:  "Empty",
 		PawnF:  "Pawn",
@@ -73,11 +81,11 @@ func (p *Piece) String() string {
 		King:   "King",
 	}
 
-	return strings[p.T]
+	return fmt.Sprintf("%s/%s/%d", strings[p.T], p.Pos.String(), p.T)
 }
 
 // Possib returns all.Possible moves from piece's.Position.
-func (p *Piece) Possib() Points {
+func (p Piece) Possib() Points {
 	src := p.Pos
 	// i.e starting point
 	switch p.T {
@@ -93,13 +101,14 @@ func (p *Piece) Possib() Points {
 		}
 		if src.X == 1 || src.X == 6 {
 			if p.T == PawnF {
-				ps = append(ps, Point{X: src.X - 2, Y: src.Y})
+				ps.Insert(Point{X: src.X - 2, Y: src.Y})
 			} else if p.T == PawnB {
-				ps = append(ps, Point{X: src.X + 2, Y: src.Y})
+				ps.Insert(Point{X: src.X + 2, Y: src.Y})
 			}
 		}
 
-		return ps.Clean()
+		ps.Clean()
+		return ps
 	// Only diagonal
 	case Bishop:
 		return src.Diagonal()
@@ -108,8 +117,7 @@ func (p *Piece) Possib() Points {
 		return src.Knight()
 	// horizontal or vertical
 	case Rook:
-		return src.Horizontal().
-			Merge(src.Vertical())
+		return src.Horizontal().Merge(src.Vertical())
 	// move within square or diagonal or horizontal or vertical
 	case Queen:
 		return src.Horizontal().
@@ -125,7 +133,7 @@ func (p *Piece) Possib() Points {
 }
 
 // CanGo does validation for the piece. Each piece has it's own rules.
-func (p *Piece) CanGo(dst Point) bool {
+func (p Piece) CanGo(dst Point) bool {
 	if dst.Equal(p.Pos) || !dst.Valid() {
 		return false
 	}
@@ -134,7 +142,7 @@ func (p *Piece) CanGo(dst Point) bool {
 }
 
 // MarshalJSON json.Marshaler
-func (p *Piece) MarshalJSON() ([]byte, error) {
+func (p Piece) MarshalJSON() ([]byte, error) {
 	x := struct {
 		P uint8 `json:"player"`
 		T uint8 `json:"type"`

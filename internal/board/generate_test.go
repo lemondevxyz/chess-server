@@ -5,30 +5,107 @@ import (
 	"testing"
 )
 
+type pointSlice []Point
+
+func (ps pointSlice) Len() int {
+	return len(ps)
+}
+
+func (ps pointSlice) Less(i, j int) bool {
+	p, o := ps[i], ps[j]
+	if p.X == o.X {
+		return p.Y < o.Y
+	}
+
+	return p.X < o.X
+}
+
+func (ps pointSlice) Swap(i, j int) {
+	ps[i], ps[j] = ps[j], ps[i]
+}
+
+func (ps pointSlice) Merge(sp ...pointSlice) pointSlice {
+	ret := append(pointSlice{}, ps...)
+	for _, v := range sp {
+		ret = append(ret, v...)
+	}
+
+	return ret
+}
+
+func (ps pointSlice) In(pnt Point) bool {
+	for _, v := range ps {
+		if v.Equal(pnt) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (ps pointSlice) Remove(i int) {
+	if i >= len(ps) || i == -1 {
+		return
+	}
+}
+
+func (ps pointSlice) Clean() pointSlice {
+	for k := len(ps) - 1; k >= 0; k-- {
+		v := ps[k]
+		if !v.Valid() {
+			ps[len(ps)-1], ps[k] = ps[k], ps[len(ps)-1]
+			ps = ps[:len(ps)-1]
+		}
+	}
+
+	return ps
+}
+
+type displayBoard [8][8]Piece
+
+func (b displayBoard) String() (str string) {
+	for x := 0; x < 8; x++ {
+		for y := 0; y < 8; y++ {
+			pec := b[x][y]
+
+			if !pec.Valid() {
+				str += " "
+			} else {
+				str += pec.ShortString()
+			}
+			str += " "
+		}
+
+		str += "\n"
+	}
+
+	return str
+}
+
 const t_empty = Bishop
 const t_points = King
 const t_point = Knight
 
-func board_set(p Point, ps Points) *Board {
-	b := &Board{}
+func board_set(p Point, ps pointSlice) *displayBoard {
+	b := &displayBoard{}
 	for x := 0; x < 8; x++ {
 		for y := 0; y < 8; y++ {
-			b.data[x][y] = &Piece{T: t_empty}
+			b[x][y] = Piece{T: t_empty}
 		}
 	}
 
 	for _, v := range ps {
-		b.data[v.X][v.Y] = &Piece{T: t_points}
+		b[v.X][v.Y] = Piece{T: t_points}
 	}
-	b.data[p.X][p.Y] = &Piece{T: t_point}
+	b[p.X][p.Y] = Piece{T: t_point}
 
 	return b
 }
 
-func in_board(b *Board, want Points) bool {
+func in_board(b *displayBoard, want pointSlice) bool {
 	for _, v := range want {
-		p := b.data[v.X][v.Y]
-		if p == nil || p.T != t_points {
+		p := b[v.X][v.Y]
+		if !p.Valid() || p.T != t_points {
 			return false
 		}
 	}
@@ -36,14 +113,14 @@ func in_board(b *Board, want Points) bool {
 	return true
 }
 
-func out_board(b *Board, want Points) bool {
-	for x, v := range b.data {
+func out_board(b *displayBoard, want pointSlice) bool {
+	for x, v := range b {
 		for y, b := range v {
-			if b != nil && b.T != t_empty && b.T != t_point {
+			if b.Valid() && b.T != t_empty && b.T != t_point {
 				found := false
 
 				for _, p := range want {
-					if p.X == x && p.Y == y {
+					if p.X == int8(x) && p.Y == int8(y) {
 						if b.T == t_points {
 							found = true
 							break
@@ -66,10 +143,15 @@ func out_board(b *Board, want Points) bool {
 }
 
 func generate_test(t *testing.T, name string, p Point, ps Points, want []Point) {
-	b := board_set(p, ps)
+	sp := pointSlice{}
+	for _, v := range ps {
+		sp = append(sp, v)
+	}
 
-	sort.Sort(ps)
-	sort.Sort(Points(want))
+	b := board_set(p, sp)
+
+	sort.Sort(sp)
+	sort.Sort(pointSlice(want))
 
 	t.Logf("src: %v", p)
 	t.Logf("have: %v", ps)
@@ -85,10 +167,10 @@ func generate_test(t *testing.T, name string, p Point, ps Points, want []Point) 
 }
 
 func TestPointsMerge(t *testing.T) {
-	ps := Points{
+	ps := pointSlice{
 		{4, 3},
 	}
-	ps.Merge(Points{{3, 4}})
+	ps.Merge(pointSlice{{3, 4}})
 
 	if !ps.In(Point{4, 3}) || ps.In(Point{3, 4}) {
 		t.Fatalf("Merge does not merge...")
@@ -96,15 +178,16 @@ func TestPointsMerge(t *testing.T) {
 }
 
 func TestPointsClean(t *testing.T) {
-	ps := Points{
+	ps := pointSlice{
 		{1, -4},
 		{-6, 0},
 		{1, 1},
 	}
-	ps.Clean()
+	ps = ps.Clean()
 
+	t.Log(ps)
 	if ps.In(Point{1, -4}) || ps.In(Point{-6, 0}) || !ps.In(Point{1, 1}) {
-		t.Fatalf("Clean does not invalid points")
+		t.Fatalf("Clean does not remove invalid points")
 	}
 }
 
@@ -291,7 +374,7 @@ func TestCorner(t *testing.T) {
 
 func TestDirection(t *testing.T) {
 	p := Point{4, 3}
-	ps := Points{
+	ps := pointSlice{
 		{3, 2},
 		{3, 3},
 		{3, 4},

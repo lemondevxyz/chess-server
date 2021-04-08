@@ -6,10 +6,11 @@ import (
 )
 
 // MoveEvent is a function called post-movement of a piece, ret is a boolean representing the validity of the move.
-type MoveEvent func(p *Piece, src Point, dst Point, ret bool)
+type MoveEvent func(p Piece, src Point, dst Point, ret bool)
 
 type Board struct {
-	data [8][8]*Piece
+	// data [8][8]*Piece
+	data [32]Piece
 	// move event listener
 	ml []MoveEvent
 }
@@ -17,56 +18,62 @@ type Board struct {
 // NewBoard creates a new board with the default placement.
 func NewBoard() *Board {
 	b := Board{
-		ml: []MoveEvent{},
+		ml:   []MoveEvent{},
+		data: [32]Piece{},
 	}
 
-	row := [2][8]uint8{
-		{
-			Rook,
-			Knight,
-			Bishop,
-			Queen,
-			King,
-			Bishop,
-			Knight,
-			Rook,
-		},
-		{
-			PawnB,
-			PawnB,
-			PawnB,
-			PawnB,
-			PawnB,
-			PawnB,
-			PawnB,
-			PawnB,
-		},
+	row := [32]uint8{
+		0:  Rook,
+		1:  Knight,
+		2:  Bishop,
+		3:  Queen,
+		4:  King,
+		5:  Bishop,
+		6:  Knight,
+		7:  Rook,
+		8:  PawnB,
+		9:  PawnB,
+		10: PawnB,
+		11: PawnB,
+		12: PawnB,
+		13: PawnB,
+		14: PawnB,
+		15: PawnB,
+		16: PawnF,
+		17: PawnF,
+		18: PawnF,
+		19: PawnF,
+		20: PawnF,
+		21: PawnF,
+		22: PawnF,
+		23: PawnF,
+		24: Rook,
+		25: Knight,
+		26: Bishop,
+		27: Queen,
+		28: King,
+		29: Bishop,
+		30: Knight,
+		31: Rook,
 	}
 
-	for x, s := range row {
-		for y, v := range s {
-			// x := k + 6
-			b.data[x][y] = &Piece{
-				T:      v,
-				Player: 2,
-				Pos:    Point{x, y},
-			}
-		}
-	}
-
-	row[0], row[1] = row[1], row[0]
 	for k, s := range row {
-		for y, v := range s {
-			if v == PawnB {
-				v = PawnF
-			}
+		player := 2
+		if k >= 16 {
+			player = 1
+		}
 
-			x := k + 6
-			b.data[x][y] = &Piece{
-				T:      v,
-				Player: 1,
-				Pos:    Point{x, y},
-			}
+		x := int8(k / 8)
+		y := int8(k % 8)
+
+		if k >= 16 {
+			x += 4
+		}
+
+		b.data[k] = Piece{
+			T:      s,
+			Player: uint8(player),
+			Pos:    Point{x, y},
 		}
 	}
 
@@ -75,41 +82,44 @@ func NewBoard() *Board {
 
 func (b Board) Copy() *Board {
 	o := Board{
-		data: [8][8]*Piece{},
+		ml:   []MoveEvent{},
+		data: [32]Piece{},
 	}
 
-	for x, v := range b.data {
-		for y, s := range v {
-			if s != nil {
-				o.data[x][y] = &Piece{
-					Pos:    s.Pos,
-					T:      s.T,
-					Player: s.Player,
-				}
-			}
-		}
+	for k, s := range b.data {
+		o.data[k] = s
 	}
 
 	return &o
 }
 
-// String method returns a string. makes it easier to debug
-func (b Board) String() (str string) {
-	for k, s := range b.data {
-		if k != 0 {
-			str += "\n"
+func (b Board) string(def string) (str string) {
+	for i := 0; i < (8 * 8); i++ {
+		x := int8(i % 8)
+		y := int8(i / 8)
+
+		char := def
+
+		pos := Point{x, y}
+		for _, v := range b.data {
+			if v.Pos.Equal(pos) {
+				char = v.ShortString()
+			}
 		}
 
-		for _, v := range s {
-			if v == nil {
-				str += "  "
-			} else {
-				str += v.ShortString() + " "
-			}
+		str += char + " "
+		if i != 0 && x == 0 {
+			str += "\n"
 		}
 	}
 
 	return str
+
+}
+
+// String method returns a string. makes it easier to debug
+func (b Board) String() (str string) {
+	return b.string(" ")
 }
 
 // Listen returns adds a callback that gets called pre and post movement.
@@ -118,93 +128,67 @@ func (b *Board) Listen(callback MoveEvent) {
 }
 
 // Set sets a piece in the board without game-logic interfering.
-func (b *Board) Set(p *Piece) {
-	if p != nil {
-		if p.T == Empty {
-			b.data[p.Pos.X][p.Pos.Y] = nil
-		} else {
-			b.data[p.Pos.X][p.Pos.Y] = p
-		}
+func (b *Board) Set(i int, pos Point) error {
+	if i >= len(b.data) {
+		return ErrInvalidPoint
 	}
+
+	if !pos.Valid() {
+		b.data[i].T = Empty
+		b.data[i].Pos = Point{-1, -1}
+	} else {
+		b.data[i].Pos = pos
+	}
+
+	return nil
 }
 
-// Get returns a piece
-func (b Board) Get(src Point) *Piece {
-	return b.data[src.X][src.Y]
-}
-
-// Checkmaters returns a map of each pieces and what points they threaten.
-/*
-func (b Board) Checkmaters(player uint8) map[*Piece]Points {
-
-	var pec *Piece
-	pecmap := map[*Piece]Points{}
-
-	for _, v := range b.data {
-		for _, s := range v {
-			if s != nil {
-				if s.Player == player {
-					if s.T == King {
-						pec = s
-						break
-					}
-				} else {
-					if s.T == King {
-						pecmap[s] = s.Possib()
-					} else {
-						pecmap[s] = b.Possib(s)
-					}
-				}
+// Get returns a piece and it's index. Or otherwise -1, an empty piece and an error.
+func (b Board) Get(src Point) (int, Piece, error) {
+	for k, v := range b.data {
+		if v.Pos.Equal(src) {
+			if !v.Valid() {
+				return k, v, ErrInvalidPoint
 			}
-		}
-	}
-	if pec == nil {
-		return nil
-	}
 
-	// the cleansing
-	ret := map[*Piece]Points{}
-	ps := pec.Possib()
-
-	for k, v := range pecmap {
-		for _, pnt := range ps {
-			if v.In(pnt) {
-				_, ok := ret[k]
-				if !ok {
-					ret[k] = Points{pnt}
-				} else {
-					ret[k] = append(ret[k], pnt)
-				}
-			}
+			return k, v, nil
 		}
 	}
 
-	return ret
+	return -1, Piece{}, ErrEmptyPiece
 }
-*/
+
+func (b Board) GetByIndex(i int) (Piece, error) {
+	if i >= len(b.data) {
+		return Piece{}, ErrInvalidPoint
+	}
+
+	return b.data[i], nil
+}
 
 // Possib is the same as Piece.Possib, but with removal of illegal moves.
-func (b Board) Possib(pec *Piece) Points {
+func (b Board) Possib(id int) (Points, error) {
+	pec, err := b.GetByIndex(id)
+	if err != nil {
+		return nil, ErrEmptyPiece
+	}
+
 	ps := pec.Possib()
 	switch pec.T {
 	case Knight: // disallow movement to allies
-		for i := len(ps) - 1; i >= 0; i-- {
-
-			v := ps[i]
-			cep := b.Get(v)
-			if cep != nil {
+		for k, v := range ps {
+			_, cep, err := b.Get(v)
+			if err == nil {
 				if cep.Player == pec.Player {
-					ps[i] = ps[len(ps)-1]
-					ps = ps[:len(ps)-1]
+					delete(ps, k)
 				}
 			}
 		}
 	case PawnF, PawnB: // disallow movement in front of piece
-		for i := len(ps) - 1; i >= 0; i-- {
-			pnt := ps[i]
-			if b.Get(pnt) != nil { // piece in the way ...
-				ps[i] = ps[len(ps)-1]
-				ps = ps[:len(ps)-1]
+		for k, pnt := range ps {
+			_, _, err = b.Get(pnt)
+			if err == nil { // piece in the way ...
+				delete(ps, k)
 			}
 		}
 
@@ -215,18 +199,16 @@ func (b Board) Possib(pec *Piece) Points {
 			x = pec.Pos.X + 1
 		}
 
-		sp := Points{
-			{x, pec.Pos.Y - 1},
-			{x, pec.Pos.Y + 1},
-		}
-		sp = sp.Clean()
+		sp := Points{}
+		sp.Insert(Point{x, pec.Pos.Y - 1})
+		sp.Insert(Point{x, pec.Pos.Y + 1})
 
-		for i := len(sp) - 1; i >= 0; i-- {
-			v := sp[i]
+		sp.Clean()
 
-			cep := b.Get(v)
+		for k, v := range sp {
+			_, cep, err := b.Get(v)
 			// is there a piece
-			if cep != nil {
+			if err == nil {
 				// is it the enemy's
 				if cep.Player != pec.Player {
 					// then don't remove this move from the possible moves
@@ -237,8 +219,7 @@ func (b Board) Possib(pec *Piece) Points {
 			// empty piece or piece is ours
 			// so remove it
 			// pawn cannot kill it's friend
-			sp[i] = sp[len(sp)-1]
-			sp = sp[:len(sp)-1]
+			delete(sp, k)
 		}
 
 		ps = ps.Merge(ps, sp)
@@ -259,16 +240,21 @@ func (b Board) Possib(pec *Piece) Points {
 		// collect enemy's possible points
 		// then check if it crosses paths with king's
 		sp := Points{}
-		for _, v := range b.data {
-			for _, s := range v {
-				if s != nil { // always use protection
-					if s.Player != pec.Player {
-						if s.T != Empty {
-							if s.T == King {
-								// no infinite loop
-								sp = append(sp, s.Possib()...)
-							} else {
-								sp = append(sp, b.Possib(s)...)
+		for k, s := range b.data {
+			if s.Valid() { // always use protection
+				if s.Player != pec.Player {
+					if s.T != Empty {
+						if s.T == King {
+							// no infinite loop
+							for _, pnt := range s.Possib() {
+								sp.Insert(pnt)
+							}
+						} else {
+							pnts, err := b.Possib(k)
+							if err != nil {
+								for _, pnt := range pnts {
+									sp.Insert(pnt)
+								}
 							}
 						}
 					}
@@ -276,29 +262,25 @@ func (b Board) Possib(pec *Piece) Points {
 			}
 		}
 
-		for i := len(ps) - 1; i >= 0; i-- {
-			v := ps[i]
-			cep := b.Get(v)
+		for k, v := range ps {
+			_, cep, err := b.Get(v)
 			// disallow replacing ally piece
-			if sp.In(v) || (cep != nil && cep.Player == pec.Player) {
-				ps[i] = ps[len(ps)-1]
-				ps = ps[:len(ps)-1]
+			if sp.In(v) || (err == nil && cep.Player == pec.Player) {
+				delete(ps, k)
 			}
 		}
 
 		// a nice preauction, create a copy of board and try king moves.
 		// if they land us in a nasty checkmate then discard them
 		drb := b.Copy()
-		drb.Set(&Piece{Pos: pec.Pos, T: Empty})
-		for i := len(ps) - 1; i >= 0; i-- {
+		drb.Set(id, Point{-1, -1})
+		for k, v := range ps {
 			// move could disallow back movement to king's original position
 			// so we use set
-			v := ps[i]
-			drb.Set(&Piece{Pos: v, T: King, Player: pec.Player})
+			drb.Set(id, v)
 			if drb.Checkmate(pec.Player) {
 				// if that move is checkmattable then discard it
-				ps[i] = ps[len(ps)-1]
-				ps = ps[:len(ps)-1]
+				delete(ps, k)
 			}
 		}
 
@@ -308,24 +290,20 @@ func (b Board) Possib(pec *Piece) Points {
 		// starting from x, y this function loops through possible points
 		// afterwards it changes the value via op function which receives x, y and modifies them
 		// in-case it encountered a piece in the way it wait to finish and removes all the following points
-		loop := func(x, y int, op func(int, int) (int, int)) {
+		loop := func(x, y int8, op func(int8, int8) (int8, int8)) {
 			rm := false
 			for i := 0; i < 8; i++ {
-				pnt := Point{x, y}
+				pnt := Point{int8(x), int8(y)}
 				if !ps.In(pnt) || !pnt.Valid() {
 					break
 				}
 
 				if !rm {
 					// encountered piece in the way
-					cep := b.Get(pnt)
-					if cep != nil {
+					_, cep, err := b.Get(pnt)
+					if err == nil {
 						if pec.Player == cep.Player {
-							index := ps.Index(cep.Pos)
-							if index >= 0 {
-								ps[index] = ps[len(ps)-1]
-								ps = ps[:len(ps)-1]
-							}
+							ps.Delete(cep.Pos)
 						}
 						rm = true
 					} /*else {
@@ -334,11 +312,7 @@ func (b Board) Possib(pec *Piece) Points {
 					}*/
 				} else {
 					// start deleting following points, cause we reached a piece in the way
-					index := ps.Index(pnt)
-					if index >= 0 {
-						ps[index] = ps[len(ps)-1]
-						ps = ps[:len(ps)-1]
-					}
+					ps.Delete(pnt)
 				}
 				x, y = op(x, y)
 			}
@@ -371,7 +345,8 @@ func (b Board) Possib(pec *Piece) Points {
 
 	}
 
-	return ps.Clean()
+	ps.Clean()
+	return ps, nil
 }
 
 // FinalCheckmate returns true if the player cannot save themselves. The game ends right after.
@@ -394,43 +369,43 @@ func (b Board) FinalCheckmate(player uint8) bool {
 	exist := false
 	ret := true
 
-	for _, v := range b.data {
-		for _, s := range v {
-			if s != nil {
-				if s.Player == player {
-					if s.T == King {
-						exist = true
-						// continue
-						// this prevents the king from defending itself
-					}
-
-					if !ret {
-						continue
-					}
-
-					oldpos := s.Pos
-					b.Set(&Piece{Pos: oldpos, T: Empty}) // erase the old piece
-
-					for _, v := range b.Possib(s) {
-						s.Pos = v
-						b.Set(s)
-						if !b.Checkmate(player) {
-							ret = false
-						} else {
-							b.Set(&Piece{Pos: s.Pos, T: Empty})
-						}
-					}
-
-					//fmt.Println(x, y)
-
-					s.Pos = oldpos
-					b.Set(s)
+	for k, s := range b.data {
+		if s.Valid() {
+			if s.Player == player {
+				if s.T == King {
+					exist = true
+					// continue
+					// this prevents the king from defending itself
 				}
+
+				if !ret {
+					continue
+				}
+
+				oldpos := s.Pos
+				b.Set(k, Point{-1, -1}) // erase the old piece
+
+				ps, err := b.Possib(k)
+				if err != nil {
+					panic(err)
+				}
+
+				for _, v := range ps {
+					s.Pos = v
+					b.Set(k, v)
+					if !b.Checkmate(player) {
+						ret = false
+					} else {
+						b.Set(k, Point{-1, -1})
+					}
+				}
+
+				s.Pos = oldpos
+				b.Set(k, oldpos)
 			}
 		}
 	}
 
-	//fmt.Println(exist, ret)
 	if !exist {
 		return true
 	}
@@ -440,34 +415,33 @@ func (b Board) FinalCheckmate(player uint8) bool {
 
 // Checkmate returns true if the player has been checkmatted
 func (b Board) Checkmate(player uint8) bool {
-	var king *Piece
-	for _, s := range b.data {
-		for _, v := range s {
-			if v != nil {
-				if v.T == King && v.Player == player {
-					king = v
-					break
-				}
-			}
-		}
+	var king Piece
+	if player == 1 {
+		king = b.data[4]
+	} else if player == 2 {
+		king = b.data[28]
 	}
-	if king == nil {
+
+	if !king.Valid() {
 		// no king, automatically win
 		return true
 	}
 
-	for _, s := range b.data {
-		for _, v := range s {
-			if v != nil {
-				if v.Player != player {
-					possib := v.Possib()
-					if v.T != King { // avoid infinite loop
-						possib = b.Possib(v)
-					}
+	for k, s := range b.data {
+		if s.Valid() {
+			if s.Player != player {
+				possib := s.Possib()
+				if s.T != King { // avoid infinite loop
+					var err error
+					possib, err = b.Possib(k)
 
-					if possib.In(king.Pos) {
-						return true
+					if err != nil {
+						continue
 					}
+				}
+
+				if possib.In(king.Pos) {
+					return true
 				}
 			}
 		}
@@ -477,48 +451,68 @@ func (b Board) Checkmate(player uint8) bool {
 }
 
 // Move moves a piece from it's original position to the destination. Returns true if it did, or false if it didn't.
-func (b *Board) Move(p *Piece, dst Point) (ret bool) {
+func (b *Board) Move(id int, dst Point) (ret bool) {
+	pec, err := b.GetByIndex(id)
+	if err != nil {
+		ret = false
+		return
+	}
+
 	defer func() {
-		src := p.Pos
-		if p != nil && ret {
-			b.data[p.Pos.X][p.Pos.Y] = nil
+		src := pec.Pos
 
-			p.Pos.X = dst.X
-			p.Pos.Y = dst.Y
+		if ret {
+			b.data[id].Pos = dst
 
-			b.data[dst.X][dst.Y] = p
+			// if there's a piece there
+			// then delete it
+			_, _, err := b.Get(src)
+			if err != nil {
+				b.Set(id, Point{-1, -1})
+			}
 		}
 
 		for _, v := range b.ml {
-			v(p, src, dst, ret)
+			v(pec, src, dst, ret)
 		}
 	}()
 
-	if p != nil {
-		if b.Get(p.Pos) != p {
-			return
-		}
-
-		o := b.Get(dst)
+	if err == nil && pec.Valid() {
 		// can we legally go there, i.e is it in the possible combinations??
 		// so for example bishop cannot go horizontally
-		if p.CanGo(dst) {
+		if pec.CanGo(dst) {
+			di, cep, err := b.Get(dst)
 			// is there a piece in the destination??
-			if o != nil && o.T != Empty {
+			if cep.Valid() && err == nil {
 				// is the piece's an enemy
-				if p.Player != o.Player {
+				if pec.Player != cep.Player {
 					// is it not a pawn(cause pawns cannot enemy forward or backward of them)
-					if p.T != PawnF && p.T != PawnB {
-						ret = b.Possib(p).In(dst)
+					if pec.T != PawnF && pec.T != PawnB {
+						ps, err := b.Possib(di)
+						if err != nil {
+							ret = false
+						} else {
+							ret = ps.In(dst)
+						}
 					}
 				}
 			} else {
 				// no piece in the destination
-				ret = b.Possib(p).In(dst)
+				ps, err := b.Possib(id)
+				if err != nil {
+					ret = false
+				} else {
+					ret = ps.In(dst)
+				}
 			}
 		} else {
-			if p.T == PawnF || p.T == PawnB {
-				ret = b.Possib(p).In(dst)
+			if pec.T == PawnF || pec.T == PawnB {
+				ps, err := b.Possib(id)
+				if err != nil {
+					ret = false
+				} else {
+					ret = ps.In(dst)
+				}
 			}
 		}
 	}
@@ -545,45 +539,5 @@ func (b *Board) UnmarshalJSON(body []byte) error {
 		return err
 	}
 
-	size := len(b.data)
-	for x := 0; x < size; x++ {
-		for y := 0; y < size; y++ {
-			p := b.data[x][y]
-			if p != nil {
-				p.Pos.X = x
-				p.Pos.Y = y
-			}
-		}
-	}
-
 	return nil
-}
-
-// DeadPieces returns all the dead pieces
-func (b Board) DeadPieces(player uint8) map[uint8]uint8 {
-	x := map[uint8]uint8{
-		PawnF:  8,
-		PawnB:  8,
-		Bishop: 2,
-		Knight: 2,
-		Rook:   2,
-		King:   1,
-		Queen:  1,
-	}
-
-	for _, s := range b.data {
-		for _, v := range s {
-			if v != nil && v.Player == player {
-				_, ok := x[v.T]
-				if ok {
-					x[v.T]--
-					if x[v.T] == 0 {
-						delete(x, v.T)
-					}
-				}
-			}
-		}
-	}
-
-	return x
 }
