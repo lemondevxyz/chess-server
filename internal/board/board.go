@@ -113,7 +113,7 @@ func (b *Board) Set(i int, pos Point) error {
 	}
 
 	if !pos.Valid() {
-		b.data[i].T = Empty
+		// b.data[i].T = Empty
 		b.data[i].Pos = Point{-1, -1}
 	} else {
 		b.data[i].Pos = pos
@@ -273,15 +273,22 @@ func (b Board) Possib(id int) (Points, error) {
 			rm := false
 			for i := 0; i < 8; i++ {
 				pnt := Point{int8(x), int8(y)}
+				/*
+					if pnt.Valid() {
+						fmt.Println(ps, ps.In(pnt), pnt)
+					}
+				*/
 				if !ps.In(pnt) || !pnt.Valid() {
 					break
 				}
 
 				if !rm {
 					// encountered piece in the way
+
 					_, cep, err := b.Get(pnt)
 					if err == nil {
 						if pec.Player == cep.Player {
+							//fmt.Println("same player", pnt)
 							ps.Delete(cep.Pos)
 						}
 						rm = true
@@ -296,6 +303,8 @@ func (b Board) Possib(id int) (Points, error) {
 				x, y = op(x, y)
 			}
 		}
+
+		// fmt.Println("bef", ps)
 
 		x, y := orix, oriy
 		// normal direction
@@ -322,6 +331,7 @@ func (b Board) Possib(id int) (Points, error) {
 			loop(x, y, DownRight)
 		}
 
+		// fmt.Println("aft", ps)
 	}
 
 	ps.Clean()
@@ -447,8 +457,9 @@ func (b *Board) Move(id int, dst Point) (ret bool) {
 			if err == nil {
 				b.Set(di, Point{-1, -1})
 			}
+
+			b.data[id].Pos = dst
 		}
-		b.data[id].Pos = dst
 
 		for _, v := range b.ml {
 			v(pec, src, dst, ret)

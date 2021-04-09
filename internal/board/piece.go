@@ -41,8 +41,8 @@ type Piece struct {
 
 // Valid returns true if the piece is true. This basically checks if the type is in bound, if the point valid
 func (p Piece) Valid() bool {
-	if p.Pos.Valid() {
-		return true
+	if !p.Pos.Valid() {
+		return false
 	}
 
 	if p.T >= PawnF && p.T <= King {
@@ -68,8 +68,8 @@ func (p Piece) ShortString() string {
 	return strings[p.T]
 }
 
-// String representation of the type
-func (p Piece) String() string {
+// Name returns the name type for the piece
+func (p Piece) Name() string {
 	strings := map[uint8]string{
 		Empty:  "Empty",
 		PawnF:  "Pawn",
@@ -81,7 +81,12 @@ func (p Piece) String() string {
 		King:   "King",
 	}
 
-	return fmt.Sprintf("%s/%s/%d", strings[p.T], p.Pos.String(), p.T)
+	return strings[p.T]
+}
+
+// String representation of the piece's [type, number, position]
+func (p Piece) String() string {
+	return fmt.Sprintf("%s/%s/%d", p.Name(), p.Pos.String(), p.Player)
 }
 
 // Possib returns all.Possible moves from piece's.Position.

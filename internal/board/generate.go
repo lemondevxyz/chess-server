@@ -1,12 +1,8 @@
 package board
 
-import "fmt"
-
-const (
-	DirUp uint8 = 1 << iota
-	DirDown
-	DirLeft
-	DirRight
+import (
+	"fmt"
+	"sort"
 )
 
 func Set(b, flag uint8) uint8    { return b | flag }
@@ -34,11 +30,21 @@ func abs(i int8) int8 {
 }
 
 func (ps Points) String() (str string) {
+	sli := []string{}
 	for k := range ps {
-		str += k + ", "
+		sli = append(sli, k)
 	}
 
-	return "[" + str[:len(str)-2] + "]"
+	sort.Strings(sli)
+	for _, v := range sli {
+		str += v + ", "
+	}
+
+	if len(str) >= 2 {
+		return "[" + str[:len(str)-2] + "]"
+	}
+
+	return "[]"
 }
 
 // Clean removes all out of bounds points, and duplicate poitns
@@ -108,24 +114,6 @@ func (p Point) Equal(o Point) bool {
 // Valid return false when out of bounds
 func (p Point) Valid() bool {
 	return !(p.X > 7 || p.Y > 7 || p.X < 0 || p.Y < 0)
-}
-
-func (p Point) Direction(dst Point) (d uint8) {
-	x := dst.X - p.X
-	if x < 0 {
-		d = Set(d, DirUp)
-	} else if x > 0 {
-		d = Set(d, DirDown)
-	}
-
-	y := dst.Y - p.Y
-	if y < 0 {
-		d = Set(d, DirLeft)
-	} else if y > 0 {
-		d = Set(d, DirRight)
-	}
-
-	return
 }
 
 // Diagonal generates diagonal points
@@ -273,24 +261,6 @@ func (p Point) Backward() Points {
 	return ps
 }
 
-// Left generates a point to the left.
-func (p Point) Left() Points {
-	ps := Points{}
-	ps.Insert(Point{p.X, p.Y - 1})
-	ps.Clean()
-
-	return ps
-}
-
-// Right generates a point to the right.
-func (p Point) Right() Points {
-	ps := Points{}
-	ps.Insert(Point{p.X, p.Y + 1})
-	ps.Clean()
-
-	return ps
-}
-
 // Corner generates [+1, +1], [+1, -1], [-1, +1] and [-1, -1].
 func (p Point) Corner() Points {
 	ps := Points{}
@@ -307,55 +277,14 @@ func (p Point) Corner() Points {
 	return ps
 }
 
-func (p Point) Increase(dir uint8) Point {
-	x, y := p.X, p.Y
-	if Has(dir, DirUp) {
-		x--
-	} else if Has(dir, DirDown) {
-		x++
-	}
-	if Has(dir, DirLeft) {
-		y--
-	} else if Has(dir, DirRight) {
-		y++
-	}
-
-	return Point{x, y}
-}
-
 // The following is a collection of generic functions, that start from x,y and return a new point from that perspective.
 // Also the use of x, y values(instead of Point) makes these more comprehensible
 func UpLeft(x, y int8) (int8, int8)    { return x - 1, y - 1 }
-func UpRight(x, y int8) (int8, int8)   { return x - 1, y + 1 }
-func DownLeft(x, y int8) (int8, int8)  { return x + 1, y - 1 }
+func UpRight(x, y int8) (int8, int8)   { return x + 1, y - 1 }
+func DownLeft(x, y int8) (int8, int8)  { return x - 1, y + 1 }
 func DownRight(x, y int8) (int8, int8) { return x + 1, y + 1 }
 
-func Up(x, y int8) (int8, int8)    { return x - 1, y }
-func Down(x, y int8) (int8, int8)  { return x + 1, y }
-func Left(x, y int8) (int8, int8)  { return x, y - 1 }
-func Right(x, y int8) (int8, int8) { return x, y + 1 }
-
-// Smaller returns true if dst is smaller than src. Smaller compares x to x, and then y to y.
-/*
-func (p Point) Smaller(dst Point) bool {
-	if p.Equal(dst) {
-		return false
-	}
-
-	x, y := p.X, p.Y
-	if x > dst.X {
-		return true
-	}
-
-	return y > dst.Y
-}
-
-// Bigger returns true if dst is bigger than src
-func (p Point) Bigger(dst Point) bool {
-	if p.Equal(dst) {
-		return false
-	}
-
-	return !p.Smaller(dst)
-}
-*/
+func Up(x, y int8) (int8, int8)    { return x, y - 1 }
+func Down(x, y int8) (int8, int8)  { return x, y + 1 }
+func Left(x, y int8) (int8, int8)  { return x - 1, y }
+func Right(x, y int8) (int8, int8) { return x + 1, y }

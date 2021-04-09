@@ -251,41 +251,58 @@ func TestBoardMoveKill(t *testing.T) {
 
 }
 
-/*
 // check if some pieces can move over pieces that are in the way...
+// it's a tiny bit overkill to test every piece type, but reliablity is worth every price
 func TestBoardMoveInTheWay(t *testing.T) {
-	b := NewBoard()
+	generic := func(id int) {
+		brd := NewBoard()
+		pec, _ := brd.GetByIndex(id)
 
-	// try moving the rook through the pawn
-	p := b.Get(Point{7, 0})
-	// rook should not be able to move one bit if it's in the start
-	for _, v := range p.Possib() {
-		if b.Move(p, v) {
-			t.Logf("%s", v.String())
-			t.Logf("\n%s", b.String())
-			t.Fatalf("rook can move over other pieces")
+		for _, v := range pec.Possib() {
+			z, _ := brd.Possib(id)
+			if brd.Move(id, v) {
+				t.Logf("pos: %s", v.String())
+				t.Logf("board.Possib: %s", z)
+				t.Logf("board:\n%s", brd.String())
+				t.Fatalf("%s can move over other pieces", pec.Name())
+			}
 		}
 	}
 
-	// try moving knight through pawn
-	p = b.Get(Point{7, 1})
-	for _, v := range p.Possib() {
+	for i := 0; i < 16; i++ {
+		x := i
+		if i == 1 || i == 6 || i == 9 || i == 14 { // skip over knights
+			continue
+		}
+		if i >= 8 {
+			x += 16
+		}
+
+		generic(x)
+	}
+
+	b := NewBoard()
+
+	id := 25
+	pec, _ := b.GetByIndex(id)
+
+	for _, v := range pec.Possib() {
 
 		b = NewBoard()
-		p = b.Get(Point{7, 1})
+		pec, _ = b.GetByIndex(id)
 		if !v.Valid() {
 			continue
 		}
 
-		o := b.Get(v)
+		_, cep, err := b.Get(v)
 		want := true
-		if o != nil {
-			if o.Player == p.Player {
+		if err == nil {
+			if cep.Player == pec.Player {
 				want = false
 			}
 		}
 
-		have := b.Move(p, v)
+		have := b.Move(id, v)
 		if have != want {
 			t.Logf("%s", v.String())
 			t.Logf("\n%s", b.String())
@@ -297,54 +314,9 @@ func TestBoardMoveInTheWay(t *testing.T) {
 			}
 		}
 	}
-
-	// try moving bishop through pawn
-	p = b.Get(Point{7, 2})
-	for _, v := range p.Possib() {
-		if b.Move(p, v) {
-			t.Logf("%s", v.String())
-			t.Logf("\n%s", b.String())
-			t.Fatalf("bishop can move over other pieces")
-		}
-	}
-
-	//p = b.Get(Point{7, })
-	// try moving king through other pieces
-	p = b.Get(Point{7, 3})
-	for _, v := range p.Possib() {
-		if b.Move(p, v) {
-			t.Logf("%s", v.String())
-			t.Logf("\n%s", b.String())
-			t.Fatalf("king can move over other pieces")
-		}
-	}
-
-	p = b.Get(Point{7, 4})
-	for _, v := range p.Possib() {
-		if b.Move(p, v) {
-			t.Logf("%s", v.String())
-			t.Logf("\n%s", b.String())
-			t.Fatalf("queen can move over other pieces")
-		}
-	}
-
-	// try moving king to a threatened
-	{
-		brd := NewBoard()
-		for i := 0; i < 8; i++ {
-			brd.Set(&Piece{Pos: Point{1, i}, T: Empty})
-			brd.Set(&Piece{Pos: Point{6, i}, T: Empty})
-		}
-
-		pec := brd.Get(Point{7, 4})
-		brd.Set(&Piece{Pos: Point{7, 4}, T: Empty})
-		brd.Set(&Piece{Pos: Point{6, 3}, T: King})
-		t.Log(brd.Possib(pec))
-
-		t.Logf("\n%s", brd)
-	}
 }
 
+/*
 // while above makes sure that no "special" piece can move over from it's starting position, this one tests past bugs.
 func TestBoardPieceBugInTheWay(t *testing.T) {
 	{ // bishop shouldn't skip over enemy pawn and killing knight
