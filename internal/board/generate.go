@@ -33,6 +33,14 @@ func abs(i int8) int8 {
 	return i
 }
 
+func (ps Points) String() (str string) {
+	for k := range ps {
+		str += k + ", "
+	}
+
+	return "[" + str[:len(str)-2] + "]"
+}
+
 // Clean removes all out of bounds points, and duplicate poitns
 func (ps Points) Clean() {
 	// remove invalid points
@@ -73,12 +81,10 @@ func (ps Points) Delete(dst Point) {
 // Outside generates points that are outside of ps
 func (ps Points) Outside() Points {
 	ret := Points{}
-	fmt.Println(ps)
 	for x := 0; x < 8; x++ {
 		for y := 0; y < 8; y++ {
 			p := Point{int8(x), int8(y)}
 			if !ps.In(p) {
-				fmt.Println(p)
 				ret[p.String()] = p
 			}
 		}
@@ -187,11 +193,12 @@ func (p Point) Diagonal() Points {
 func (p Point) Horizontal() Points {
 	ret := Points{}
 	for i := int8(0); i < 8; i++ {
-		if p.Y == i {
+		if p.X == i {
 			continue
 		}
 
-		ret.Insert(Point{p.X, i})
+		ret.Insert(Point{i, p.Y})
+
 	}
 
 	return ret
@@ -201,11 +208,11 @@ func (p Point) Horizontal() Points {
 func (p Point) Vertical() Points {
 	ret := Points{}
 	for i := int8(0); i < 8; i++ {
-		if p.X == i {
+		if p.Y == i {
 			continue
 		}
 
-		ret.Insert(Point{i, p.Y})
+		ret.Insert(Point{p.X, i})
 	}
 
 	return ret
@@ -251,7 +258,7 @@ func (p Point) Knight() Points {
 // Forward generates a point forward. Forward being up -1
 func (p Point) Forward() Points {
 	ps := Points{}
-	ps.Insert(Point{p.X - 1, p.Y})
+	ps.Insert(Point{p.X, p.Y - 1})
 	ps.Clean()
 
 	return ps
@@ -260,7 +267,7 @@ func (p Point) Forward() Points {
 // Backward generates a point backward. Backward being down +1
 func (p Point) Backward() Points {
 	ps := Points{}
-	ps.Insert(Point{p.X + 1, p.Y})
+	ps.Insert(Point{p.X, p.Y + 1})
 	ps.Clean()
 
 	return ps

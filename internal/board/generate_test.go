@@ -295,19 +295,6 @@ func TestDiagonal(t *testing.T) {
 func TestHorizontal(t *testing.T) {
 	p := Point{4, 3}
 	generate_test(t, "horizontal", p, p.Horizontal(), []Point{
-		{4, 0},
-		{4, 1},
-		{4, 2},
-		{4, 4},
-		{4, 5},
-		{4, 6},
-		{4, 7},
-	})
-}
-
-func TestVertical(t *testing.T) {
-	p := Point{4, 3}
-	generate_test(t, "vertical", p, p.Vertical(), []Point{
 		{0, 3},
 		{1, 3},
 		{2, 3},
@@ -315,6 +302,19 @@ func TestVertical(t *testing.T) {
 		{5, 3},
 		{6, 3},
 		{7, 3},
+	})
+}
+
+func TestVertical(t *testing.T) {
+	p := Point{4, 3}
+	generate_test(t, "vertical", p, p.Vertical(), []Point{
+		{4, 0},
+		{4, 1},
+		{4, 2},
+		{4, 4},
+		{4, 5},
+		{4, 6},
+		{4, 7},
 	})
 }
 

@@ -46,12 +46,14 @@ func TestPawnB(t *testing.T) {
 		Pos: Point{1, 1},
 	}
 
-	if !p.CanGo(Point{3, 1}) {
+	if !p.CanGo(Point{1, 3}) {
 		t.Fatalf("Pawn cannot go two steps at the beginning")
-	} else if !p.CanGo(Point{2, 1}) {
+	} else if !p.CanGo(Point{1, 2}) {
 		t.Fatalf("Pawn cannot go a normal step at the beginning")
-	} else if p.CanGo(Point{0, 1}) {
+	} else if p.CanGo(Point{1, 0}) {
 		t.Fatalf("Backward Pawn can go Forwards")
+	} else if p.CanGo(Point{2, 1}) {
+		t.Fatalf("Backward Pawn can move horizontally")
 	}
 
 	p.Pos = Point{2, 1}
@@ -63,15 +65,17 @@ func TestPawnB(t *testing.T) {
 func TestPawnF(t *testing.T) {
 	p := Piece{
 		T:   PawnF,
-		Pos: Point{6, 1},
+		Pos: Point{1, 6},
 	}
 
-	if !p.CanGo(Point{4, 1}) {
+	if !p.CanGo(Point{1, 4}) {
 		t.Fatalf("Pawn cannot go two steps at the beginning")
-	} else if !p.CanGo(Point{5, 1}) {
+	} else if !p.CanGo(Point{1, 5}) {
 		t.Fatalf("Pawn cannot go a normal step at the beginning")
-	} else if p.CanGo(Point{7, 1}) {
+	} else if p.CanGo(Point{1, 6}) {
 		t.Fatalf("Forward Pawn can go Backwards")
+	} else if p.CanGo(Point{2, 6}) {
+		t.Fatalf("Forward Pawn can move horizontally")
 	}
 
 	p.Pos = Point{5, 1}

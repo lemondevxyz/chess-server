@@ -23,38 +23,22 @@ func NewBoard() *Board {
 	}
 
 	row := [32]uint8{
-		0:  Rook,
-		1:  Knight,
-		2:  Bishop,
-		3:  Queen,
-		4:  King,
-		5:  Bishop,
-		6:  Knight,
-		7:  Rook,
-		8:  PawnB,
-		9:  PawnB,
-		10: PawnB,
-		11: PawnB,
-		12: PawnB,
-		13: PawnB,
-		14: PawnB,
-		15: PawnB,
-		16: PawnF,
-		17: PawnF,
-		18: PawnF,
-		19: PawnF,
-		20: PawnF,
-		21: PawnF,
-		22: PawnF,
-		23: PawnF,
-		24: Rook,
-		25: Knight,
-		26: Bishop,
-		27: Queen,
-		28: King,
-		29: Bishop,
-		30: Knight,
-		31: Rook,
+		// 0 -> 7
+		// 0   | 1    | 2    | 3    | 4    | 5    | 6    | 7
+		// 0,0 | 1, 0 | 2, 0 | 3, 0 | 4, 0 | 5, 0 | 6, 0 | 7, 0
+		Rook, Knight, Bishop, Queen, King, Bishop, Knight, Rook,
+		// 8 -> 15
+		// 8   | 9    | 10   | 11   | 12   | 13   | 14   | 15
+		// 0,1 | 1, 1 | 2, 1 | 3, 1 | 4, 1 | 5, 1 | 6, 1 | 7, 1
+		PawnB, PawnB, PawnB, PawnB, PawnB, PawnB, PawnB, PawnB,
+		// 16 -> 23
+		// 16  | 17   | 18   | 19   | 20   | 21   | 22   | 23
+		// 0,6 | 1, 6 | 2, 6 | 3, 6 | 4, 6 | 5, 6 | 6, 6 | 7, 6
+		PawnF, PawnF, PawnF, PawnF, PawnF, PawnF, PawnF, PawnF,
+		// 24 -> 31
+		// 24  | 25   | 26   | 27   | 28   | 29   | 30   | 31
+		// 0,7 | 1, 7 | 2, 7 | 3, 7 | 4, 7 | 5, 7 | 6, 7 | 7, 7
+		Rook, Knight, Bishop, Queen, King, Bishop, Knight, Rook,
 	}
 
 	for k, s := range row {
@@ -63,11 +47,11 @@ func NewBoard() *Board {
 			player = 1
 		}
 
-		x := int8(k / 8)
-		y := int8(k % 8)
+		x := int8(k % 8)
+		y := int8(k / 8)
 
 		if k >= 16 {
-			x += 4
+			y += 4
 		}
 
 		b.data[k] = Piece{
@@ -93,12 +77,16 @@ func (b Board) Copy() *Board {
 	return &o
 }
 
-func (b Board) string(def string) (str string) {
+// String method returns a string. makes it easier to debug
+func (b Board) String() (str string) {
 	for i := 0; i < (8 * 8); i++ {
 		x := int8(i % 8)
 		y := int8(i / 8)
+		if i != 0 && x == 0 {
+			str += "\n"
+		}
 
-		char := def
+		char := " "
 
 		pos := Point{x, y}
 		for _, v := range b.data {
@@ -108,18 +96,9 @@ func (b Board) string(def string) (str string) {
 		}
 
 		str += char + " "
-		if i != 0 && x == 0 {
-			str += "\n"
-		}
 	}
 
-	return str
-
-}
-
-// String method returns a string. makes it easier to debug
-func (b Board) String() (str string) {
-	return b.string(" ")
+	return
 }
 
 // Listen returns adds a callback that gets called pre and post movement.
@@ -453,7 +432,7 @@ func (b Board) Checkmate(player uint8) bool {
 // Move moves a piece from it's original position to the destination. Returns true if it did, or false if it didn't.
 func (b *Board) Move(id int, dst Point) (ret bool) {
 	pec, err := b.GetByIndex(id)
-	if err != nil {
+	if err != nil || !pec.Valid() || dst.Equal(pec.Pos) {
 		ret = false
 		return
 	}
@@ -462,57 +441,54 @@ func (b *Board) Move(id int, dst Point) (ret bool) {
 		src := pec.Pos
 
 		if ret {
-			b.data[id].Pos = dst
-
 			// if there's a piece there
 			// then delete it
-			_, _, err := b.Get(src)
-			if err != nil {
-				b.Set(id, Point{-1, -1})
+			di, _, err := b.Get(dst)
+			if err == nil {
+				b.Set(di, Point{-1, -1})
 			}
 		}
+		b.data[id].Pos = dst
 
 		for _, v := range b.ml {
 			v(pec, src, dst, ret)
 		}
 	}()
 
-	if err == nil && pec.Valid() {
-		// can we legally go there, i.e is it in the possible combinations??
-		// so for example bishop cannot go horizontally
-		if pec.CanGo(dst) {
-			di, cep, err := b.Get(dst)
-			// is there a piece in the destination??
-			if cep.Valid() && err == nil {
-				// is the piece's an enemy
-				if pec.Player != cep.Player {
-					// is it not a pawn(cause pawns cannot enemy forward or backward of them)
-					if pec.T != PawnF && pec.T != PawnB {
-						ps, err := b.Possib(di)
-						if err != nil {
-							ret = false
-						} else {
-							ret = ps.In(dst)
-						}
+	// can we legally go there, i.e is it in the possible combinations??
+	// so for example bishop cannot go horizontally
+	if pec.CanGo(dst) {
+		_, cep, err := b.Get(dst)
+		// is there a piece in the destination??
+		if cep.Valid() && err == nil {
+			// is the piece's an enemy
+			if pec.Player != cep.Player {
+				// is it not a pawn(cause pawns cannot enemy forward or backward of them)
+				if pec.T != PawnF && pec.T != PawnB {
+					ps, err := b.Possib(id)
+					if err != nil {
+						ret = false
+					} else {
+						ret = ps.In(dst)
 					}
-				}
-			} else {
-				// no piece in the destination
-				ps, err := b.Possib(id)
-				if err != nil {
-					ret = false
-				} else {
-					ret = ps.In(dst)
 				}
 			}
 		} else {
-			if pec.T == PawnF || pec.T == PawnB {
-				ps, err := b.Possib(id)
-				if err != nil {
-					ret = false
-				} else {
-					ret = ps.In(dst)
-				}
+			// no piece in the destination
+			ps, err := b.Possib(id)
+			if err != nil {
+				ret = false
+			} else {
+				ret = ps.In(dst)
+			}
+		}
+	} else {
+		if pec.T == PawnF || pec.T == PawnB {
+			ps, err := b.Possib(id)
+			if err != nil {
+				ret = false
+			} else {
+				ret = ps.In(dst)
 			}
 		}
 	}

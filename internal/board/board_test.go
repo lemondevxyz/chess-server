@@ -14,22 +14,26 @@ func TestNewBoard(t *testing.T) {
 		Rook, Knight, Bishop, Queen, King, Bishop, Knight, Rook,
 	}
 
+	b := NewBoard()
+
+	t.Log(b.data)
+
 	ps := []Point{}
-	for x := int8(0); x < 2; x++ {
-		for y := int8(0); y < 8; y++ {
+	for y := int8(0); y < 2; y++ {
+		for x := int8(0); x < 8; x++ {
+			//t.Log(y, x)
 			ps = append(ps, Point{x, y})
 		}
 	}
-	for x := int8(6); x < 8; x++ {
-		for y := int8(0); y < 8; y++ {
+	for y := int8(6); y < 8; y++ {
+		for x := int8(0); x < 8; x++ {
 			ps = append(ps, Point{x, y})
 			// ps.Insert(Point{x, y})
 		}
 	}
 
-	t.Logf("want array: %v", ps)
+	// t.Logf("want array: %v", ps)
 
-	b := NewBoard()
 	for x := 0; x < 32; x++ {
 		if b.data[x].T != u[x] {
 			t.Fatalf("rows(types) are not setup properly: %d | want: %d, have: %d", x, u[x], b.data[x].T)
@@ -50,7 +54,10 @@ func TestBoardCopy(t *testing.T) {
 		t.Fatalf("board.Copy doesnt copy well")
 	}
 
-	brd.Move(19, Point{4, 3})
+	brd.Move(19, Point{3, 4})
+
+	t.Logf("\n%s", brd.String())
+	t.Logf("\n%s", drb.String())
 	if brd.String() == drb.String() {
 		t.Fatalf("board.Copy original move applies to copy of board")
 	}
@@ -75,6 +82,7 @@ func TestBoardListen(t *testing.T) {
 	x, y := false, false
 	// func(p Piece, src Point, dst Point, ret bool)
 	b.Listen(func(_ Piece, _, _ Point, ret bool) {
+		t.Log(ret)
 		if ret {
 			valid <- true
 		} else {
@@ -82,8 +90,8 @@ func TestBoardListen(t *testing.T) {
 		}
 	})
 
-	b.Move(9, Point{3, 1})
-	b.Move(9, Point{7, 1})
+	b.Move(9, Point{1, 3})
+	b.Move(9, Point{1, 2})
 
 	select {
 	case <-time.After(time.Millisecond * 20):
@@ -118,29 +126,33 @@ func TestBoardMove(t *testing.T) {
 	}
 }
 
-/*
 func TestBoardMovePawn(t *testing.T) {
 
 	b := NewBoard()
 
-	x := b.data[1][3]
-	y := b.data[6][4]
+	// dark 1
+	// light 1
+	d1 := 11
+	l1 := 20
+	l2 := 21
 
-	b.Move(10, Point{3, 3})
-	b.Move(y, Point{4, 4})
+	t.Log(b.data[d1], b.data[l1], b.data[l2])
 
-	z := b.data[6][5]
-	b.Move(z, Point{5, 5})
+	b.Move(d1, Point{3, 3})
+	b.Move(l1, Point{4, 4})
+	b.Move(l2, Point{5, 5})
 
-	if !b.Move(x, Point{4, 4}) {
+	t.Log(b.data[d1], b.data[l1], b.data[l2])
+
+	if !b.Move(d1, Point{4, 4}) {
 		t.Fatalf("backward pawn should kill other pawn")
-	} else if !b.Move(z, Point{4, 4}) {
+	} else if !b.Move(l2, Point{4, 4}) {
 		t.Fatalf("forward pawn should kill other pawn")
 	}
 
-	x = b.data[1][4]
-	b.Move(x, Point{3, 4})
-	if b.Move(x, Point{4, 4}) {
+	d2 := 12
+	b.Move(d2, Point{3, 4})
+	if b.Move(d2, Point{4, 4}) {
 		t.Fatalf("pawn cannot takeout pawn in front of it")
 	}
 
@@ -148,10 +160,12 @@ func TestBoardMovePawn(t *testing.T) {
 
 // probs overkill but why not
 // basically test if other pieces can kill enemy pieces
-func TestBoardMoveOthers(t *testing.T) {
+func TestBoardMoveKill(t *testing.T) {
 
 	b := NewBoard()
 	cs := []struct {
+		nm1 int
+		nm2 int
 		src Point
 		dst Point
 		t   uint8
@@ -162,81 +176,82 @@ func TestBoardMoveOthers(t *testing.T) {
 		// Queen
 		// King
 		{
+			nm1: 2,
+			nm2: 29,
 			src: Point{3, 3},
 			dst: Point{4, 4},
 			t:   Bishop,
 		},
 		{
+			nm1: 1,
+			nm2: 25,
 			src: Point{3, 3},
 			dst: Point{4, 5},
 			t:   Knight,
 		},
 		{
+			nm1: 0,
+			nm2: 24,
 			src: Point{3, 3},
 			dst: Point{4, 3},
 			t:   Rook,
 		},
 		{
+			nm1: 7,
+			nm2: 31,
 			src: Point{3, 3},
-			dst: Point{3, 4},
+			dst: Point{3, 5},
 			t:   Rook,
 		},
 		{
+			nm1: 3,
+			nm2: 27,
 			src: Point{3, 3},
 			dst: Point{3, 4},
 			t:   Queen,
 		},
 		{
+			nm1: 4,
+			nm2: 28,
 			src: Point{3, 3},
 			dst: Point{3, 4},
 			t:   King,
 		},
 	}
 
-	for _, v := range cs {
-		b.Set(&Piece{
-			Player: 1,
-			T:      v.t,
-			Pos:    v.src,
-		})
-		b.Set(&Piece{
-			Player: 2,
-			T:      v.t,
-			Pos:    v.dst,
-		})
+	for k, v := range cs {
+		b.Set(v.nm1, v.src)
+		b.Set(v.nm2, v.dst)
 
-		x := b.data[v.src.X][v.src.Y]
-		if !b.Move(x, v.dst) {
+		if !b.Move(v.nm1, v.dst) {
+			t.Logf("index: %d", k)
+			t.Logf("\n%s", b)
 			t.Fatalf("test cordinates are invalid. src: %d - dst: %d - type: %d", v.src, v.dst, v.t)
 			return
 		} else {
-			if b.data[v.src.X][v.src.Y] != nil {
+			if b.data[v.nm1].Pos.Equal(v.src) {
 				t.Fatalf("move doesn't actually move")
 			} else {
-				if b.data[v.dst.X][v.dst.Y] != x {
+				if !b.data[v.nm1].Pos.Equal(v.dst) || b.data[v.nm2].T != Empty {
 					t.Fatalf("move doesn't replace enemy")
 				}
 			}
 		}
+
+		b.Set(v.nm1, Point{-1, -1})
+		b.Set(v.nm2, Point{-1, -1})
 	}
 
-	b.data[0][0] = &Piece{
-		Player: 1,
-		T:      PawnF,
-		Pos:    Point{0, 0},
-	}
-	b.data[1][1] = &Piece{
-		Player: 1,
-		T:      PawnB,
-		Pos:    Point{1, 1},
-	}
+	b.Move(0, Point{2, 1})
+	b.Move(1, Point{3, 2})
 
-	if b.Move(b.data[0][0], Point{1, 1}) {
+	if b.Move(0, Point{3, 2}) {
 		t.Fatalf("ally killed")
 	}
 
 }
 
+/*
 // check if some pieces can move over pieces that are in the way...
 func TestBoardMoveInTheWay(t *testing.T) {
 	b := NewBoard()

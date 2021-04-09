@@ -99,11 +99,11 @@ func (p Piece) Possib() Points {
 		} else {
 			ps = src.Backward()
 		}
-		if src.X == 1 || src.X == 6 {
+		if src.Y == 1 || src.Y == 6 {
 			if p.T == PawnF {
-				ps.Insert(Point{X: src.X - 2, Y: src.Y})
+				ps.Insert(Point{X: src.X, Y: src.Y - 2})
 			} else if p.T == PawnB {
-				ps.Insert(Point{X: src.X + 2, Y: src.Y})
+				ps.Insert(Point{X: src.X, Y: src.Y + 2})
 			}
 		}
 
