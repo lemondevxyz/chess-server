@@ -232,7 +232,7 @@ func TestBoardMoveKill(t *testing.T) {
 			if b.data[v.nm1].Pos.Equal(v.src) {
 				t.Fatalf("move doesn't actually move")
 			} else {
-				if !b.data[v.nm1].Pos.Equal(v.dst) || b.data[v.nm2].T != Empty {
+				if !b.data[v.nm1].Pos.Equal(v.dst) || b.data[v.nm2].Pos.Valid() {
 					t.Fatalf("move doesn't replace enemy")
 				}
 			}
@@ -316,82 +316,80 @@ func TestBoardMoveInTheWay(t *testing.T) {
 	}
 }
 
-/*
 // while above makes sure that no "special" piece can move over from it's starting position, this one tests past bugs.
 func TestBoardPieceBugInTheWay(t *testing.T) {
 	{ // bishop shouldn't skip over enemy pawn and killing knight
+		// constant ids
+		const ourpawn = 20   // {4, 6}
+		const ourbishop = 29 // {5, 7}
+
 		brd := NewBoard()
-		pec := brd.Get(Point{6, 4})
+		// first remove our pawn at {6, 4}
+		brd.Set(ourpawn, Point{-1, -1})
 
-		pec.T = Empty
-		pos := Point{4, 2}
+		pos := Point{2, 4}
+		// move bishop to 2, 4
+		brd.Set(ourbishop, pos)
 
-		brd.Set(pec)
-		brd.Set(&Piece{
-			T:   Bishop,
-			Pos: pos,
-		})
-
-		t.Logf("bishop possible moves: %s", pos.String())
-		t.Log(brd.Possib(brd.Get(Point{4, 2})))
-		if brd.Move(brd.Get(Point{4, 2}), Point{0, 6}) {
+		// t.Logf("\n%s", brd.String())
+		if brd.Move(ourbishop, Point{5, 0}) {
 			t.Fatalf("bishop can skip enemy pawn and kill knight")
 		}
 	}
 	{ // knight cannot override nearby pawn, but it's in the possible moves
+		const ourknight = 30 // at {6, 7}
+
 		brd := NewBoard()
 
-		pos := Point{7, 6}
-		pec := brd.Get(pos)
+		// pec, _ := brd.GetByIndex(ourknight)
+		// t.Logf("knight position: %s", pec.Pos)
+		possib, _ := brd.Possib(ourknight)
+		// t.Logf("knight possible moves: %s", possib)
 
-		t.Logf("knight possible moves: %s", pos.String())
-		possib := brd.Possib(pec)
-		t.Log(possib)
-
-		if possib.In(Point{6, 4}) {
+		if possib.In(Point{4, 6}) {
 			t.Fatalf("knight possible moves is killing nearby pawn")
 		}
 	}
 	{ // pawn possiblity needs to include killable pieces
+		const ourpawn = 20   // at {4, 6}
+		const enemypawn = 11 // at {3, 1}
+
 		brd := NewBoard()
+		pec, _ := brd.GetByIndex(ourpawn)
 
-		pos := Point{6, 4}
-		pec := brd.Get(pos)
-
-		pos.X -= 2
-		if !brd.Move(pec, pos) {
+		pec.Pos.Y -= 2
+		if !brd.Move(ourpawn, pec.Pos) {
 			t.Fatalf("major fault within move")
 		}
 
-		pos = Point{1, 3}
-		pec = brd.Get(pos)
+		pec, _ = brd.GetByIndex(enemypawn)
 
-		pos.X += 2
-		if !brd.Move(pec, pos) {
+		pec.Pos.Y += 2
+		if !brd.Move(enemypawn, pec.Pos) {
 			t.Fatalf("major fault within move")
 		}
 
-		pos = Point{4, 4}
-		pec = brd.Get(pos)
-		if !brd.Possib(pec).In(Point{3, 3}) {
+		possib, _ := brd.Possib(ourpawn)
+		if !possib.In(Point{3, 3}) {
 			t.Fatalf("pawn does not include killable pieces")
 		}
 	}
 	{ // queen possible moves should not include it's fellow allies
+		const ourqueen = 27
 		brd := NewBoard()
 
-		pos := Point{7, 4}
-		pec := brd.Get(pos)
+		// pec, _ := brd.GetByIndex(ourqueen)
 
-		sp := Points{
-			{7, 3},
-			{7, 5},
-			{6, 4},
-			{6, 3},
-			{6, 5},
-		}
+		ps := Points{}
+		ps.Insert(
+			Point{7, 3},
+			Point{7, 5},
+			Point{6, 4},
+			Point{6, 3},
+			Point{6, 5},
+		)
 
-		ps := brd.Possib(pec)
+		sp, _ := brd.Possib(ourqueen)
 		for _, v := range sp {
 			if ps.In(v) {
 				t.Fatalf("queen possible moves includes it's fellow allies. point: %s", v.String())
@@ -399,31 +397,29 @@ func TestBoardPieceBugInTheWay(t *testing.T) {
 		}
 	}
 	{ // pawn backward shouldn't have X-2 at X = 1, pawn forward shouldn't have X+2 at X = 6
+		const pawnb = 9
+		const pawnf = 17
+
 		brd := NewBoard()
 
-		pawnf := &Piece{
-			Pos:    Point{1, 1},
-			T:      PawnF,
-			Player: 1,
-		}
-		pawnb := &Piece{
-			Pos:    Point{6, 1},
-			T:      PawnB,
-			Player: 2,
+		brd.Set(pawnb, Point{1, 6})
+		brd.Set(pawnf, Point{1, 1})
+
+		// t.Logf("\n%s", brd)
+
+		psb, _ := brd.Possib(pawnb)
+		if psb.In(Point{1, 4}) {
+			t.Fatalf("backward pawn can go to 1, 4")
 		}
 
-		brd.Set(pawnb)
-		brd.Set(pawnf)
-
-		if brd.Possib(pawnb).In(Point{4, 1}) {
-			t.Fatalf("backward pawn can go to 4, 1")
-		}
-		if brd.Possib(pawnf).In(Point{3, 1}) {
-			t.Fatalf("backward pawn can go to 3, 1")
+		psf, _ := brd.Possib(pawnf)
+		if psf.In(Point{1, 3}) {
+			t.Fatalf("forward pawn can go to 3, 1")
 		}
 	}
 }
 
+/*
 func TestBoardCheckmate(t *testing.T) {
 	// testing top 10 fast checkmates: https://www.chess.com/article/view/fastest-chess-checkmates
 	// black always wins
