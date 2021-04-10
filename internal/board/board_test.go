@@ -118,54 +118,6 @@ func TestBoardSet(t *testing.T) {
 	}
 }
 
-func TestBoardGetKing(t *testing.T) {
-	const ourking = 28
-	const ournumber = 1
-
-	const theirking = 4
-	const theirnumber = 2
-
-	brd := NewBoard()
-	if ourking != brd.GetKing(ournumber) {
-		t.Fatalf("ourking is not equal to GetKing(%d)", ournumber)
-	}
-	if theirking != brd.GetKing(theirnumber) {
-		t.Fatalf("ourking is not equal to GetKing(%d)", theirnumber)
-	}
-}
-
-func TestBoardGetRange(t *testing.T) {
-	const ournumber = 1
-	const theirnumber = 2
-
-	ourarr := []int{}
-	for i := 16; i < 32; i++ {
-		ourarr = append(ourarr, i)
-	}
-
-	theirarr := []int{}
-	for i := 0; i < 16; i++ {
-		theirarr = append(theirarr, i)
-	}
-
-	brd := NewBoard()
-
-	ourwant := brd.GetIDs(ournumber)
-	theirwant := brd.GetIDs(theirnumber)
-
-	for i := 0; i < 16; i++ {
-		ourhave := ourarr[i]
-		theirhave := theirarr[i]
-
-		if ourhave != ourwant[i] {
-			t.Fatalf("getRange does not match want. want: %d | have: %d", ourwant[i], ourhave)
-		}
-		if theirhave != theirwant[i] {
-			t.Fatalf("getRange does not match want. want: %d | have: %d", theirwant[i], theirhave)
-		}
-	}
-}
-
 func TestBoardMove(t *testing.T) {
 	b := NewBoard()
 

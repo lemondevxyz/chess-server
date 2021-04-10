@@ -225,7 +225,7 @@ func (b Board) Possib(id int) (Points, error) {
 		// collect enemy's possible points
 		// then check if it crosses paths with king's
 		sp := Points{}
-		for _, id := range b.GetIDs(b.GetInversePlayer(pec.Player)) {
+		for _, id := range GetRange(GetInversePlayer(pec.Player)) {
 			cep := b.data[id]
 			if cep.Valid() { // always use protection
 				if cep.T == King {
@@ -344,53 +344,6 @@ func (b Board) Possib(id int) (Points, error) {
 	return ps, nil
 }
 
-// GetKing returns the king number for player
-func (b Board) GetKing(player uint8) int {
-	if player == 1 {
-		return 28
-	} else if player == 2 {
-		return 4
-	}
-
-	return -1
-}
-
-// GetIDs returns an array of possible ids for a player's pieces..
-func (b Board) GetIDs(player uint8) [16]int {
-	start := 0
-	if player == 1 {
-		start += 16
-	}
-
-	arr := [16]int{}
-	for i := 0; i < 16; i++ {
-		arr[i] = i + start
-	}
-
-	return arr
-}
-
-// GetInversePlayer returns the opposite player
-func (b Board) GetInversePlayer(player uint8) uint8 {
-	if player == 1 {
-		return 2
-	} else if player == 2 {
-		return 1
-	}
-
-	return 0
-}
-
-func (b Board) BelongsTo(id int, player uint8) bool {
-	if player == 1 {
-		return id >= 16 && id < 32
-	} else if player == 2 {
-		return id < 16 && id >= 0
-	}
-
-	return false
-}
-
 // FinalCheckmate returns true if the player cannot save themselves. The game ends right after.
 // This primarily checks for the Possib moves and if an ally can jump in to save the king.
 func (b Board) FinalCheckmate(player uint8) bool {
@@ -408,7 +361,7 @@ func (b Board) FinalCheckmate(player uint8) bool {
 		return false
 	}
 
-	kingid := b.GetKing(player)
+	kingid := GetKing(player)
 	if kingid == -1 {
 		return true
 	}
@@ -420,7 +373,7 @@ func (b Board) FinalCheckmate(player uint8) bool {
 
 	final := true
 
-	for _, id := range b.GetIDs(player) {
+	for _, id := range GetRange(player) {
 		pec := b.data[id]
 		if pec.Valid() {
 			if !final {
@@ -452,7 +405,7 @@ func (b Board) FinalCheckmate(player uint8) bool {
 // It does not care whether the checkmatted player can escape
 func (b Board) Checkmate(player uint8) bool {
 	var king Piece
-	id := b.GetKing(player)
+	id := GetKing(player)
 	// fmt.Println(id)
 	if id != -1 {
 		king = b.data[id]
@@ -466,8 +419,8 @@ func (b Board) Checkmate(player uint8) bool {
 		return true
 	}
 
-	enemy := b.GetInversePlayer(player)
-	for _, id := range b.GetIDs(enemy) {
+	enemy := GetInversePlayer(player)
+	for _, id := range GetRange(enemy) {
 		pec := b.data[id]
 		if pec.Valid() {
 			possib := pec.Possib()
