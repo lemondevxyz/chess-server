@@ -5,6 +5,10 @@ import (
 	"time"
 )
 
+// TODO: 	refactor this whole test
+// 			possibly implement generic functions, like empty and try.
+// 			a test should not be 500+ SLOC
+
 // placement test
 func TestNewBoard(t *testing.T) {
 	u := [32]uint8{
@@ -111,6 +115,54 @@ func TestBoardSet(t *testing.T) {
 	b.Set(place, pos)
 	if b.data[place].Pos != pos {
 		t.Fatalf("Set does not work")
+	}
+}
+
+func TestBoardGetKing(t *testing.T) {
+	const ourking = 28
+	const ournumber = 1
+
+	const theirking = 4
+	const theirnumber = 2
+
+	brd := NewBoard()
+	if ourking != brd.GetKing(ournumber) {
+		t.Fatalf("ourking is not equal to GetKing(%d)", ournumber)
+	}
+	if theirking != brd.GetKing(theirnumber) {
+		t.Fatalf("ourking is not equal to GetKing(%d)", theirnumber)
+	}
+}
+
+func TestBoardGetRange(t *testing.T) {
+	const ournumber = 1
+	const theirnumber = 2
+
+	ourarr := []int{}
+	for i := 16; i < 32; i++ {
+		ourarr = append(ourarr, i)
+	}
+
+	theirarr := []int{}
+	for i := 0; i < 16; i++ {
+		theirarr = append(theirarr, i)
+	}
+
+	brd := NewBoard()
+
+	ourwant := brd.GetIDs(ournumber)
+	theirwant := brd.GetIDs(theirnumber)
+
+	for i := 0; i < 16; i++ {
+		ourhave := ourarr[i]
+		theirhave := theirarr[i]
+
+		if ourhave != ourwant[i] {
+			t.Fatalf("getRange does not match want. want: %d | have: %d", ourwant[i], ourhave)
+		}
+		if theirhave != theirwant[i] {
+			t.Fatalf("getRange does not match want. want: %d | have: %d", theirwant[i], theirhave)
+		}
 	}
 }
 
@@ -419,30 +471,36 @@ func TestBoardPieceBugInTheWay(t *testing.T) {
 	}
 }
 
-/*
 func TestBoardCheckmate(t *testing.T) {
 	// testing top 10 fast checkmates: https://www.chess.com/article/view/fastest-chess-checkmates
 	// black always wins
-	empty := func(brd *Board, src Point) {
-		brd.Set(&Piece{Pos: src, T: Empty})
-	}
-	try := func(brd *Board, src Point, pnt Point) {
-		pec := brd.Get(src)
-		if pec == nil {
-			t.Fatalf("invalid piece at point: %s", src.String())
+	empty := func(brd *Board, id int) {
+		if brd == nil {
+			t.Fatalf("board is nil")
 		}
-
-		if !brd.Move(pec, pnt) {
+		brd.Set(id, Point{-1, -1})
+	}
+	try := func(brd *Board, id int, pnt Point) {
+		pec, err := brd.GetByIndex(id)
+		if err != nil {
+			t.Fatalf("no piece at %d", id)
+		}
+		if !brd.Move(id, pnt) {
 			t.Fatalf("perfectly legal move is failing. piece: %s | src: %s - dst: %s", pec.String(), pec.Pos.String(), pnt.String())
 		}
 	}
 	{ // BUG: checkmate works through other pieces
+		// const ids
+		const ourpawn1 = 21
+		const ourpawn2 = 22
+		const theirpawn = 12
+		const theirqueen = 3
 		brd := NewBoard()
 
-		try(brd, Point{6, 5}, Point{5, 5})
-		try(brd, Point{1, 4}, Point{3, 4})
-		try(brd, Point{6, 6}, Point{5, 6})
-		try(brd, Point{0, 3}, Point{4, 7})
+		try(brd, ourpawn1, Point{5, 5})
+		try(brd, theirpawn, Point{4, 3})
+		try(brd, ourpawn2, Point{6, 5})
+		try(brd, theirqueen, Point{7, 4})
 		// R N B   K B N R
 		// P P P P   P P P
 		//
@@ -452,21 +510,64 @@ func TestBoardCheckmate(t *testing.T) {
 		// P P P P P     P
 		// R N B Q K B N R
 		// t.Logf("\n%s", brd)
-
 		if brd.Checkmate(1) {
 			t.Fatalf("bad checkmate, over other piece")
 		}
 	}
-	{ // checkmate but not a final checkmate
+	{ // BUG: knight can checkmate escapable king
+		// this basically tests out if the king can escape by itself, without the help of ally pieces...
+		const ourking = 4
+		const theirknight = 30
 		brd := NewBoard()
 
-		try(brd, Point{6, 5}, Point{5, 5})
-		try(brd, Point{1, 4}, Point{3, 4})
-		try(brd, Point{6, 0}, Point{4, 0})
-		try(brd, Point{0, 3}, Point{4, 7})
+		empty(brd, 1)  // Point{1, 0} Knight
+		empty(brd, 2)  // Point{2, 0} Bishop
+		empty(brd, 3)  // Point{3, 0} Queen
+		empty(brd, 11) // Point{3, 1} PawnB
+		empty(brd, 12) // Point{4, 1} PawnB
+
+		try(brd, ourking, Point{4, 1})
+		try(brd, ourking, Point{4, 2})
+
+		empty(brd, 27) // Point{3, 7} Queen
+		empty(brd, 29) // Point{5, 7} Bishop
+		empty(brd, 20) // Point{4, 6} PawnF
+
+		brd.Set(16, Point{2, 2}) // Point{0, 6} PawnF
+
+		try(brd, theirknight, Point{5, 5})
+		try(brd, theirknight, Point{6, 3})
+
+		if brd.FinalCheckmate(2) {
+			t.Fatalf("knight can final checkmate escapable king")
+		}
+	}
+	{ // checkmate but not a final checkmate
+		const ourpawn1 = 16
+		const ourpawn2 = 21
+		const ourpawn3 = 22
+		const ourking = 28
+		const theirqueen = 3
+		const theirpawn = theirqueen + 8 + 1
+
+		brd := NewBoard()
+
+		try(brd, ourpawn1, Point{0, 4})
+		try(brd, theirpawn, Point{4, 3})
+		try(brd, ourpawn2, Point{5, 5})
+		try(brd, theirqueen, Point{7, 4})
+
+		// t.Logf("\n%s", brd)
 
 		if !brd.Checkmate(1) {
-			t.Fatalf("no checkmate")
+
+			t.Logf("\n%s", brd.data[theirqueen])
+			ps, _ := brd.Possib(theirqueen)
+			t.Logf("possib: %s", ps)
+
+			t.Logf("\n%s", brd.data[ourking])
+
+			t.Fatalf("checkmate - want: true | have: false")
 		}
 		// R N B   K B N R
 		// P P P P   P P P
@@ -477,29 +578,19 @@ func TestBoardCheckmate(t *testing.T) {
 		//   P P P P   P P
 		// R N B Q K B N R
 		// t.Logf("\n%s", brd)
-		try(brd, Point{6, 6}, Point{5, 6})
+		try(brd, ourpawn3, Point{6, 5})
 
 		if brd.FinalCheckmate(1) {
-			t.Fatalf("somehow final checkmate")
+			t.Fatalf("final checkmate - want: false | have: true")
 		}
 	}
 	{ // fool's pawn
 		brd := NewBoard()
 
-		try(brd, Point{6, 5}, Point{5, 5})
-		try(brd, Point{1, 4}, Point{3, 4})
-		try(brd, Point{6, 6}, Point{4, 6})
-		try(brd, Point{0, 3}, Point{4, 7})
-
-		// R N B   K B N R
-		// P P P P   P P P
-		//
-		//         P
-		//             P Q
-		//           P
-		// P P P P P     P
-		// R N B Q K B N R
-		// t.Logf("\n%s", brd)
+		try(brd, 21, Point{5, 5}) // Point{5, 6} PawnF
+		try(brd, 12, Point{4, 3}) // Point{4, 1} PawnB
+		try(brd, 22, Point{6, 4}) // Point{6, 6} PawnF
+		try(brd, 3, Point{7, 4})  // Point{3, 0}
 
 		if !brd.Checkmate(1) {
 			t.Fatalf("no checkmate")
@@ -511,14 +602,19 @@ func TestBoardCheckmate(t *testing.T) {
 	{ // scholar's mate
 		brd := NewBoard()
 
-		try(brd, Point{6, 4}, Point{4, 4})
-		try(brd, Point{1, 4}, Point{3, 4})
-		try(brd, Point{6, 2}, Point{4, 2})
-		try(brd, Point{0, 5}, Point{3, 2})
-		try(brd, Point{7, 1}, Point{5, 2})
-		try(brd, Point{0, 3}, Point{4, 7})
-		try(brd, Point{7, 6}, Point{5, 5})
-		try(brd, Point{4, 7}, Point{6, 5})
+		try(brd, 20, Point{4, 4}) // Point{4, 6} PawnF
+		try(brd, 12, Point{4, 3}) // Point{4, 1} PawnB
+		try(brd, 18, Point{2, 4}) // Point{2, 6} PawnF
+		try(brd, 5, Point{2, 3})  // Point{5, 0} Bishop
+		try(brd, 25, Point{2, 5}) // {1, 7} Knight
+		try(brd, 3, Point{7, 4})
+		try(brd, 30, Point{5, 5})
+		try(brd, 3, Point{5, 6})
+		/*
+			try(brd, Point{0, 3}, Point{4, 7})
+			try(brd, Point{7, 6}, Point{5, 5})
+			try(brd, Point{4, 7}, Point{6, 5})
+		*/
 
 		//  R N B   K   N R
 		//  P P P P   P P P
@@ -529,7 +625,7 @@ func TestBoardCheckmate(t *testing.T) {
 		//  P P   P   Q P P
 		//  R   B Q K B   R
 		//
-		//  t.Logf("\n%s", brd)
+		// t.Logf("\n%s", brd)
 		if !brd.Checkmate(1) {
 			t.Fatalf("no checkmate")
 		}
@@ -538,144 +634,4 @@ func TestBoardCheckmate(t *testing.T) {
 			t.Fatalf("no final checkmate")
 		}
 	}
-	{ // bird's opening
-		brd := NewBoard()
-
-		try(brd, Point{6, 5}, Point{4, 5})
-		try(brd, Point{1, 4}, Point{3, 4})
-		try(brd, Point{4, 5}, Point{3, 4})
-		try(brd, Point{1, 3}, Point{2, 3})
-		try(brd, Point{3, 4}, Point{2, 3})
-		try(brd, Point{0, 5}, Point{2, 3})
-		try(brd, Point{7, 1}, Point{5, 2})
-		try(brd, Point{0, 3}, Point{4, 7})
-
-		// R N B   K   N R
-		// P P P     P P P
-		//       B
-		//
-		//               Q
-		//     N
-		// P P P P P   P P
-		// R   B Q K B N R
-		// t.Logf("\n%s", brd)
-
-		// this one requires seeing 4 moves ahead
-		// technically it's not a final checkmate, but if the player knows this strat then it is.
-		// this could be a future enhancement, for the server to memorize all these strategies and stuff, but for now it should fail.
-
-		if !brd.Checkmate(1) {
-			t.Fatalf("no checkmate")
-		}
-
-		if brd.FinalCheckmate(1) {
-			t.Fatalf("no final checkmate")
-		}
-	}
-	{ // italian game smothered mate
-		brd := NewBoard()
-
-		try(brd, Point{6, 4}, Point{4, 4})
-		try(brd, Point{1, 4}, Point{3, 4})
-		try(brd, Point{7, 6}, Point{5, 5})
-		try(brd, Point{0, 1}, Point{2, 2})
-		try(brd, Point{7, 5}, Point{4, 2})
-		try(brd, Point{2, 2}, Point{4, 3})
-		try(brd, Point{5, 5}, Point{3, 4})
-		try(brd, Point{0, 3}, Point{3, 6})
-		try(brd, Point{3, 4}, Point{1, 5})
-		try(brd, Point{3, 6}, Point{6, 6})
-		try(brd, Point{7, 7}, Point{7, 5})
-		try(brd, Point{6, 6}, Point{4, 4})
-		try(brd, Point{4, 2}, Point{6, 4})
-		try(brd, Point{4, 3}, Point{5, 5})
-
-		// R   B   K B N R
-		// P P P P   N P P
-		//
-		//
-		//         Q
-		//           N
-		// P P P P B P   P
-		// R N B Q K R
-		// t.Logf("\n%s", brd)
-
-		// this once also requires seeing more than 1 move ahead.
-
-		if !brd.Checkmate(1) {
-			t.Fatalf("no checkmate")
-		}
-
-		if brd.FinalCheckmate(1) {
-			t.Fatalf("no final checkmate")
-		}
-	}
-	// TODO: implement the rest
-
-	// this section tests previous bugs
-	// and if they still exist
-	{
-		// queen at 6,5
-		// and king at 6,4
-		// but somehow it's final
-
-		brd := NewBoard()
-		empty(brd, Point{1, 4})
-		empty(brd, Point{6, 4})
-		empty(brd, Point{6, 5})
-
-		queen := brd.Get(Point{0, 3})
-		brd.Move(queen, Point{4, 7})
-		king := brd.Get(Point{7, 4})
-		brd.Move(king, Point{6, 4})
-		brd.Move(queen, Point{6, 5})
-
-		// R N B   K B N R
-		// P P P P   P P P
-		//
-		//
-		//
-		//
-		// P P P P K Q P P
-		// R N B Q   B N R
-		// t.Logf("\n%s", brd.String())
-
-		if brd.FinalCheckmate(king.Player) {
-			t.Fatalf("queen at 6:5, king at 6:4. but somehow final checkmate")
-		}
-	}
-	{ // somehow king can end the game by checkmating king
-		// even if the king can escape
-		brd := NewBoard()
-
-		empty(brd, Point{0, 1})
-		empty(brd, Point{0, 2})
-		empty(brd, Point{0, 3})
-		empty(brd, Point{1, 3})
-		empty(brd, Point{1, 4})
-
-		try(brd, Point{0, 4}, Point{1, 4})
-		try(brd, Point{1, 4}, Point{2, 4})
-
-		empty(brd, Point{7, 3})
-		empty(brd, Point{7, 5})
-		//empty(brd, Point{7, 6})
-		empty(brd, Point{6, 4})
-
-		brd.Set(&Piece{
-			Pos:    Point{2, 2},
-			T:      PawnF,
-			Player: 1,
-		})
-
-		try(brd, Point{7, 6}, Point{5, 5})
-		try(brd, Point{5, 5}, Point{3, 6})
-
-		if brd.FinalCheckmate(2) {
-			t.Fatalf("knight can final checkmate escapable king")
-		}
-
-		t.Logf("\n%s", brd.String())
-	}
 }
-*/

@@ -116,6 +116,12 @@ func (b *Board) Set(i int, pos Point) error {
 		// b.data[i].T = Empty
 		b.data[i].Pos = Point{-1, -1}
 	} else {
+		// also if there's a piece in the position, erase it!
+		di, _, err := b.Get(pos)
+		if err == nil {
+			b.data[di].Pos = Point{-1, -1}
+		}
+
 		b.data[i].Pos = pos
 	}
 
@@ -219,22 +225,19 @@ func (b Board) Possib(id int) (Points, error) {
 		// collect enemy's possible points
 		// then check if it crosses paths with king's
 		sp := Points{}
-		for k, s := range b.data {
-			if s.Valid() { // always use protection
-				if s.Player != pec.Player {
-					if s.T != Empty {
-						if s.T == King {
-							// no infinite loop
-							for _, pnt := range s.Possib() {
-								sp.Insert(pnt)
-							}
-						} else {
-							pnts, err := b.Possib(k)
-							if err != nil {
-								for _, pnt := range pnts {
-									sp.Insert(pnt)
-								}
-							}
+		for _, id := range b.GetIDs(b.GetInversePlayer(pec.Player)) {
+			cep := b.data[id]
+			if cep.Valid() { // always use protection
+				if cep.T == King {
+					// no infinite loop
+					for _, pnt := range cep.Possib() {
+						sp.Insert(pnt)
+					}
+				} else {
+					pnts, err := b.Possib(id)
+					if err != nil {
+						for _, pnt := range pnts {
+							sp.Insert(pnt)
 						}
 					}
 				}
@@ -288,14 +291,13 @@ func (b Board) Possib(id int) (Points, error) {
 					_, cep, err := b.Get(pnt)
 					if err == nil {
 						if pec.Player == cep.Player {
-							//fmt.Println("same player", pnt)
+							// sheesh it's our piece
+							// and since we cannot kill it then erase it as a point we can go through
 							ps.Delete(cep.Pos)
 						}
+						// set to remove all following points from now on
 						rm = true
-					} /*else {
-						// this direction cannot possibly have following points
-						break
-					}*/
+					}
 				} else {
 					// start deleting following points, cause we reached a piece in the way
 					ps.Delete(pnt)
@@ -308,6 +310,10 @@ func (b Board) Possib(id int) (Points, error) {
 
 		x, y := orix, oriy
 		// normal direction
+		// these are basically modifier functions, called in loop. So for example, say we start at 0, 0 and we call up.
+		// the loop will call up, so the points will increase incremently:
+		// [{1,0},{2,0},{3,0}....] and so on
+		// until it reaches and out of bounds point, then it stops....
 		{
 			x, y = Up(orix, oriy)
 			loop(x, y, Up)
@@ -338,6 +344,53 @@ func (b Board) Possib(id int) (Points, error) {
 	return ps, nil
 }
 
+// GetKing returns the king number for player
+func (b Board) GetKing(player uint8) int {
+	if player == 1 {
+		return 28
+	} else if player == 2 {
+		return 4
+	}
+
+	return -1
+}
+
+// GetIDs returns an array of possible ids for a player's pieces..
+func (b Board) GetIDs(player uint8) [16]int {
+	start := 0
+	if player == 1 {
+		start += 16
+	}
+
+	arr := [16]int{}
+	for i := 0; i < 16; i++ {
+		arr[i] = i + start
+	}
+
+	return arr
+}
+
+// GetInversePlayer returns the opposite player
+func (b Board) GetInversePlayer(player uint8) uint8 {
+	if player == 1 {
+		return 2
+	} else if player == 2 {
+		return 1
+	}
+
+	return 0
+}
+
+func (b Board) BelongsTo(id int, player uint8) bool {
+	if player == 1 {
+		return id >= 16 && id < 32
+	} else if player == 2 {
+		return id < 16 && id >= 0
+	}
+
+	return false
+}
+
 // FinalCheckmate returns true if the player cannot save themselves. The game ends right after.
 // This primarily checks for the Possib moves and if an ally can jump in to save the king.
 func (b Board) FinalCheckmate(player uint8) bool {
@@ -355,60 +408,57 @@ func (b Board) FinalCheckmate(player uint8) bool {
 		return false
 	}
 
-	exist := false
-	ret := true
-
-	for k, s := range b.data {
-		if s.Valid() {
-			if s.Player == player {
-				if s.T == King {
-					exist = true
-					// continue
-					// this prevents the king from defending itself
-				}
-
-				if !ret {
-					continue
-				}
-
-				oldpos := s.Pos
-				b.Set(k, Point{-1, -1}) // erase the old piece
-
-				ps, err := b.Possib(k)
-				if err != nil {
-					panic(err)
-				}
-
-				for _, v := range ps {
-					s.Pos = v
-					b.Set(k, v)
-					if !b.Checkmate(player) {
-						ret = false
-					} else {
-						b.Set(k, Point{-1, -1})
-					}
-				}
-
-				s.Pos = oldpos
-				b.Set(k, oldpos)
-			}
-		}
-	}
-
-	if !exist {
+	kingid := b.GetKing(player)
+	if kingid == -1 {
 		return true
 	}
 
-	return ret
+	king := b.data[kingid]
+	if !king.Pos.Valid() {
+		return true
+	}
+
+	final := true
+
+	for _, id := range b.GetIDs(player) {
+		pec := b.data[id]
+		if pec.Valid() {
+			if !final {
+				break
+			}
+
+			ps, _ := b.Possib(id)
+			oldpos := pec.Pos
+			for _, v := range ps {
+				// s.Pos = v
+				b.Set(id, v)
+				if !b.Checkmate(player) {
+					final = false
+				} /* else {
+					b.Set(id, Point{-1, -1})
+				} */
+			}
+
+			// s.Pos = oldpos
+			b.Set(id, oldpos)
+		}
+	}
+
+	return final
 }
 
-// Checkmate returns true if the player has been checkmatted
+// Checkmate returns true if the player has been checkmatted.
+// While FinalCheckmate checks if the checkmatted player can do anything about it, this basically check if there is a checkmate.
+// It does not care whether the checkmatted player can escape
 func (b Board) Checkmate(player uint8) bool {
 	var king Piece
-	if player == 1 {
-		king = b.data[4]
-	} else if player == 2 {
-		king = b.data[28]
+	id := b.GetKing(player)
+	// fmt.Println(id)
+	if id != -1 {
+		king = b.data[id]
+	} else {
+		// invalid player number
+		return true
 	}
 
 	if !king.Valid() {
@@ -416,22 +466,22 @@ func (b Board) Checkmate(player uint8) bool {
 		return true
 	}
 
-	for k, s := range b.data {
-		if s.Valid() {
-			if s.Player != player {
-				possib := s.Possib()
-				if s.T != King { // avoid infinite loop
-					var err error
-					possib, err = b.Possib(k)
+	enemy := b.GetInversePlayer(player)
+	for _, id := range b.GetIDs(enemy) {
+		pec := b.data[id]
+		if pec.Valid() {
+			possib := pec.Possib()
+			if pec.T != King { // avoid infinite loop
+				var err error
+				possib, err = b.Possib(id)
 
-					if err != nil {
-						continue
-					}
+				if err != nil {
+					continue
 				}
+			}
 
-				if possib.In(king.Pos) {
-					return true
-				}
+			if possib.In(king.Pos) {
+				return true
 			}
 		}
 	}
