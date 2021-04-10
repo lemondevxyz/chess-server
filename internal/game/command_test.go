@@ -11,11 +11,11 @@ import (
 	"github.com/toms1441/chess-server/internal/order"
 )
 
-var kingmap = map[int]int{
+var kingmap = map[int8]int8{
 	7: 6,
 	0: 2,
 }
-var rookmap = map[int]int{
+var rookmap = map[int8]int8{
 	7: 5,
 	0: 3,
 }
@@ -85,9 +85,9 @@ func TestCommandMove(t *testing.T) {
 	}()
 	gGame.SwitchTurn()
 
-	do := func(cl *Client, rd *io.PipeReader, src, dst board.Point) error {
+	do := func(cl *Client, rd *io.PipeReader, id int8, dst board.Point) error {
 		body, err := json.Marshal(order.MoveModel{
-			Src: src,
+			ID:  id,
 			Dst: dst,
 		})
 
@@ -127,8 +127,8 @@ func TestCommandMove(t *testing.T) {
 			t.Logf("\n%v", x)
 		}
 
-		p := cl.g.b.Get(dst)
-		if p == nil {
+		_, pec, err := cl.g.b.Get(dst)
+		if err != nil || !pec.Valid() {
 			return fmt.Errorf("piece is nil")
 		}
 
@@ -142,14 +142,14 @@ func TestCommandMove(t *testing.T) {
 		return nil
 	}
 
-	err := do(cl1, rd1, board.Point{X: 6, Y: 1}, board.Point{X: 4, Y: 1})
+	err := do(cl1, rd1, 17, board.Point{1, 4})
 	if err != nil {
 		t.Fatalf("client 1 : %v", err)
 	}
 
 	resetPipe()
 
-	err = do(cl2, rd2, board.Point{X: 1, Y: 1}, board.Point{X: 3, Y: 1})
+	err = do(cl2, rd2, 9, board.Point{1, 3})
 	if err != nil {
 		t.Fatalf("client 2 : %v", err)
 	}
@@ -157,30 +157,37 @@ func TestCommandMove(t *testing.T) {
 }
 
 func TestCommandPromotion(t *testing.T) {
+	const id = 19
+
 	resetPipe()
 	defer resetPipe()
 
 	cl1.g, cl2.g = nil, nil
 	gGame, _ = NewGame(cl1, cl2)
 
-	pec := gGame.b.Get(board.Point{6, 3})
+	pec, err := gGame.b.GetByIndex(id)
+	if err != nil {
+		t.Fatalf("board.Get: %s", err)
+	}
 	pos := pec.Pos
 
 	ch := make(chan error)
 	go func() {
-		pos.X -= 2
-		if !gGame.b.Move(pec, pos) {
+		pec, _ := gGame.b.GetByIndex(id)
+		pos.Y -= 2
+		if !gGame.b.Move(id, pos) {
 			//fmt.Println("error 1")
-			ch <- fmt.Errorf("cannot move from %v to %v", pec.Pos, pos)
+			ch <- fmt.Errorf("here cannot move from %v to %v", pec.Pos, pos)
 			return
 		}
 
-		gGame.b.Set(&board.Piece{Pos: board.Point{1, 3}, T: board.Empty})
-		gGame.b.Set(&board.Piece{Pos: board.Point{0, 3}, T: board.Empty})
+		gGame.b.Set(3, board.Point{-1, -1})
+		gGame.b.Set(11, board.Point{-1, -1})
 
 		for i := 0; i < 4; i++ {
-			pos.X -= 1
-			if !gGame.b.Move(pec, pos) {
+			pec, _ := gGame.b.GetByIndex(id)
+			pos.Y -= 1
+			if !gGame.b.Move(id, pos) {
 				//fmt.Println("error 2")
 				ch <- fmt.Errorf("cannot move from %v to %v", pec.Pos, pos)
 				return
@@ -202,8 +209,8 @@ func TestCommandPromotion(t *testing.T) {
 		if err := json.Unmarshal(upd.Data, &promote); err != nil {
 			t.Fatalf("json.Unmarshal: %s", err.Error())
 		}
-		if !promote.Src.Equal(pos) {
-			t.Fatalf("promote coordinates aren't at x=7|x=1")
+		if promote.ID != id {
+			t.Fatalf("promote.ID != ID : %d != %d", promote.ID, id)
 		}
 
 		promote.Type = board.Queen
@@ -231,7 +238,7 @@ func TestCommandPromotion(t *testing.T) {
 		}
 	}
 
-	err := <-ch
+	err = <-ch
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
@@ -242,41 +249,37 @@ func TestCommandCastling(t *testing.T) {
 	defer resetPipe()
 
 	id := order.Castling
-	do := func(x int, rooky int, kingy int, cl *Client) {
+	do := func(other bool, rook int, king int, cl *Client) {
 		resetPipe()
 		cl1.g, cl2.g = nil, nil
 		gGame, _ = NewGame(cl1, cl2)
 
 		go func() {
 			gGame.SwitchTurn()
-			if x == 0 {
+			if other {
 				gGame.SwitchTurn()
 			}
 		}()
 
 		<-clientRead(rd1)
 		<-clientRead(rd2)
-		if x == 0 {
+		if other {
 			<-clientRead(rd1)
 			<-clientRead(rd2)
 		}
 
-		for y := 1; y < 7; y++ {
-			if y == 4 {
-				continue
-			}
+		row := board.GetRangeStart(cl.num)
+		for _, v := range row {
 
-			gGame.b.Set(&board.Piece{
-				Pos: board.Point{x, y},
-				T:   board.Empty,
-			})
+			pec, _ := gGame.b.GetByIndex(v)
+			if pec.T != board.Rook && pec.T != board.King {
+				gGame.b.Set(v, board.Point{-1, -1})
+			}
 		}
 
-		t.Logf("\n%s", gGame.b.String())
-
 		cast := order.CastlingModel{
-			Src: board.Point{x, kingy},
-			Dst: board.Point{x, rooky},
+			Src: rook,
+			Dst: king,
 		}
 
 		body, err := json.Marshal(cast)
@@ -286,13 +289,21 @@ func TestCommandCastling(t *testing.T) {
 
 		x1, x2 := make(chan []byte), make(chan []byte)
 		go func() {
-			<-clientRead(rd1)
-			<-clientRead(rd2)
 			x1 = clientRead(rd1)
+			clientRead(rd2)
+			clientRead(rd1)
 			x2 = clientRead(rd2)
 		}()
 
-		t.Logf(string(body))
+		pecking, err := gGame.b.GetByIndex(king)
+		if err != nil {
+			t.Fatalf("board.GetByIndex(king): %s", err.Error())
+		}
+		pecrook, err := gGame.b.GetByIndex(rook)
+		if err != nil {
+			t.Fatalf("board.GetByIndex(king): %s", err.Error())
+		}
+
 		err = cl.Do(order.Order{
 			ID:   id,
 			Data: body,
@@ -304,29 +315,52 @@ func TestCommandCastling(t *testing.T) {
 		b1, b2 := <-x1, <-x2
 		t.Log(string(b1), string(b2))
 
-		if kingy != 4 {
-			rooky, kingy = kingy, rooky
+		y := pecking.Pos.Y
+		rookx := pecrook.Pos.X
+		if rookx == 4 {
+			rookx = pecking.Pos.X
 		}
 
-		pecrook, pecking := gGame.b.Get(board.Point{x, rookmap[rooky]}), gGame.b.Get(board.Point{x, kingmap[rooky]})
-		if pecrook == nil || pecking == nil || pecrook.T != board.Rook || pecking.T != board.King {
-			t.Fatalf("unpredictable results. %s: %s | %s: %s", pecrook.Pos, pecrook, pecking.Pos, pecking)
+		pecking, err = gGame.b.GetByIndex(king)
+		if err != nil {
+			t.Fatalf("board.GetByIndex(king): %s", err.Error())
+		}
+		pecrook, err = gGame.b.GetByIndex(rook)
+		if err != nil {
+			t.Fatalf("board.GetByIndex(king): %s", err.Error())
+		}
+
+		if pecrook.T == board.King && pecking.T == board.Rook {
+			pecrook, pecking = pecking, pecrook
+		}
+
+		want := board.Point{rookmap[rookx], y}
+		if !pecrook.Pos.Equal(want) {
+			t.Logf("\n%s", gGame.b.String())
+			t.Fatalf("rook's position hasn't changed. want: %s | have: %s", want, pecrook.Pos)
+		}
+		want = board.Point{kingmap[rookx], y}
+		if !pecking.Pos.Equal(want) {
+			t.Logf("\n%s", gGame.b.String())
+			t.Fatalf("king's position hasn't changed. want: %s | have: %s", want, pecking.Pos)
 		}
 	}
 
-	do(7, 7, 4, cl1)
-	do(7, 0, 4, cl1)
-	do(7, 4, 7, cl1)
-	do(7, 4, 0, cl1)
+	king := board.GetKing(cl1.num)
+	rks := board.GetRooks(cl1.num)
 
-	do(0, 7, 4, cl2)
-	do(0, 0, 4, cl2)
-	do(0, 4, 7, cl2)
-	do(0, 4, 7, cl2)
+	do(false, rks[1], king, cl1)
+	do(false, rks[0], king, cl1)
+	do(false, king, rks[0], cl1)
+	do(false, king, rks[1], cl1)
 
-	id = order.Move
-	t.Log("henlo")
-	do(7, 7, 4, cl1)
+	king = board.GetKing(cl2.num)
+	rks = board.GetRooks(cl2.num)
+
+	do(true, rks[1], king, cl2)
+	do(true, rks[0], king, cl2)
+	do(true, king, rks[0], cl2)
+	do(true, king, rks[1], cl2)
 
 }
 

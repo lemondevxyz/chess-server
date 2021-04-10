@@ -54,8 +54,8 @@ func TestCommandRequest(t *testing.T) {
 	<-read(rd2)
 
 	x := order.MoveModel{
-		Src: board.Point{6, 1},
-		Dst: board.Point{4, 1},
+		ID:  17, // {1, 6}
+		Dst: board.Point{1, 4},
 	}
 
 	byt, err := json.Marshal(x)
@@ -123,8 +123,9 @@ func TestCommandRequest(t *testing.T) {
 
 func TestPossibleRequest(t *testing.T) {
 
+	id := int8(15)
 	possib := order.PossibleModel{
-		Src: &board.Point{1, 7},
+		ID: &id,
 	}
 
 	byt, err := json.Marshal(possib)

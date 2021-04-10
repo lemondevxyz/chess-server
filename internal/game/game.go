@@ -48,15 +48,15 @@ func NewGame(cl1, cl2 *Client) (*Game, error) {
 
 	g.b = board.NewBoard()
 
-	g.b.Listen(func(p *board.Piece, src board.Point, dst board.Point, ret bool) {
+	g.b.Listen(func(p board.Piece, id int, src board.Point, dst board.Point, ret bool) {
 		if ret {
 			if p.T == board.PawnB || p.T == board.PawnF {
-				if dst.X == 7 || dst.X == 0 {
+				if dst.Y == 7 || dst.Y == 0 {
 					c := g.cs[p.Player-1]
 					if c != nil {
 
 						x := order.PromoteModel{
-							Src: dst,
+							ID: id,
 						}
 
 						g.Update(c, order.Order{
@@ -70,8 +70,6 @@ func NewGame(cl1, cl2 *Client) (*Game, error) {
 			}
 		}
 	})
-
-	//g.SwitchTurn()
 
 	return g, nil
 }
@@ -104,7 +102,6 @@ func (g *Game) SwitchTurn() {
 		Player: aft,
 	})
 
-	g.UpdateAll(order.Order{ID: order.Turn, Data: x})
 	if g.b.Checkmate(aft) {
 		g.Update(g.cs[aft-1], order.Order{
 			ID:        order.Checkmate,
@@ -115,6 +112,7 @@ func (g *Game) SwitchTurn() {
 			Parameter: aft,
 		})
 	}
+	g.UpdateAll(order.Order{ID: order.Turn, Data: x})
 }
 
 // IsTurn returns if it's the client's turn this time
@@ -150,7 +148,8 @@ func (g *Game) Update(c *Client, u order.Order) error {
 	return nil
 }
 
-// UpdateAll sends the update to all of the players.
+// UpdateAll sends the update to all of the players. Difference between this and calling update individually is the data does not get re-marshalized.
+// Use this whenever the data is the same between the two players
 func (g *Game) UpdateAll(u order.Order) error {
 	if g.cs[0] == nil || g.cs[1] == nil {
 		return ErrClientNil

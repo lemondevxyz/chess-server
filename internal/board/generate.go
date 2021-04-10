@@ -5,11 +5,6 @@ import (
 	"sort"
 )
 
-func Set(b, flag uint8) uint8    { return b | flag }
-func Clear(b, flag uint8) uint8  { return b &^ flag }
-func Toggle(b, flag uint8) uint8 { return b ^ flag }
-func Has(b, flag uint8) bool     { return b&flag != 0 }
-
 type Point struct {
 	X int8 `json:"x"`
 	Y int8 `json:"y"`
@@ -277,7 +272,7 @@ func (p Point) Corner() Points {
 	return ps
 }
 
-// The following is a collection of generic functions, that start from x,y and return a new point from that perspective.
+// The following is a collection of modifier functions, that take in x,y and modify them to go in certain directions...
 // Also the use of x, y values(instead of Point) makes these more comprehensible
 func UpLeft(x, y int8) (int8, int8)    { return x - 1, y - 1 }
 func UpRight(x, y int8) (int8, int8)   { return x + 1, y - 1 }

@@ -24,13 +24,13 @@ type GameModel struct {
 
 // [O]
 type MoveModel struct {
-	Src board.Point `json:"src"`
+	ID  int8        `json:"id"`
 	Dst board.Point `json:"dst"`
 }
 
 // [O] sent as response to http
 type PossibleModel struct {
-	Src    *board.Point  `json:"src,omitempty"`    // [C]
+	ID     *int8         `json:"src,omitempty"`    // [C]
 	Points *board.Points `json:"points,omitempty"` // [U]
 }
 
@@ -41,33 +41,26 @@ type TurnModel struct {
 
 // [O]
 type PromoteModel struct {
-	Src  board.Point `json:"src"`
-	Type uint8       `json:"type"`
+	ID   int   `json:"id"`
+	Type uint8 `json:"type"`
 }
 
 // [U]
-type PromotionModel struct {
+type PromotionModel PromoteModel /*struct {
 	Type uint8       `json:"type"`
 	Dst  board.Point `json:"dst"`
-}
+}*/
 
 // [O]
-type CastlingModel MoveModel /*struct {
-	Src board.Point `json:"src"`
-	Dst board.Point `json:"dst"`
-}*/
+type CastlingModel struct {
+	Src int `json:"src"`
+	Dst int `json:"dst"`
+}
 
 // [U]
 type CheckmateModel TurnModel /* struct {
 	Player uint8 `json:"player"`
 }*/
-
-// [O]
-/*
-type MessageModel struct {
-	Message string `json:"message"`
-}
-*/
 
 // [O]
 type DoneModel struct {

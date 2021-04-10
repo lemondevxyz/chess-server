@@ -44,14 +44,14 @@ func TestTurns(t *testing.T) {
 			t.Fatalf("player is not one: %d", x.Player)
 		}
 	}
-
-	resetPipe()
+	// turn read
+	<-clientRead(rd2)
 
 	cherr := make(chan error)
 	go func() {
 		body, err := json.Marshal(order.MoveModel{
-			Src: board.Point{6, 1},
-			Dst: board.Point{5, 1},
+			ID:  23,
+			Dst: board.Point{7, 4},
 		})
 
 		if err != nil {
@@ -81,6 +81,7 @@ func TestTurns(t *testing.T) {
 
 	<-clientRead(rd1)
 	<-clientRead(rd2)
+
 	select {
 	case <-time.After(time.Millisecond * 100):
 		t.Fatalf("timeout")
@@ -100,7 +101,6 @@ func TestTurns(t *testing.T) {
 			t.Fatalf("json.Unmarshal: %s", err.Error())
 		}
 
-		t.Log(x)
 		if x.Player != 2 {
 			t.Fatalf("player is not two: %d", x.Player)
 		}
@@ -135,11 +135,11 @@ func TestGameDone(t *testing.T) {
 
 	done := false
 
-	doMove := func(src, dst board.Point) {
+	doMove := func(id int8, dst board.Point) {
 		cl := gGame.cs[gGame.turn-1]
 
 		x, err := json.Marshal(order.MoveModel{
-			Src: src,
+			ID:  id,
 			Dst: dst,
 		})
 		if err != nil {
@@ -165,11 +165,11 @@ func TestGameDone(t *testing.T) {
 
 	}
 	t.Log("first move")
-	doMove(board.Point{6, 5}, board.Point{5, 5})
+	doMove(21, board.Point{5, 5})
 	t.Log("second move")
-	doMove(board.Point{1, 4}, board.Point{3, 4})
+	doMove(12, board.Point{4, 3})
 	t.Log("third move")
-	doMove(board.Point{6, 6}, board.Point{4, 6})
+	doMove(22, board.Point{6, 4})
 	done = true
 	resetPipe()
 	go func() {
@@ -181,7 +181,7 @@ func TestGameDone(t *testing.T) {
 		<-clientRead(rd1)
 	}()
 	t.Log("fourth move")
-	doMove(board.Point{0, 3}, board.Point{4, 7})
+	doMove(3, board.Point{7, 4})
 	t.Log("after fourth move")
 
 	/*

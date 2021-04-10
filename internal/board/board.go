@@ -6,7 +6,7 @@ import (
 )
 
 // MoveEvent is a function called post-movement of a piece, ret is a boolean representing the validity of the move.
-type MoveEvent func(p Piece, src Point, dst Point, ret bool)
+type MoveEvent func(p Piece, id int, src Point, dst Point, ret bool)
 
 type Board struct {
 	// data [8][8]*Piece
@@ -465,7 +465,7 @@ func (b *Board) Move(id int, dst Point) (ret bool) {
 		}
 
 		for _, v := range b.ml {
-			v(pec, src, dst, ret)
+			v(pec, id, src, dst, ret)
 		}
 	}()
 

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/toms1441/chess-server/internal/board"
 	"github.com/toms1441/chess-server/internal/game"
 	"github.com/toms1441/chess-server/internal/order"
 )
@@ -68,20 +69,19 @@ func PossibHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if possib.Src == nil {
+	if possib.ID == nil {
 		RespondError(w, http.StatusBadRequest, fmt.Errorf("src is missing"))
+		return
+	}
+
+	if !board.BelongsTo(*possib.ID, cl.Number()) {
+		RespondError(w, http.StatusUnauthorized, fmt.Errorf("piece doesn't belong to you"))
 		return
 	}
 
 	brd := gm.Board()
 
-	pec := brd.Get(*possib.Src)
-	if pec == nil {
-		RespondError(w, http.StatusBadRequest, game.ErrPieceNil)
-		return
-	}
-
-	points := brd.Possib(pec)
+	points, _ := brd.Possib(int(*possib.ID))
 
 	possib = order.PossibleModel{}
 	possib.Points = &points

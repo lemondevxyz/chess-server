@@ -85,7 +85,7 @@ func TestBoardListen(t *testing.T) {
 
 	x, y := false, false
 	// func(p Piece, src Point, dst Point, ret bool)
-	b.Listen(func(_ Piece, _, _ Point, ret bool) {
+	b.Listen(func(_ Piece, _ int, _, _ Point, ret bool) {
 		t.Log(ret)
 		if ret {
 			valid <- true

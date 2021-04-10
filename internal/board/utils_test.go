@@ -99,3 +99,72 @@ func TestGetRange(t *testing.T) {
 		}
 	}
 }
+
+func TestGetStartRow(t *testing.T) {
+	const player, enemy uint8 = 1, 2
+
+	brd := NewBoard()
+	_, rook, err := brd.Get(Point{0, GetStartRow(player)})
+	if err != nil {
+		t.Fatalf("error: %s", err)
+	}
+
+	if rook.T != Rook || rook.Player != player {
+		t.Log(rook)
+		t.Fatalf("Piece is not rook, or the player does not match")
+	}
+
+	_, rook, err = brd.Get(Point{0, GetStartRow(enemy)})
+	if err != nil {
+		t.Fatalf("error: %s", err)
+	}
+
+	if rook.T != Rook || rook.Player != enemy {
+		t.Log(rook)
+		t.Fatalf("Piece is not rook, or the player does not match")
+	}
+}
+
+func TestGetPawnRow(t *testing.T) {
+	const player, enemy uint8 = 1, 2
+
+	brd := NewBoard()
+	_, rook, err := brd.Get(Point{0, GetPawnRow(player)})
+	if err != nil {
+		t.Fatalf("error: %s", err)
+	}
+
+	if rook.T != PawnF || rook.Player != player {
+		t.Log(rook)
+		t.Fatalf("Piece is not rook, or the player does not match")
+	}
+
+	_, rook, err = brd.Get(Point{0, GetPawnRow(enemy)})
+	if err != nil {
+		t.Fatalf("error: %s", err)
+	}
+
+	if rook.T != PawnB || rook.Player != enemy {
+		t.Log(rook)
+		t.Fatalf("Piece is not rook, or the player does not match")
+	}
+}
+
+func TestBelongsTo(t *testing.T) {
+	const ournumber = 2
+	ourvalues := [16]int8{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}
+
+	for _, v := range ourvalues {
+		if !BelongsTo(v, ournumber) {
+			t.Fatalf("%d should belong to id: '%d'", v, ournumber)
+		}
+	}
+
+	const theirnumber = 1
+	theirvalues := [16]int8{16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31}
+	for _, v := range theirvalues {
+		if !BelongsTo(v, theirnumber) {
+			t.Fatalf("%d should belong to id: '%d'", v, theirnumber)
+		}
+	}
+}
