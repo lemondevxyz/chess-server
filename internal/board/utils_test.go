@@ -121,7 +121,7 @@ func TestGetPawnRow(t *testing.T) {
 		t.Fatalf("error: %s", err)
 	}
 
-	if rook.Kind != PawnF || rook.P1 != true {
+	if rook.Kind != Pawn || rook.P1 != true {
 		t.Log(rook)
 		t.Fatalf("Piece is not rook, or the player does not match")
 	}
@@ -131,7 +131,7 @@ func TestGetPawnRow(t *testing.T) {
 		t.Fatalf("error: %s", err)
 	}
 
-	if rook.Kind != PawnB || rook.P1 != false {
+	if rook.Kind != Pawn || rook.P1 != false {
 		t.Log(rook)
 		t.Fatalf("Piece is not rook, or the player does not match")
 	}

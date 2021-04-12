@@ -13,8 +13,8 @@ import (
 func TestNewBoard(t *testing.T) {
 	u := [32]uint8{
 		Rook, Knight, Bishop, Queen, King, Bishop, Knight, Rook,
-		PawnB, PawnB, PawnB, PawnB, PawnB, PawnB, PawnB, PawnB,
-		PawnF, PawnF, PawnF, PawnF, PawnF, PawnF, PawnF, PawnF,
+		Pawn, Pawn, Pawn, Pawn, Pawn, Pawn, Pawn, Pawn,
+		Pawn, Pawn, Pawn, Pawn, Pawn, Pawn, Pawn, Pawn,
 		Rook, Knight, Bishop, Queen, King, Bishop, Knight, Rook,
 	}
 
@@ -137,6 +137,9 @@ func TestBoardMovePawn(t *testing.T) {
 	if !b.Move(d1, Point{4, 4}) {
 		t.Fatalf("backward pawn should kill other pawn")
 	} else if !b.Move(l2, Point{4, 4}) {
+		t.Log(b.data[d1], b.data[l1], b.data[l2])
+		ps, _ := b.Possib(l2)
+		t.Log(ps)
 		t.Fatalf("forward pawn should kill other pawn")
 	}
 

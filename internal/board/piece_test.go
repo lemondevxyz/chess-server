@@ -20,7 +20,7 @@ func piece_test(t *testing.T, name string, p Piece, ps Points) {
 
 func TestCanGoOutOfBound(t *testing.T) {
 	p := Piece{
-		Kind: PawnB,
+		Kind: Pawn,
 		Pos:  Point{0, 0},
 	}
 
@@ -31,7 +31,7 @@ func TestCanGoOutOfBound(t *testing.T) {
 
 func TestCanGoEqual(t *testing.T) {
 	p := Piece{
-		Kind: PawnB,
+		Kind: Pawn,
 		Pos:  Point{0, 0},
 	}
 
@@ -42,8 +42,9 @@ func TestCanGoEqual(t *testing.T) {
 
 func TestPawnB(t *testing.T) {
 	p := Piece{
-		Kind: PawnB,
+		Kind: Pawn,
 		Pos:  Point{1, 1},
+		P1:   false,
 	}
 
 	if !p.CanGo(Point{1, 3}) {
@@ -64,8 +65,9 @@ func TestPawnB(t *testing.T) {
 
 func TestPawnF(t *testing.T) {
 	p := Piece{
-		Kind: PawnF,
+		Kind: Pawn,
 		Pos:  Point{1, 6},
+		P1:   true,
 	}
 
 	if !p.CanGo(Point{1, 4}) {

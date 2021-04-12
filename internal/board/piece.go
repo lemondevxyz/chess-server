@@ -6,10 +6,9 @@ import (
 
 const (
 	Empty uint8 = iota
-	// Pawn Forward -> 1, 0 - 2, 0
-	PawnF
-	// Pawn Backward -> 6, 0 -> 5, 0
-	PawnB
+	// Pawn
+	// Moves forward(0, 6 -> 0, 5) if P1, other moves backward(0, 1 -> 0, 2)
+	Pawn
 	// Bishop
 	// Moves diagonally
 	Bishop
@@ -43,7 +42,7 @@ func (p Piece) Valid() bool {
 		return false
 	}
 
-	if p.Kind >= PawnF && p.Kind <= King {
+	if p.Kind >= Pawn && p.Kind <= King {
 		return true
 	}
 
@@ -52,26 +51,22 @@ func (p Piece) Valid() bool {
 
 // ShortString produces a one-character string to represent the piece. Used for debugging.
 func (p Piece) ShortString() string {
-	strings := map[uint8]string{
-		Empty:  " ",
-		PawnF:  "P",
-		PawnB:  "P",
-		Bishop: "B",
-		Knight: "N",
-		Rook:   "R",
-		Queen:  "Q",
-		King:   "K",
+	if p.Kind == Empty {
+		return " "
+	} else if p.Kind == Knight {
+		return "N"
 	}
 
-	return strings[p.Kind]
+	name := p.Name()
+
+	return name[:1]
 }
 
 // Name returns the name type for the piece
 func (p Piece) Name() string {
 	strings := map[uint8]string{
 		Empty:  "Empty",
-		PawnF:  "Pawn",
-		PawnB:  "Pawn",
+		Pawn:   "Pawn",
 		Bishop: "Bishop",
 		Knight: "Knight",
 		Rook:   "Rook",
@@ -99,18 +94,17 @@ func (p Piece) Possib() Points {
 	switch p.Kind {
 	// Only horizontally, can't move back
 	// 2 points at start, 1 point after that
-	case PawnF, PawnB:
-		// i plan to depecrate this
+	case Pawn:
 		ps := Points{}
-		if p.Kind == PawnF {
+		if p.P1 {
 			ps = src.Forward()
 		} else {
 			ps = src.Backward()
 		}
 		if src.Y == 1 || src.Y == 6 {
-			if p.Kind == PawnF {
+			if p.P1 {
 				ps.Insert(Point{X: src.X, Y: src.Y - 2})
-			} else if p.Kind == PawnB {
+			} else {
 				ps.Insert(Point{X: src.X, Y: src.Y + 2})
 			}
 		}

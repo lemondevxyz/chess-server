@@ -66,7 +66,7 @@ func init() {
 				// promotion
 				g.SwitchTurn()
 			} else {
-				if pec.Kind != board.PawnF && pec.Kind != board.PawnB {
+				if pec.Kind != board.Pawn {
 					g.SwitchTurn()
 				}
 			}
@@ -87,7 +87,7 @@ func init() {
 			if err != nil {
 				return board.ErrEmptyPiece
 			}
-			if pec.Kind != board.PawnF && pec.Kind != board.PawnB {
+			if pec.Kind != board.Pawn {
 				return ErrIllegalPromotion
 			}
 
