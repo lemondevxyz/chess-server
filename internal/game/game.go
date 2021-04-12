@@ -48,26 +48,24 @@ func NewGame(cl1, cl2 *Client) (*Game, error) {
 
 	g.b = board.NewBoard()
 
-	g.b.Listen(func(p board.Piece, id int, src board.Point, dst board.Point, ret bool) {
-		if ret {
-			if p.T == board.PawnB || p.T == board.PawnF {
-				if dst.Y == 7 || dst.Y == 0 {
-					c := g.cs[p.Player-1]
-					if c != nil {
+	g.b.Listen(func(id int, p board.Piece, src board.Point, dst board.Point) {
+		if p.Kind == board.PawnB || p.Kind == board.PawnF {
+			if dst.Y == 7 || dst.Y == 0 {
+				c := g.cs[p.Player-1]
+				if c != nil {
 
-						x := order.PromoteModel{
-							ID: id,
-						}
-
-						g.Update(c, order.Order{
-							ID:        order.Promote,
-							Parameter: x,
-						})
+					x := order.PromoteModel{
+						ID: id,
 					}
+
+					g.Update(c, order.Order{
+						ID:        order.Promote,
+						Parameter: x,
+					})
 				}
-			} else if p.T == board.King || p.T == board.Rook {
-				g.canCastle[p.Player] = false
 			}
+		} else if p.Kind == board.King || p.Kind == board.Rook {
+			g.canCastle[p.Player] = false
 		}
 	})
 

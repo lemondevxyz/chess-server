@@ -5,52 +5,17 @@ import (
 	"net"
 	"net/http"
 	"os"
-	"time"
 
 	"github.com/fatih/color"
 	"github.com/gorilla/mux"
 	"github.com/toms1441/chess-server/internal/rest"
-	"github.com/toms1441/chess-server/internal/rest/headless"
 )
 
 // just to build without debug
 // via build.sh
 var debug = "yes"
 
-func debug_game(debugValue Debug, solo bool) {
-	ch := rest.ClientChannel()
-	go func() {
-		var us2 *rest.User
-
-		us1 := <-ch
-		if solo {
-			go headless.NewClient("ws://localhost" + ":8080" + "/api/" + apiver + "/ws")
-		}
-
-		us2 = <-ch
-
-		id, err := us2.Invite(us1.PublicID, rest.InviteLifespan)
-		if err != nil {
-			fmt.Printf("error: %s\n", err.Error())
-		} else {
-			us1.AcceptInvite(id)
-		}
-
-		// a little delay isn't bad
-		time.Sleep(time.Second * 1)
-
-		switch debugValue {
-		case debugCastling:
-			castlingDebug(us2, us1)
-		case debugPromote:
-			promotionDebug(us2, us1)
-		case debugCheckmate:
-			checkmateDebug(us2, us1)
-		}
-	}()
-}
-
-const apiver = "v0"
+const apiver = "v1"
 
 func main() {
 	if debug == "yes" {

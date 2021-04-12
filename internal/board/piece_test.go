@@ -20,8 +20,8 @@ func piece_test(t *testing.T, name string, p Piece, ps Points) {
 
 func TestCanGoOutOfBound(t *testing.T) {
 	p := Piece{
-		T:   PawnB,
-		Pos: Point{0, 0},
+		Kind: PawnB,
+		Pos:  Point{0, 0},
 	}
 
 	if p.CanGo(Point{-1, 0}) || p.CanGo(Point{0, -1}) || p.CanGo(Point{-1, -1}) {
@@ -31,8 +31,8 @@ func TestCanGoOutOfBound(t *testing.T) {
 
 func TestCanGoEqual(t *testing.T) {
 	p := Piece{
-		T:   PawnB,
-		Pos: Point{0, 0},
+		Kind: PawnB,
+		Pos:  Point{0, 0},
 	}
 
 	if p.CanGo(p.Pos) {
@@ -42,8 +42,8 @@ func TestCanGoEqual(t *testing.T) {
 
 func TestPawnB(t *testing.T) {
 	p := Piece{
-		T:   PawnB,
-		Pos: Point{1, 1},
+		Kind: PawnB,
+		Pos:  Point{1, 1},
 	}
 
 	if !p.CanGo(Point{1, 3}) {
@@ -64,8 +64,8 @@ func TestPawnB(t *testing.T) {
 
 func TestPawnF(t *testing.T) {
 	p := Piece{
-		T:   PawnF,
-		Pos: Point{1, 6},
+		Kind: PawnF,
+		Pos:  Point{1, 6},
 	}
 
 	if !p.CanGo(Point{1, 4}) {
@@ -106,41 +106,10 @@ func TestRook(t *testing.T) {
 	)
 
 	piece_test(t, "Rook", Piece{
-		T:   Rook,
-		Pos: pos,
+		Kind: Rook,
+		Pos:  pos,
 	}, ps)
 }
-
-// no need - generators tests for this
-//func TestKnight(t *testing.T) {
-//}
-
-// no need - generators tests for this
-/*
-func TestBishop(t *testing.T) {
-	pos := Point{4, 3}
-
-	piece_test(t, "Bishop", Piece{
-		T:   Bishop,
-		Pos: pos,
-	}, Points{
-		{7, 6},
-		{6, 5},
-		{5, 4},
-		{3, 2},
-		{2, 1},
-		{1, 0},
-
-		{7, 0},
-		{6, 1},
-		{5, 2},
-		{3, 4},
-		{2, 5},
-		{1, 6},
-		{0, 7},
-	})
-}
-*/
 
 func TestQueen(t *testing.T) {
 	pos := Point{4, 3}
@@ -178,8 +147,8 @@ func TestQueen(t *testing.T) {
 	)
 
 	piece_test(t, "Queen", Piece{
-		T:   Queen,
-		Pos: pos,
+		Kind: Queen,
+		Pos:  pos,
 	}, ps)
 }
 
@@ -200,7 +169,7 @@ func TestKing(t *testing.T) {
 	)
 
 	piece_test(t, "King", Piece{
-		T:   King,
-		Pos: pos,
+		Kind: King,
+		Pos:  pos,
 	}, ps)
 }

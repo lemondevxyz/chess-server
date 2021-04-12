@@ -17,9 +17,9 @@ const (
 	debugCheckmate
 )
 
-func getMoveData(src board.Point, dst board.Point) []byte {
+func getMoveData(id int8, dst board.Point) []byte {
 	body, _ := json.Marshal(order.MoveModel{
-		Src: src,
+		ID:  id,
 		Dst: dst,
 	})
 

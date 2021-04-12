@@ -109,7 +109,7 @@ func TestGetStartRow(t *testing.T) {
 		t.Fatalf("error: %s", err)
 	}
 
-	if rook.T != Rook || rook.Player != player {
+	if rook.Kind != Rook || rook.Player != player {
 		t.Log(rook)
 		t.Fatalf("Piece is not rook, or the player does not match")
 	}
@@ -119,7 +119,7 @@ func TestGetStartRow(t *testing.T) {
 		t.Fatalf("error: %s", err)
 	}
 
-	if rook.T != Rook || rook.Player != enemy {
+	if rook.Kind != Rook || rook.Player != enemy {
 		t.Log(rook)
 		t.Fatalf("Piece is not rook, or the player does not match")
 	}
@@ -134,7 +134,7 @@ func TestGetPawnRow(t *testing.T) {
 		t.Fatalf("error: %s", err)
 	}
 
-	if rook.T != PawnF || rook.Player != player {
+	if rook.Kind != PawnF || rook.Player != player {
 		t.Log(rook)
 		t.Fatalf("Piece is not rook, or the player does not match")
 	}
@@ -144,7 +144,7 @@ func TestGetPawnRow(t *testing.T) {
 		t.Fatalf("error: %s", err)
 	}
 
-	if rook.T != PawnB || rook.Player != enemy {
+	if rook.Kind != PawnB || rook.Player != enemy {
 		t.Log(rook)
 		t.Fatalf("Piece is not rook, or the player does not match")
 	}

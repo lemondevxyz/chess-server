@@ -90,14 +90,14 @@ func board_set(p Point, ps pointSlice) *displayBoard {
 	b := &displayBoard{}
 	for x := 0; x < 8; x++ {
 		for y := 0; y < 8; y++ {
-			b[x][y] = Piece{T: t_empty}
+			b[x][y] = Piece{Kind: t_empty}
 		}
 	}
 
 	for _, v := range ps {
-		b[v.X][v.Y] = Piece{T: t_points}
+		b[v.X][v.Y] = Piece{Kind: t_points}
 	}
-	b[p.X][p.Y] = Piece{T: t_point}
+	b[p.X][p.Y] = Piece{Kind: t_point}
 
 	return b
 }
@@ -105,7 +105,7 @@ func board_set(p Point, ps pointSlice) *displayBoard {
 func in_board(b *displayBoard, want pointSlice) bool {
 	for _, v := range want {
 		p := b[v.X][v.Y]
-		if !p.Valid() || p.T != t_points {
+		if !p.Valid() || p.Kind != t_points {
 			return false
 		}
 	}
@@ -116,12 +116,12 @@ func in_board(b *displayBoard, want pointSlice) bool {
 func out_board(b *displayBoard, want pointSlice) bool {
 	for x, v := range b {
 		for y, b := range v {
-			if b.Valid() && b.T != t_empty && b.T != t_point {
+			if b.Valid() && b.Kind != t_empty && b.Kind != t_point {
 				found := false
 
 				for _, p := range want {
 					if p.X == int8(x) && p.Y == int8(y) {
-						if b.T == t_points {
+						if b.Kind == t_points {
 							found = true
 							break
 						} else {

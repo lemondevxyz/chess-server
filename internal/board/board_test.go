@@ -39,8 +39,8 @@ func TestNewBoard(t *testing.T) {
 	// t.Logf("want array: %v", ps)
 
 	for x := 0; x < 32; x++ {
-		if b.data[x].T != u[x] {
-			t.Fatalf("rows(types) are not setup properly: %d | want: %d, have: %d", x, u[x], b.data[x].T)
+		if b.data[x].Kind != u[x] {
+			t.Fatalf("rows(types) are not setup properly: %d | want: %d, have: %d", x, u[x], b.data[x].Kind)
 		}
 		if !b.data[x].Pos.Equal(ps[x]) {
 			t.Fatalf("rows(position) are not setup properly: %d | want: %s, have: %s", x, ps[x].String(), b.data[x].Pos.String())
@@ -70,32 +70,17 @@ func TestBoardCopy(t *testing.T) {
 func TestBoardListen(t *testing.T) {
 	b := NewBoard()
 
-	valid := make(chan bool)
-	invalid := make(chan bool)
-
 	ok := make(chan bool)
-	go func() {
-		a := <-valid
-		b := <-invalid
-
-		if a && b {
-			ok <- true
-		}
-	}()
 
 	x, y := false, false
 	// func(p Piece, src Point, dst Point, ret bool)
-	b.Listen(func(_ Piece, _ int, _, _ Point, ret bool) {
-		t.Log(ret)
-		if ret {
-			valid <- true
-		} else {
-			invalid <- true
-		}
+	b.Listen(func(_ int, _ Piece, _, _ Point) {
+		t.Log("ay")
+		ok <- true
+		t.Log("ay again")
 	})
 
-	b.Move(9, Point{1, 3})
-	b.Move(9, Point{1, 2})
+	go b.Move(9, Point{1, 2})
 
 	select {
 	case <-time.After(time.Millisecond * 20):
@@ -125,7 +110,8 @@ func TestBoardMove(t *testing.T) {
 		t.Fatalf("CanGo failed")
 	}
 
-	if b.data[10].T != PawnB {
+	// lamo
+	if !b.data[11].Pos.Equal(Point{3, 3}) {
 		t.Fatalf("Pawn didn't move")
 	}
 }
@@ -491,6 +477,7 @@ func TestBoardCheckmate(t *testing.T) {
 		try(brd, theirknight, Point{6, 3})
 
 		if brd.FinalCheckmate(2) {
+			t.Logf("\n%s", brd)
 			t.Fatalf("knight can final checkmate escapable king")
 		}
 	}

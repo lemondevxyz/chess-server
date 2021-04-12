@@ -272,7 +272,7 @@ func TestCommandCastling(t *testing.T) {
 		for _, v := range row {
 
 			pec, _ := gGame.b.GetByIndex(v)
-			if pec.T != board.Rook && pec.T != board.King {
+			if pec.Kind != board.Rook && pec.Kind != board.King {
 				gGame.b.Set(v, board.Point{-1, -1})
 			}
 		}
@@ -330,7 +330,7 @@ func TestCommandCastling(t *testing.T) {
 			t.Fatalf("board.GetByIndex(king): %s", err.Error())
 		}
 
-		if pecrook.T == board.King && pecking.T == board.Rook {
+		if pecrook.Kind == board.King && pecking.Kind == board.Rook {
 			pecrook, pecking = pecking, pecrook
 		}
 

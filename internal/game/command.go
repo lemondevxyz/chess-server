@@ -66,7 +66,7 @@ func init() {
 				// promotion
 				g.SwitchTurn()
 			} else {
-				if pec.T != board.PawnF && pec.T != board.PawnB {
+				if pec.Kind != board.PawnF && pec.Kind != board.PawnB {
 					g.SwitchTurn()
 				}
 			}
@@ -87,11 +87,11 @@ func init() {
 			if err != nil {
 				return board.ErrEmptyPiece
 			}
-			if pec.T != board.PawnF && pec.T != board.PawnB {
+			if pec.Kind != board.PawnF && pec.Kind != board.PawnB {
 				return ErrIllegalPromotion
 			}
 
-			pec.T = s.Type
+			pec.Kind = s.Type
 
 			err = g.UpdateAll(order.Order{
 				ID: order.Promotion,

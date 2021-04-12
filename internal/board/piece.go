@@ -33,10 +33,10 @@ type Piece struct {
 	// false == 0 which equals(OLD API) to 1
 	// true == 1 which equals(OLD API) to 2
 	Player uint8 `json:"player"`
-	// T the piece type
-	T uint8 `json:"type"`
-	//.Pos
-	Pos Point
+	// Kind is the type of piece, since type is keyword in most langauges..
+	Kind uint8 `json:"kind"`
+	// Pos where the piece stands..
+	Pos Point `json:"pos"`
 }
 
 // Valid returns true if the piece is true. This basically checks if the type is in bound, if the point valid
@@ -45,7 +45,7 @@ func (p Piece) Valid() bool {
 		return false
 	}
 
-	if p.T >= PawnF && p.T <= King {
+	if p.Kind >= PawnF && p.Kind <= King {
 		return true
 	}
 
@@ -65,7 +65,7 @@ func (p Piece) ShortString() string {
 		King:   "K",
 	}
 
-	return strings[p.T]
+	return strings[p.Kind]
 }
 
 // Name returns the name type for the piece
@@ -81,7 +81,7 @@ func (p Piece) Name() string {
 		King:   "King",
 	}
 
-	return strings[p.T]
+	return strings[p.Kind]
 }
 
 // String representation of the piece's [type, number, position]
@@ -93,21 +93,21 @@ func (p Piece) String() string {
 func (p Piece) Possib() Points {
 	src := p.Pos
 	// i.e starting point
-	switch p.T {
+	switch p.Kind {
 	// Only horizontally, can't move back
 	// 2 points at start, 1 point after that
 	case PawnF, PawnB:
 		// i plan to depecrate this
 		ps := Points{}
-		if p.T == PawnF {
+		if p.Kind == PawnF {
 			ps = src.Forward()
 		} else {
 			ps = src.Backward()
 		}
 		if src.Y == 1 || src.Y == 6 {
-			if p.T == PawnF {
+			if p.Kind == PawnF {
 				ps.Insert(Point{X: src.X, Y: src.Y - 2})
-			} else if p.T == PawnB {
+			} else if p.Kind == PawnB {
 				ps.Insert(Point{X: src.X, Y: src.Y + 2})
 			}
 		}
@@ -151,7 +151,7 @@ func (p Piece) MarshalJSON() ([]byte, error) {
 	x := struct {
 		P uint8 `json:"player"`
 		T uint8 `json:"type"`
-	}{p.Player, p.T}
+	}{p.Player, p.Kind}
 
 	body, err := json.Marshal(x)
 	if err != nil {
@@ -166,7 +166,7 @@ func (p *Piece) UnmarshalJSON(b []byte) error {
 	x := struct {
 		P uint8 `json:"player"`
 		T uint8 `json:"type"`
-	}{p.Player, p.T}
+	}{p.Player, p.Kind}
 
 	err := json.Unmarshal(b, &x)
 	if err != nil {
