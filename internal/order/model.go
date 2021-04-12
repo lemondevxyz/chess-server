@@ -18,8 +18,8 @@ type InviteModel struct {
 // [U]
 type GameModel struct {
 	// which pieces are yours
-	Player uint8        `json:"player"`
-	Board  *board.Board `json:"board"`
+	P1    bool         `json:"p1"`
+	Board *board.Board `json:"board"`
 }
 
 // [O]
@@ -36,7 +36,7 @@ type PossibleModel struct {
 
 // [U]
 type TurnModel struct {
-	Player uint8 `json:"player"`
+	P1 bool `json:"player"`
 }
 
 // [O]
@@ -58,13 +58,9 @@ type CastlingModel struct {
 }
 
 // [U]
-type CheckmateModel TurnModel /* struct {
-	Player uint8 `json:"player"`
-}*/
+type CheckmateModel TurnModel
 
 // [O]
 type DoneModel struct {
-	// Result represents the result of the match
-	// it equal to the winning player's number
-	Result uint8 `json:"result"`
+	P1 bool `json:"p1"`
 }

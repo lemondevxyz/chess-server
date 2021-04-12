@@ -287,7 +287,7 @@ func TestBoardMoveInTheWay(t *testing.T) {
 		_, cep, err := b.Get(v)
 		want := true
 		if err == nil {
-			if cep.Player == pec.Player {
+			if cep.P1 == pec.P1 {
 				want = false
 			}
 		}
@@ -448,7 +448,7 @@ func TestBoardCheckmate(t *testing.T) {
 		// P P P P P     P
 		// R N B Q K B N R
 		// t.Logf("\n%s", brd)
-		if brd.Checkmate(1) {
+		if brd.Checkmate(true) {
 			t.Fatalf("bad checkmate, over other piece")
 		}
 	}
@@ -476,7 +476,7 @@ func TestBoardCheckmate(t *testing.T) {
 		try(brd, theirknight, Point{5, 5})
 		try(brd, theirknight, Point{6, 3})
 
-		if brd.FinalCheckmate(2) {
+		if brd.FinalCheckmate(false) {
 			t.Logf("\n%s", brd)
 			t.Fatalf("knight can final checkmate escapable king")
 		}
@@ -498,7 +498,7 @@ func TestBoardCheckmate(t *testing.T) {
 
 		// t.Logf("\n%s", brd)
 
-		if !brd.Checkmate(1) {
+		if !brd.Checkmate(true) {
 
 			t.Logf("\n%s", brd.data[theirqueen])
 			ps, _ := brd.Possib(theirqueen)
@@ -519,7 +519,7 @@ func TestBoardCheckmate(t *testing.T) {
 		// t.Logf("\n%s", brd)
 		try(brd, ourpawn3, Point{6, 5})
 
-		if brd.FinalCheckmate(1) {
+		if brd.FinalCheckmate(true) {
 			t.Fatalf("final checkmate - want: false | have: true")
 		}
 	}
@@ -531,10 +531,10 @@ func TestBoardCheckmate(t *testing.T) {
 		try(brd, 22, Point{6, 4}) // Point{6, 6} PawnF
 		try(brd, 3, Point{7, 4})  // Point{3, 0}
 
-		if !brd.Checkmate(1) {
+		if !brd.Checkmate(true) {
 			t.Fatalf("no checkmate")
 		}
-		if !brd.FinalCheckmate(1) {
+		if !brd.FinalCheckmate(true) {
 			t.Fatalf("no final checkmate")
 		}
 	}
@@ -565,11 +565,11 @@ func TestBoardCheckmate(t *testing.T) {
 		//  R   B Q K B   R
 		//
 		// t.Logf("\n%s", brd)
-		if !brd.Checkmate(1) {
+		if !brd.Checkmate(true) {
 			t.Fatalf("no checkmate")
 		}
 
-		if !brd.FinalCheckmate(1) {
+		if !brd.FinalCheckmate(true) {
 			t.Fatalf("no final checkmate")
 		}
 	}

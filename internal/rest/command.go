@@ -74,7 +74,7 @@ func PossibHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !board.BelongsTo(*possib.ID, cl.Number()) {
+	if !board.BelongsTo(*possib.ID, cl.P1()) {
 		RespondError(w, http.StatusUnauthorized, fmt.Errorf("piece doesn't belong to you"))
 		return
 	}

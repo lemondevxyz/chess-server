@@ -4,6 +4,7 @@ import (
 	"io"
 	"sync"
 
+	"github.com/toms1441/chess-server/internal/board"
 	"github.com/toms1441/chess-server/internal/order"
 )
 
@@ -11,7 +12,7 @@ import (
 type Client struct {
 	// W where to write updates
 	W   io.Writer
-	num uint8 // player 1 or 2??
+	p1  bool // player 1 or 2??
 	id  string
 	g   *Game
 	mtx sync.Mutex
@@ -57,16 +58,13 @@ func (c *Client) LeaveGame() {
 		return
 	}
 
-	x := g.cs[0]
-	if x == c {
-		x = g.cs[1]
-	}
+	x := g.cs[board.GetInversePlayer(c.p1)]
 
 	c.g = nil
 	x.g = nil
 }
 
-// Number returns the number for that client. Either 1 or 2.
-func (c *Client) Number() uint8 {
-	return c.num
+// P1 returns if the client is player one or two.
+func (c *Client) P1() bool {
+	return c.p1
 }

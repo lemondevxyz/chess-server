@@ -31,7 +31,7 @@ func init() {
 				return err
 			}
 
-			if !board.BelongsTo(s.ID, c.num) {
+			if !board.BelongsTo(s.ID, c.p1) {
 				return ErrIllegalMove
 			}
 
@@ -42,7 +42,7 @@ func init() {
 			}
 
 			// disallow enemy moving ally pieces
-			if pec.Player != c.num {
+			if pec.P1 != c.p1 {
 				return ErrIllegalMove
 			}
 
@@ -111,7 +111,7 @@ func init() {
 			if !c.g.IsTurn(c) {
 				return ErrIllegalTurn
 			}
-			if !c.g.canCastle[c.num] {
+			if !c.g.canCastle[c.p1] {
 				return ErrIllegalCastling
 			}
 
@@ -121,10 +121,10 @@ func init() {
 				return err
 			}
 
-			kingid := board.GetKing(c.num)
+			kingid := board.GetKing(c.p1)
 			rookid := 0
 
-			rid := board.GetRooks(c.num)
+			rid := board.GetRooks(c.p1)
 			r1, r2 := rid[0], rid[1]
 			if (kingid != cast.Src && kingid != cast.Dst) || cast.Src != r1 && cast.Dst != r1 && cast.Src != r2 && cast.Dst != r2 {
 				fmt.Println("debug 3")
@@ -152,7 +152,7 @@ func init() {
 				minx, maxx = maxx, minx
 			}
 
-			y := board.GetStartRow(c.num)
+			y := board.GetStartRow(c.p1)
 			for x := minx; x < maxx; x++ {
 				if x == 0 || x == 4 || x == 7 { // skip king and rook
 					continue
@@ -185,12 +185,7 @@ func init() {
 			return nil
 		},
 		order.Done: func(c *Client, o order.Order) error {
-			oth := c.Number()
-			if oth == 1 {
-				oth = 2
-			} else if oth == 2 {
-				oth = 1
-			}
+			oth := board.GetInversePlayer(c.p1)
 
 			c.g.done = true
 

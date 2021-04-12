@@ -63,13 +63,13 @@ var ubs = map[uint8]UpdateCallback{
 		return nil
 	},
 	order.Checkmate: func(c *Client, u *order.Order) error {
-		x, ok := u.Parameter.(uint8)
+		x, ok := u.Parameter.(bool)
 		if !ok {
 			return ErrUpdateParameter
 		}
 
 		body, err := json.Marshal(order.CheckmateModel{
-			Player: x,
+			P1: x,
 		})
 		if err != nil {
 			return err
@@ -80,14 +80,14 @@ var ubs = map[uint8]UpdateCallback{
 	},
 	// lamo laziness
 	order.Done: func(c *Client, u *order.Order) error {
-		x, ok := u.Parameter.(uint8)
+		x, ok := u.Parameter.(bool)
 		if !ok {
 			return ErrUpdateParameter
 		}
 
 		var err error
 		u.Data, err = json.Marshal(order.DoneModel{
-			Result: x,
+			P1: x,
 		})
 		if err != nil {
 			return err

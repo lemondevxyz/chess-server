@@ -20,59 +20,6 @@ var rookmap = map[int8]int8{
 	0: 3,
 }
 
-/*
-func TestCommandSendMessage(t *testing.T) {
-	defer resetPipe()
-
-	body, err := json.Marshal(order.MessageModel{
-		Message: "test",
-	})
-
-	if err != nil {
-		t.Fatalf("json.Marshal: %s", err.Error())
-	}
-
-	c := order.Order{
-		ID:   order.Message,
-		Data: body,
-	}
-
-	cherr := make(chan error)
-	go func() {
-		cherr <- cl1.Do(c)
-	}()
-
-	body = <-clientRead(rd1)
-
-	x := order.MessageModel{}
-
-	u := order.Order{}
-
-	err = json.Unmarshal(body, &u)
-	if err != nil {
-		t.Fatalf("json.Unmarshal: %s", err.Error())
-	}
-
-	t.Logf("%s", string(body))
-
-	err = json.Unmarshal(u.Data, &x)
-	if err != nil {
-		t.Fatalf("json.Unmarshal: %s", err.Error())
-	}
-
-	if x.Message != "[Player 1]: test" {
-		t.Fatalf("json.Unmarshal: unwanted result")
-	}
-
-	<-clientRead(rd2)
-
-	err = <-cherr
-	if err != nil {
-		t.Fatalf("cl.Do: %s", err.Error())
-	}
-}
-*/
-
 func TestCommandMove(t *testing.T) {
 	defer resetPipe()
 
@@ -268,7 +215,7 @@ func TestCommandCastling(t *testing.T) {
 			<-clientRead(rd2)
 		}
 
-		row := board.GetRangeStart(cl.num)
+		row := board.GetRangeStart(cl.p1)
 		for _, v := range row {
 
 			pec, _ := gGame.b.GetByIndex(v)
@@ -346,16 +293,16 @@ func TestCommandCastling(t *testing.T) {
 		}
 	}
 
-	king := board.GetKing(cl1.num)
-	rks := board.GetRooks(cl1.num)
+	king := board.GetKing(cl1.p1)
+	rks := board.GetRooks(cl1.p1)
 
 	do(false, rks[1], king, cl1)
 	do(false, rks[0], king, cl1)
 	do(false, king, rks[0], cl1)
 	do(false, king, rks[1], cl1)
 
-	king = board.GetKing(cl2.num)
-	rks = board.GetRooks(cl2.num)
+	king = board.GetKing(cl2.p1)
+	rks = board.GetRooks(cl2.p1)
 
 	do(true, rks[1], king, cl2)
 	do(true, rks[0], king, cl2)
@@ -398,12 +345,12 @@ func TestCommandDone(t *testing.T) {
 	pam := <-done
 	data := pam["data"].(map[string]interface{})
 
-	won := uint8(data["result"].(float64))
+	won := data["p1"].(bool)
 
-	if cl1.Number() == won {
+	if cl1.P1() == won {
 		t.Fatalf("cl1 should be the one who's losing, not winning")
 	}
-	if cl2.Number() != won {
+	if cl2.P1() != won {
 		t.Fatalf("cl2 should be the one who won, not losing..")
 	}
 

@@ -52,9 +52,9 @@ func NewBoard() *Board {
 	}
 
 	for k, s := range row {
-		player := 2
+		p1 := false
 		if k >= 16 {
-			player = 1
+			p1 = true
 		}
 
 		x := int8(k % 8)
@@ -65,9 +65,9 @@ func NewBoard() *Board {
 		}
 
 		brd.data[k] = Piece{
-			Kind:   s,
-			Player: uint8(player),
-			Pos:    Point{x, y},
+			Kind: s,
+			P1:   p1,
+			Pos:  Point{x, y},
 		}
 	}
 
@@ -173,7 +173,7 @@ func (brd Board) Possib(id int) (Points, error) {
 		for k, v := range ps {
 			_, cep, err := brd.Get(v)
 			if err == nil {
-				if cep.Player == pec.Player {
+				if cep.P1 == pec.P1 {
 					delete(ps, k)
 				}
 			}
@@ -204,7 +204,7 @@ func (brd Board) Possib(id int) (Points, error) {
 			// is there a piece
 			if err == nil {
 				// is it the enemy's
-				if cep.Player != pec.Player {
+				if cep.P1 != pec.P1 {
 					// then don't remove this move from the possible moves
 					continue
 				}
@@ -234,7 +234,7 @@ func (brd Board) Possib(id int) (Points, error) {
 		// collect enemy's possible points
 		// then check if it crosses paths with king's
 		sp := Points{}
-		for _, id := range GetRange(GetInversePlayer(pec.Player)) {
+		for _, id := range GetRange(GetInversePlayer(pec.P1)) {
 			cep := brd.data[id]
 			if cep.Valid() { // always use protection
 				if cep.Kind == King {
@@ -256,7 +256,7 @@ func (brd Board) Possib(id int) (Points, error) {
 		for k, v := range ps {
 			_, cep, err := brd.Get(v)
 			// disallow replacing ally piece
-			if sp.In(v) || (err == nil && cep.Player == pec.Player) {
+			if sp.In(v) || (err == nil && cep.P1 == pec.P1) {
 				delete(ps, k)
 			}
 		}
@@ -269,7 +269,7 @@ func (brd Board) Possib(id int) (Points, error) {
 			// move could disallow back movement to king's original position
 			// so we use set
 			drb.Set(id, v)
-			if drb.Checkmate(pec.Player) {
+			if drb.Checkmate(pec.P1) {
 				// if that move is checkmattable then discard it
 				delete(ps, k)
 			}
@@ -294,9 +294,8 @@ func (brd Board) Possib(id int) (Points, error) {
 
 					_, cep, err := brd.Get(pnt)
 					if err == nil {
-						if pec.Player == cep.Player {
-							// sheesh it's our piece
-							// and since we cannot kill it then erase it as a point we can go through
+						if pec.P1 == cep.P1 {
+							// it's our piece, erase it as a point we can through
 							ps.Delete(cep.Pos)
 						}
 						// set to remove all following points from now on
@@ -347,7 +346,7 @@ func (brd Board) Possib(id int) (Points, error) {
 
 // FinalCheckmate returns true if the player cannot save themselves. The game ends right after.
 // This primarily checks for the Possib moves and if an ally can jump in to save the king.
-func (brd Board) FinalCheckmate(player uint8) bool {
+func (brd Board) FinalCheckmate(p1 bool) bool {
 	// Piece maximum number of moves:
 	// - Pawn: 3 killable or 2 at start or just 1
 	// - King: 8
@@ -357,12 +356,12 @@ func (brd Board) FinalCheckmate(player uint8) bool {
 	// - Queen: (Bishop) + Rook = 27
 	// - Alltogether: 73
 	// This function works by doing every single move(from the checkmatted player) on another board, and checking if was still a checkmate.
-	if !brd.Checkmate(player) {
+	if !brd.Checkmate(p1) {
 		return false
 	}
 
 	// validate player number, and get the king's id
-	kingid := GetKing(player)
+	kingid := GetKing(p1)
 	if kingid == -1 {
 		return true
 	}
@@ -377,7 +376,7 @@ func (brd Board) FinalCheckmate(player uint8) bool {
 	final := true
 	// GetRange returns the id range for the player
 	// so we loop over all piece allies
-	for _, id := range GetRange(player) {
+	for _, id := range GetRange(p1) {
 		pec := brd.data[id]
 		// if it's dead then skip it
 		if pec.Valid() {
@@ -396,7 +395,7 @@ func (brd Board) FinalCheckmate(player uint8) bool {
 				// like for example pawns
 				if brd.canMove(id, pnt) {
 					brd.Set(id, pnt)
-					if !brd.Checkmate(player) {
+					if !brd.Checkmate(p1) {
 						return false
 					}
 				}
@@ -412,9 +411,9 @@ func (brd Board) FinalCheckmate(player uint8) bool {
 // Checkmate returns true if the player has been checkmatted.
 // While FinalCheckmate checks if the checkmatted player can do anything about it, this basically check if there is a checkmate.
 // It does not care whether the checkmatted player can escape
-func (brd Board) Checkmate(player uint8) bool {
+func (brd Board) Checkmate(p1 bool) bool {
 	var king Piece
-	id := GetKing(player)
+	id := GetKing(p1)
 	if id != -1 {
 		king = brd.data[id]
 	} else {
@@ -427,7 +426,7 @@ func (brd Board) Checkmate(player uint8) bool {
 		return true
 	}
 
-	enemyids := GetInversePlayer(player)
+	enemyids := GetInversePlayer(p1)
 	for _, id := range GetRange(enemyids) {
 		pec := brd.data[id]
 		if pec.Valid() {
@@ -465,7 +464,7 @@ func (brd *Board) canMove(id int, dst Point) (valid bool) {
 		// is there a piece in the destination??
 		if cep.Valid() && err == nil {
 			// is the piece's an enemy
-			if pec.Player != cep.Player {
+			if pec.P1 != cep.P1 {
 				// is it not a pawn(cause pawns cannot enemy forward or backward of them)
 				if pec.Kind != PawnF && pec.Kind != PawnB {
 					ps, err := brd.Possib(id)

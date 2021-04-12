@@ -4,21 +4,22 @@ import (
 	"io"
 )
 
-// Note: Future contributors beware of io.Pipe freezing the entire test, wrapping Write operations around a goroutine would make the tests unpredictable
+// Note: Future contributors, beware of io.Pipe freezing the entire test, wrapping Write operations around a goroutine would make the tests unpredictable.
+// Just watch out for different order messages, try mixing the clientRead. Or increase the amount, or decrease it.
 var (
 	rd1, wr1 = io.Pipe()
 	rd2, wr2 = io.Pipe()
 
 	cl1 = &Client{
-		W:   wr1,
-		num: 1,
-		id:  "a",
+		W:  wr1,
+		p1: true,
+		id: "a",
 	}
 
 	cl2 = &Client{
-		W:   wr2,
-		num: 2,
-		id:  "b",
+		W:  wr2,
+		p1: false,
+		id: "b",
 	}
 )
 

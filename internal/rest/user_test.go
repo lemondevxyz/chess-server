@@ -95,28 +95,26 @@ func TestUserAcceptInvite(t *testing.T) {
 	}
 	// because net.Pipe is synchronous
 	ch := make(chan error)
-	x := make([]byte, 128)
-	var n int
 
 	go func() {
-		n, err = rd2.Read(x)
-		ch <- err
-		x = x[:n]
+		_, err = us1.Invite(us2.PublicID, InviteLifespan)
+		if err != nil {
+			ch <- fmt.Errorf("us.Invite: %s", err.Error())
+			return
+		}
+		close(ch)
 	}()
 
-	_, err = us1.Invite(us2.PublicID, InviteLifespan)
+	update := order.Order{}
+	err = json.Unmarshal(<-read(rd2), &update)
+	t.Log()
 	if err != nil {
-		t.Fatalf("us.Invite: %s", err.Error())
+		t.Fatalf("json.Unmarshal: %s", err.Error())
 	}
+
 	err = <-ch
 	if err != nil {
 		t.Fatalf("rd2.Read: %s", err.Error())
-	}
-
-	update := order.Order{}
-	err = json.Unmarshal(x[:n], &update)
-	if err != nil {
-		t.Fatalf("json.Unmarshal: %s", err.Error())
 	}
 
 	inv := order.InviteModel{}
@@ -138,14 +136,11 @@ func TestUserAcceptInvite(t *testing.T) {
 		}
 	}()
 
-	x = make([]byte, 1280)
-	n, err = rd2.Read(x)
-	if err != nil {
-		t.Fatalf("rd2.Read: %s", err.Error())
-	}
+	x := <-read(rd2)
 	o := order.Order{}
-	err = json.Unmarshal(x[:n], &o)
+	err = json.Unmarshal(x, &o)
 	if err != nil {
+		t.Log(string(x))
 		t.Fatalf("json.Unmarshal: %s", err.Error())
 	}
 	gm2 := order.GameModel{}
@@ -154,13 +149,9 @@ func TestUserAcceptInvite(t *testing.T) {
 		t.Fatalf("json.Unmarshal: %s", err.Error())
 	}
 
-	x = make([]byte, 1280)
-	n, err = rd1.Read(x)
-	if err != nil {
-		t.Fatalf("rd1.Read: %s", err.Error())
-	}
+	x = <-read(rd1)
 	o = order.Order{}
-	err = json.Unmarshal(x[:n], &o)
+	err = json.Unmarshal(x, &o)
 	if err != nil {
 		t.Fatalf("json.Unmarshal: %s", err.Error())
 	}
@@ -170,10 +161,10 @@ func TestUserAcceptInvite(t *testing.T) {
 		t.Fatalf("json.Unmarshal: %s", err.Error())
 	}
 
-	if gm1.Player == gm2.Player {
+	if gm1.P1 == gm2.P1 {
+		t.Log(gm1.P1, gm2.P1)
 		t.Fatalf("player numbers are the same")
 	}
-	t.Log(gm1.Player, gm2.Player)
 
 }
 

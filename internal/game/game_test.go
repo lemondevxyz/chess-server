@@ -40,8 +40,8 @@ func TestTurns(t *testing.T) {
 			t.Fatalf("json.Unmarshal: %s", err.Error())
 		}
 
-		if x.Player != 1 {
-			t.Fatalf("player is not one: %d", x.Player)
+		if x.P1 != true {
+			t.Fatalf("p1 is not true")
 		}
 	}
 	// turn read
@@ -101,8 +101,8 @@ func TestTurns(t *testing.T) {
 			t.Fatalf("json.Unmarshal: %s", err.Error())
 		}
 
-		if x.Player != 2 {
-			t.Fatalf("player is not two: %d", x.Player)
+		if x.P1 {
+			t.Fatalf("p1 is not false")
 		}
 
 		<-clientRead(rd2)
@@ -136,7 +136,7 @@ func TestGameDone(t *testing.T) {
 	done := false
 
 	doMove := func(id int8, dst board.Point) {
-		cl := gGame.cs[gGame.turn-1]
+		cl := gGame.cs[gGame.turn]
 
 		x, err := json.Marshal(order.MoveModel{
 			ID:  id,
@@ -196,8 +196,8 @@ func TestGameDone(t *testing.T) {
 		t.Logf("\n%s", gGame.b)
 	*/
 
-	lc1 := gGame.cs[0]
-	lc2 := gGame.cs[1]
+	lc1 := gGame.cs[true]
+	lc2 := gGame.cs[false]
 	if lc1 != nil || lc2 != nil {
 		t.Fatalf("gGame cs: %v | %v", lc1, lc2)
 	}

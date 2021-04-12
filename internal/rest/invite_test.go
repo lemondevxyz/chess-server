@@ -109,18 +109,10 @@ func TestAcceptInviteHandler(t *testing.T) {
 		close(done)
 	}()
 
-	// game update
-	x := make([]byte, 1024)
-	rd2.Read(x)
-
-	x = make([]byte, 1024)
-	rd1.Read(x)
-
-	x = make([]byte, 1024)
-	rd2.Read(x)
-
-	x = make([]byte, 1024)
-	rd1.Read(x)
+	<-read(rd2)
+	<-read(rd1)
+	<-read(rd2)
+	<-read(rd1)
 
 	<-done
 

@@ -1,7 +1,6 @@
 package board
 
 import (
-	"encoding/json"
 	"fmt"
 )
 
@@ -29,10 +28,9 @@ const (
 )
 
 type Piece struct {
-	// Player false if it's dark. true if it's light.
-	// false == 0 which equals(OLD API) to 1
-	// true == 1 which equals(OLD API) to 2
-	Player uint8 `json:"player"`
+	// P1 is set to true, if it's the first player. if it's the second player then it's set to false.
+	// Note: Player 1 always starts in Y {6, 7}
+	P1 bool `json:"player"`
 	// Kind is the type of piece, since type is keyword in most langauges..
 	Kind uint8 `json:"kind"`
 	// Pos where the piece stands..
@@ -86,7 +84,12 @@ func (p Piece) Name() string {
 
 // String representation of the piece's [type, number, position]
 func (p Piece) String() string {
-	return fmt.Sprintf("%s/%s/%d", p.Name(), p.Pos.String(), p.Player)
+	num := 0
+	if p.P1 {
+		num = 1
+	}
+
+	return fmt.Sprintf("%s/%s/%d", p.Name(), p.Pos.String(), num)
 }
 
 // Possib returns all.Possible moves from piece's.Position.
@@ -144,34 +147,4 @@ func (p Piece) CanGo(dst Point) bool {
 	}
 
 	return p.Possib().In(dst)
-}
-
-// MarshalJSON json.Marshaler
-func (p Piece) MarshalJSON() ([]byte, error) {
-	x := struct {
-		P uint8 `json:"player"`
-		T uint8 `json:"type"`
-	}{p.Player, p.Kind}
-
-	body, err := json.Marshal(x)
-	if err != nil {
-		return nil, err
-	}
-
-	return body, nil
-}
-
-// UnmarshalJSON json.Unmarshaler
-func (p *Piece) UnmarshalJSON(b []byte) error {
-	x := struct {
-		P uint8 `json:"player"`
-		T uint8 `json:"type"`
-	}{p.Player, p.Kind}
-
-	err := json.Unmarshal(b, &x)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }

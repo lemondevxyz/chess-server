@@ -37,7 +37,7 @@ func read(r io.Reader) chan []byte {
 	ch := make(chan []byte)
 
 	go func() {
-		x := make([]byte, 1024)
+		x := make([]byte, 2048)
 		n, _ := r.Read(x)
 		x = x[:n]
 
