@@ -172,9 +172,17 @@ func init() {
 				brd.Set(kingid, board.Point{2, y})
 			}
 
+			body, err := json.Marshal(order.CastlingModel{
+				Src: kingid,
+				Dst: rookid,
+			})
+			if err != nil {
+				return err
+			}
+
 			err = c.g.UpdateAll(order.Order{
 				ID:   order.Castling,
-				Data: o.Data,
+				Data: body,
 			})
 			if err != nil {
 				return err
