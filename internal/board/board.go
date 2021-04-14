@@ -42,7 +42,7 @@ func NewBoard() *Board {
 		// 0,1 | 1, 1 | 2, 1 | 3, 1 | 4, 1 | 5, 1 | 6, 1 | 7, 1
 		Pawn, Pawn, Pawn, Pawn, Pawn, Pawn, Pawn, Pawn,
 		// 16 -> 23
-		// 17  | 17   | 18   | 19   | 20   | 21   | 22   | 23
+		// 16  | 17   | 18   | 19   | 20   | 21   | 22   | 23
 		// 0,6 | 1, 6 | 2, 6 | 3, 6 | 4, 6 | 5, 6 | 6, 6 | 7, 6
 		Pawn, Pawn, Pawn, Pawn, Pawn, Pawn, Pawn, Pawn,
 		// 24 -> 31

@@ -1,41 +1,55 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/fatih/color"
+	"github.com/gobwas/ws"
 	"github.com/gorilla/mux"
 	"github.com/toms1441/chess-server/internal/rest"
 )
 
 // just to build without debug
 // via build.sh
-var debug = "yes"
+//var debug = "yes"
+var debug = "castling"
 
 const apiver = "v1"
 
 func debug_game() {
-	x := rest.ClientChannel()
-	cl1 := <-x
-	// fmt.Println("connected")
-	// time.Sleep(time.Second)
-	// go ws.Dial(context.Background(), "ws://localhost:8080/api/v1/ws")
-	cl2 := <-x
-	fmt.Println("done")
+	fmt.Println("endless loop mode")
+	if debug != "yes" {
+		fmt.Printf("debug state: %s\n", debug)
+	}
+	for {
+		x := rest.ClientChannel()
+		cl1 := <-x
+		fmt.Println("connected")
+		time.Sleep(time.Second)
+		go ws.Dial(context.Background(), "ws://localhost:8080/api/v1/ws")
+		cl2 := <-x
+		fmt.Println("done")
 
-	/*
-		id, _ := cl1.Invite(cl2.PublicID, rest.InviteLifespan)
-		cl2.AcceptInvite(id)
-	*/
-	id, _ := cl2.Invite(cl1.PublicID, rest.InviteLifespan)
-	cl1.AcceptInvite(id)
+		id, _ := cl2.Invite(cl1.PublicID, rest.InviteLifespan)
+		time.Sleep(time.Millisecond * 10)
+		cl1.AcceptInvite(id)
+
+		if debug == "castling" {
+			err := debugCastling(cl1.Client(), cl2.Client())
+			if err != nil {
+				panic(err)
+			}
+		}
+	}
 }
 
 func main() {
-	if debug == "yes" {
+	if debug != "no" {
 		go debug_game()
 	}
 
@@ -61,15 +75,10 @@ func main() {
 			w.Write(nil)
 		}).Methods("GET")
 	}
-	/*
-		{ // static
-			rout.PathPrefix("/").Handler(http.StripPrefix("/", http.FileServer(http.Dir("./pub/"))))
-		}
-	*/
 
 	var proto string
 	var port string
-	if debug == "yes" {
+	if debug != "no" {
 		proto = "tcp"
 		port = ":8080"
 	} else {
@@ -109,7 +118,7 @@ func main() {
 		method := color.New(color.BgMagenta, color.Bold).Sprint(" " + r.Method + " ")
 		path := color.New(color.BgBlue).Sprint(" " + r.URL.Path + " ")
 
-		if debug == "yes" {
+		if debug != "no" {
 			ctx.Header().Add("Access-Control-Allow-Origin", "*")
 			ctx.Header().Add("Access-Control-Allow-Headers", "Content-Type, Accept, Authorization")
 			ctx.Header().Add("Access-Control-Allow-Methods", "GET, POST")
