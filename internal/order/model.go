@@ -30,7 +30,7 @@ type MoveModel struct {
 
 // [O] sent as response to http
 type PossibleModel struct {
-	ID     *int8         `json:"src,omitempty"`    // [C]
+	ID     *int8         `json:"id,omitempty"`     // [C]
 	Points *board.Points `json:"points,omitempty"` // [U]
 }
 

@@ -29,7 +29,7 @@ const (
 type Piece struct {
 	// P1 is set to true, if it's the first player. if it's the second player then it's set to false.
 	// Note: Player 1 always starts in Y {6, 7}
-	P1 bool `json:"player"`
+	P1 bool `json:"p1"`
 	// Kind is the type of piece, since type is keyword in most langauges..
 	Kind uint8 `json:"kind"`
 	// Pos where the piece stands..

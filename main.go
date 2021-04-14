@@ -1,12 +1,14 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"net/http"
 	"os"
 
 	"github.com/fatih/color"
+	"github.com/gobwas/ws"
 	"github.com/gorilla/mux"
 	"github.com/toms1441/chess-server/internal/rest"
 )
@@ -17,9 +19,19 @@ var debug = "yes"
 
 const apiver = "v1"
 
+func debug_game() {
+	x := rest.ClientChannel()
+	cl1 := <-x
+	go ws.Dial(context.Background(), "ws://localhost:8080/api/v1/ws")
+	cl2 := <-x
+
+	id, _ := cl1.Invite(cl2.PublicID, rest.InviteLifespan)
+	cl2.AcceptInvite(id)
+}
+
 func main() {
 	if debug == "yes" {
-		// debug_game(debugCheckmate, true)
+		go debug_game()
 	}
 
 	rout := mux.NewRouter()
