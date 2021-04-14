@@ -36,7 +36,7 @@ type PossibleModel struct {
 
 // [U]
 type TurnModel struct {
-	P1 bool `json:"player"`
+	P1 bool `json:"p1"`
 }
 
 // [O]
