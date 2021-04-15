@@ -14,11 +14,6 @@ import (
 	"github.com/toms1441/chess-server/internal/rest"
 )
 
-// just to build without debug
-// via build.sh
-//var debug = "yes"
-var debug = "castling"
-
 const apiver = "v1"
 
 func debug_game() {
@@ -29,11 +24,12 @@ func debug_game() {
 	for {
 		x := rest.ClientChannel()
 		cl1 := <-x
-		fmt.Println("connected")
 		time.Sleep(time.Second)
 		go func() {
 			cn, _, _, err := ws.Dial(context.Background(), "ws://localhost:8080/api/v1/ws")
-			fmt.Printf("ws.Dial: %s\n", err)
+			if err != nil {
+				fmt.Printf("ws.Dial: %s\n", err)
+			}
 
 			for {
 				b := make([]byte, 2048)
@@ -44,7 +40,9 @@ func debug_game() {
 			}
 		}()
 		cl2 := <-x
-		fmt.Println("done")
+		if !p1 {
+			cl1, cl2 = cl2, cl1
+		}
 
 		id, _ := cl2.Invite(cl1.PublicID, rest.InviteLifespan)
 		time.Sleep(time.Millisecond * 10)

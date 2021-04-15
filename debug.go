@@ -9,6 +9,11 @@ import (
 	"github.com/toms1441/chess-server/internal/order"
 )
 
+//var debug = "yes"
+var debug = "castling"
+
+const p1 = false
+
 // where c1 is p1
 func debugCastling(cl1, cl2 *game.Client) (err error) {
 	list := []order.MoveModel{
@@ -42,6 +47,13 @@ func debugCastling(cl1, cl2 *game.Client) (err error) {
 		// queen
 		{27, board.Point{4, 6}},
 		{3, board.Point{2, 1}},
+	}
+	// const
+	if !p1 {
+		list = append(list, order.MoveModel{
+			ID:  27,
+			Dst: board.Point{5, 6},
+		})
 	}
 
 	// game := cl1.Game()
