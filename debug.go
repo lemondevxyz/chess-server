@@ -10,9 +10,39 @@ import (
 )
 
 //var debug = "yes"
-var debug = "castling"
+var debug = "checkmate"
 
-const p1 = false
+const p1 = true
+
+func doMove(cl1, cl2 *game.Client, list []order.MoveModel) error {
+	p1 := true
+
+	for k, v := range list {
+		body, err := json.Marshal(v)
+		if err != nil {
+			return fmt.Errorf("body: %s\nerror: %s\nindex: %d", string(body), err.Error(), k)
+		}
+
+		if p1 {
+			err = cl1.Do(order.Order{
+				ID:   order.Move,
+				Data: body,
+			})
+		} else {
+			err = cl2.Do(order.Order{
+				ID:   order.Move,
+				Data: body,
+			})
+		}
+		if err != nil {
+			return fmt.Errorf("body: %s\nerror: %s\nindex: %d", string(body), err, k)
+		}
+
+		p1 = !p1
+	}
+
+	return nil
+}
 
 // where c1 is p1
 func debugCastling(cl1, cl2 *game.Client) (err error) {
@@ -56,32 +86,25 @@ func debugCastling(cl1, cl2 *game.Client) (err error) {
 		})
 	}
 
-	// game := cl1.Game()
-	p1 := true
+	return doMove(cl1, cl2, list)
+}
 
-	for k, v := range list {
-		body, err := json.Marshal(v)
-		if err != nil {
-			return fmt.Errorf("body: %s\nerror: %s\nindex: %d", string(body), err.Error(), k)
+func debugCheckmate(cl1, cl2 *game.Client) error {
+	var list []order.MoveModel
+	if !p1 {
+		list = []order.MoveModel{
+			{21, board.Point{5, 5}},
+			{12, board.Point{4, 3}},
+			{22, board.Point{6, 4}},
 		}
-
-		if p1 {
-			err = cl1.Do(order.Order{
-				ID:   order.Move,
-				Data: body,
-			})
-		} else {
-			err = cl2.Do(order.Order{
-				ID:   order.Move,
-				Data: body,
-			})
+	} else {
+		list = []order.MoveModel{
+			{20, board.Point{4, 4}},
+			{13, board.Point{5, 3}},
+			{30, board.Point{7, 5}},
+			{14, board.Point{6, 3}},
 		}
-		if err != nil {
-			return fmt.Errorf("body: %s\nerror: %s\nindex: %d", string(body), err, k)
-		}
-
-		p1 = !p1
 	}
 
-	return nil
+	return doMove(cl1, cl2, list)
 }

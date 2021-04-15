@@ -48,11 +48,16 @@ func debug_game() {
 		time.Sleep(time.Millisecond * 10)
 		cl1.AcceptInvite(id)
 
-		if debug == "castling" {
-			err := debugCastling(cl1.Client(), cl2.Client())
-			if err != nil {
-				panic(err)
-			}
+		var err error
+		switch debug {
+		case "castling":
+			err = debugCastling(cl1.Client(), cl2.Client())
+		case "checkmate":
+			err = debugCheckmate(cl1.Client(), cl2.Client())
+		}
+
+		if err != nil {
+			panic(err)
 		}
 	}
 }

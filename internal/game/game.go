@@ -77,11 +77,10 @@ func (g *Game) SwitchTurn() {
 	aft := !g.turn
 
 	if g.b.FinalCheckmate(aft) {
-		upd := order.Order{ID: order.Done, Parameter: int8(1)}
-		g.Update(g.cs[bef], upd)
-
-		upd.Parameter = int8(-1)
-		g.Update(g.cs[aft], upd)
+		g.UpdateAll(order.Order{
+			ID:        order.Done,
+			Parameter: bef,
+		})
 
 		g.done = true
 
