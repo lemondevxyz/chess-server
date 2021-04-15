@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"time"
 
 	"github.com/toms1441/chess-server/internal/board"
 	"github.com/toms1441/chess-server/internal/game"
@@ -45,7 +44,9 @@ func debugCastling(cl1, cl2 *game.Client) (err error) {
 		{3, board.Point{2, 1}},
 	}
 
+	// game := cl1.Game()
 	p1 := true
+
 	for k, v := range list {
 		body, err := json.Marshal(v)
 		if err != nil {
@@ -68,7 +69,6 @@ func debugCastling(cl1, cl2 *game.Client) (err error) {
 		}
 
 		p1 = !p1
-		time.Sleep(time.Millisecond * 100)
 	}
 
 	return nil

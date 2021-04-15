@@ -21,8 +21,6 @@ type Client struct {
 // Do executes a command. It automatically checks if the player is in a game, or if the command's ID is invalid.
 // Use of cbs[cmd.ID] is discouraged.
 func (c *Client) Do(cmd order.Order) error {
-	c.mtx.Lock()
-
 	if c.g == nil {
 		return ErrGameNil
 	}
@@ -32,12 +30,13 @@ func (c *Client) Do(cmd order.Order) error {
 		return ErrCommandNil
 	}
 
+	c.mtx.Lock()
 	err := x(c, cmd)
-
 	c.mtx.Unlock()
+
 	if c.g != nil {
 		if c.g.done { // we cannot do this in switch turn
-			// cause it would freeze the program if testing
+			// cause it would freeze the program
 			c.g.close()
 		}
 	}
@@ -58,10 +57,13 @@ func (c *Client) LeaveGame() {
 		return
 	}
 
-	x := g.cs[board.GetInversePlayer(c.p1)]
+	x := c.g.cs[board.GetInversePlayer(c.p1)]
+	g.Update(x, order.Order{
+		ID:        order.Done,
+		Parameter: x.p1,
+	})
 
-	c.g = nil
-	x.g = nil
+	c.g.close()
 }
 
 // P1 returns if the client is player one or two.

@@ -31,7 +31,18 @@ func debug_game() {
 		cl1 := <-x
 		fmt.Println("connected")
 		time.Sleep(time.Second)
-		go ws.Dial(context.Background(), "ws://localhost:8080/api/v1/ws")
+		go func() {
+			cn, _, _, err := ws.Dial(context.Background(), "ws://localhost:8080/api/v1/ws")
+			fmt.Printf("ws.Dial: %s\n", err)
+
+			for {
+				b := make([]byte, 2048)
+				_, err := cn.Read(b)
+				if err != nil {
+					panic(err)
+				}
+			}
+		}()
 		cl2 := <-x
 		fmt.Println("done")
 

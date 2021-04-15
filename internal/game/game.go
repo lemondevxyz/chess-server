@@ -178,9 +178,11 @@ func (g *Game) Board() *board.Board {
 // Close closes the game, and cleans up the clients
 func (g *Game) close() {
 	do := func(cl *Client) {
-		cl.mtx.Lock()
-		cl.g = nil
-		cl.mtx.Unlock()
+		if cl.g != nil {
+			cl.mtx.Lock()
+			cl.g = nil
+			cl.mtx.Unlock()
+		}
 	}
 
 	c1 := g.cs[true]

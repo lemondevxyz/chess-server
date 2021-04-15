@@ -315,8 +315,9 @@ func TestCommandDone(t *testing.T) {
 
 	defer resetPipe()
 
-	cl1.LeaveGame()
-	cl2.LeaveGame()
+	go cl1.LeaveGame()
+	x := <-clientRead(rd2)
+	t.Log(string(x))
 
 	var err error
 	gGame, err = NewGame(cl1, cl2)

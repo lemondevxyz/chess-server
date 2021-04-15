@@ -15,7 +15,8 @@ import (
 var _inviteCode = ""
 
 func TestInviteHandler(t *testing.T) {
-	us1.cl.LeaveGame()
+	go us1.cl.LeaveGame()
+	<-read(rd2)
 	//us2.cl.LeaveGame()
 
 	x := order.InviteModel{
