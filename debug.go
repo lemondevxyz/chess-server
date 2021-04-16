@@ -112,13 +112,13 @@ func debugCheckmate(cl1, cl2 *game.Client) error {
 func debugPromotion(cl1, cl2 *game.Client) error {
 	list := []order.MoveModel{
 		{17, board.Point{1, 4}},
-		{14, board.Point{6, 3}},
+		{15, board.Point{7, 3}},
 		{17, board.Point{1, 3}},
-		{14, board.Point{6, 4}},
+		{15, board.Point{7, 4}},
 		{17, board.Point{1, 2}},
-		{14, board.Point{6, 5}},
+		{15, board.Point{7, 5}},
 		{17, board.Point{0, 1}},
-		{14, board.Point{5, 6}},
+		{15, board.Point{6, 6}},
 	}
 
 	return doMove(cl1, cl2, list)

@@ -78,6 +78,11 @@ func (c *Client) inPromotion() bool {
 			return true
 		}
 
+		if pawn.Kind != board.Pawn {
+			// in case it was promoted
+			continue
+		}
+
 		if int(pawn.Pos.Y) == board.EighthRank(c.p1) {
 			return true
 		}
