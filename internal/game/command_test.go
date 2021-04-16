@@ -34,8 +34,8 @@ func TestCommandMove(t *testing.T) {
 
 	do := func(cl *Client, rd *io.PipeReader, id int8, dst board.Point) error {
 		body, err := json.Marshal(order.MoveModel{
-			ID:  id,
-			Dst: dst,
+			ID:  &id,
+			Dst: &dst,
 		})
 
 		if err != nil {
@@ -224,9 +224,11 @@ func TestCommandCastling(t *testing.T) {
 			}
 		}
 
+		// thanks golang
+		p1, p2 := &rook, &king
 		cast := order.CastlingModel{
-			Src: rook,
-			Dst: king,
+			Src: p1,
+			Dst: p2,
 		}
 
 		body, err := json.Marshal(cast)
@@ -297,17 +299,25 @@ func TestCommandCastling(t *testing.T) {
 	rks := board.GetRooks(cl1.p1)
 
 	do(false, rks[1], king, cl1)
+	t.Log("aft 1")
 	do(false, rks[0], king, cl1)
+	t.Log("aft 2")
 	do(false, king, rks[0], cl1)
+	t.Log("aft 3")
 	do(false, king, rks[1], cl1)
+	t.Log("aft 4")
 
 	king = board.GetKing(cl2.p1)
 	rks = board.GetRooks(cl2.p1)
 
 	do(true, rks[1], king, cl2)
+	t.Log("aft 5")
 	do(true, rks[0], king, cl2)
+	t.Log("aft 6")
 	do(true, king, rks[0], cl2)
+	t.Log("aft 7")
 	do(true, king, rks[1], cl2)
+	t.Log("aft 8")
 
 }
 

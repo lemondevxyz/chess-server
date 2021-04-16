@@ -53,9 +53,11 @@ func TestCommandRequest(t *testing.T) {
 	<-read(rd1)
 	<-read(rd2)
 
+	id := int8(17)
+	dst := board.Point{1, 4}
 	x := order.MoveModel{
-		ID:  17, // {1, 6}
-		Dst: board.Point{1, 4},
+		ID:  &id, // {1, 6}
+		Dst: &dst,
 	}
 
 	byt, err := json.Marshal(x)

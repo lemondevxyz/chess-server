@@ -24,8 +24,8 @@ type GameModel struct {
 
 // [O]
 type MoveModel struct {
-	ID  int8        `json:"id" validate:"required"`
-	Dst board.Point `json:"dst" validate:"required"`
+	ID  *int8        `json:"id" validate:"required"`
+	Dst *board.Point `json:"dst" validate:"required"`
 }
 
 // [O] sent as response to http
@@ -53,8 +53,8 @@ type PromotionModel PromoteModel /*struct {
 
 // [O]
 type CastlingModel struct {
-	Src int `json:"src" validate:"required"`
-	Dst int `json:"dst" validate:"required"`
+	Src *int `json:"src" validate:"required"`
+	Dst *int `json:"dst" validate:"required"`
 }
 
 // [U]

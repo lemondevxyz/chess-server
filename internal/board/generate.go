@@ -6,8 +6,8 @@ import (
 )
 
 type Point struct {
-	X int8 `json:"x"`
-	Y int8 `json:"y"`
+	X int8 `json:"x" validate:"required"`
+	Y int8 `json:"y" validate:"required"`
 }
 
 func (p Point) String() string {

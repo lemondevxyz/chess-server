@@ -49,9 +49,11 @@ func TestTurns(t *testing.T) {
 
 	cherr := make(chan error)
 	go func() {
+		id := int8(23)
+		dst := board.Point{7, 4}
 		body, err := json.Marshal(order.MoveModel{
-			ID:  23,
-			Dst: board.Point{7, 4},
+			ID:  &id,
+			Dst: &dst,
 		})
 
 		if err != nil {
@@ -138,9 +140,10 @@ func TestGameDone(t *testing.T) {
 	doMove := func(id int8, dst board.Point) {
 		cl := gGame.cs[gGame.turn]
 
+		p1, p2 := &id, &dst
 		x, err := json.Marshal(order.MoveModel{
-			ID:  id,
-			Dst: dst,
+			ID:  p1,
+			Dst: p2,
 		})
 		if err != nil {
 			t.Fatalf("json.Marshal: %s", err)
