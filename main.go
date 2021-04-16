@@ -54,6 +54,8 @@ func debug_game() {
 			err = debugCastling(cl1.Client(), cl2.Client())
 		case "checkmate":
 			err = debugCheckmate(cl1.Client(), cl2.Client())
+		case "promotion":
+			err = debugPromotion(cl1.Client(), cl2.Client())
 		}
 
 		if err != nil {

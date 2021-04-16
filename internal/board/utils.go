@@ -119,6 +119,15 @@ func GetRangePawn(p1 bool) [8]int {
 	return arr
 }
 
+// EighthRank returns value of y whenever pawn needs to promote.
+func EighthRank(p1 bool) int {
+	if p1 {
+		return 7
+	} else {
+		return 0
+	}
+}
+
 // BelongsTo returns true if the id belongs the player number
 func BelongsTo(id int8, p1 bool) bool {
 	if p1 {

@@ -70,3 +70,18 @@ func (c *Client) LeaveGame() {
 func (c *Client) P1() bool {
 	return c.p1
 }
+
+func (c *Client) inPromotion() bool {
+	for _, v := range board.GetRangePawn(c.p1) {
+		pawn, err := c.g.b.GetByIndex(v)
+		if err != nil {
+			return true
+		}
+
+		if int(pawn.Pos.Y) == board.EighthRank(c.p1) {
+			return true
+		}
+	}
+
+	return false
+}

@@ -23,6 +23,10 @@ func init() {
 				return ErrIllegalTurn
 			}
 
+			if c.inPromotion() {
+				return ErrInPromotion
+			}
+
 			s := &order.MoveModel{}
 
 			err := json.Unmarshal(o.Data, s)
@@ -113,6 +117,10 @@ func init() {
 			}
 			if !c.g.canCastle[c.p1] {
 				return ErrIllegalCastling
+			}
+
+			if c.inPromotion() {
+				return ErrInPromotion
 			}
 
 			cast := order.CastlingModel{}

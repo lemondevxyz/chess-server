@@ -12,6 +12,7 @@ var (
 	ErrIllegalMove      = errors.New("illegal move")
 	ErrIllegalPromotion = errors.New("illegal promotion")
 	ErrIllegalCastling  = errors.New("illegal castling")
+	ErrInPromotion      = errors.New("in promotion, finish promotion then do this action")
 	ErrUpdateNil        = errors.New("update is nil")
 	ErrUpdateTimeout    = errors.New("update write timeout")
 	ErrUpdateParameter  = errors.New("update parameter is invalid")
