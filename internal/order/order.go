@@ -6,8 +6,8 @@ import "encoding/json"
 // Each order is described as either an Update[U], a Command[C] or Both[O].
 
 type Order struct {
-	ID   uint8           `json:"id"`
-	Data json.RawMessage `json:"data"`
+	ID   uint8           `json:"id" validate:"required"`
+	Data json.RawMessage `json:"data" validate:"required"`
 	// Parameter primarily used in game.
 	Parameter interface{} `json:"-"`
 }

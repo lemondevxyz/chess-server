@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/go-playground/validator"
 	"github.com/toms1441/chess-server/internal/board"
 	"github.com/toms1441/chess-server/internal/order"
 )
@@ -14,6 +15,7 @@ import (
 type CommandCallback func(c *Client, o order.Order) error
 
 var cbs map[uint8]CommandCallback
+var validate = validator.New()
 
 func init() {
 	cbs = map[uint8]CommandCallback{
@@ -32,7 +34,12 @@ func init() {
 			err := json.Unmarshal(o.Data, s)
 			// unmarshal the order
 			if err != nil {
-				return err
+				return fmt.Errorf("json.Unmarshal: %w", err)
+			}
+
+			err = validate.Struct(s)
+			if err != nil {
+				return fmt.Errorf("validation: %w", err)
 			}
 
 			if !board.BelongsTo(s.ID, c.p1) {
@@ -81,10 +88,15 @@ func init() {
 			g := c.g
 			s := &order.PromoteModel{}
 
-			// unmarshal the order
 			err := json.Unmarshal(o.Data, s)
+			// unmarshal the order
 			if err != nil {
-				return err
+				return fmt.Errorf("json.Unmarshal: %w", err)
+			}
+
+			err = validate.Struct(s)
+			if err != nil {
+				return fmt.Errorf("validation: %w", err)
 			}
 
 			pec, err := g.b.GetByIndex(s.ID)
@@ -94,7 +106,7 @@ func init() {
 			if pec.Kind != board.Pawn {
 				return ErrIllegalPromotion
 			}
-			if !(s.Kind == board.Bishop || s.Kind == board.Knight || s.Kind == board.Rook || s.Kind == board.Queen) {
+			if s.Kind != board.Bishop && s.Kind != board.Knight && s.Kind != board.Rook && s.Kind != board.Queen {
 				// only allow [bishop, knight, rook, queen]
 				return ErrIllegalPromotion
 			}
@@ -129,8 +141,14 @@ func init() {
 
 			cast := order.CastlingModel{}
 			err := json.Unmarshal(o.Data, &cast)
+			// unmarshal the order
 			if err != nil {
-				return err
+				return fmt.Errorf("json.Unmarshal: %w", err)
+			}
+
+			err = validate.Struct(cast)
+			if err != nil {
+				return fmt.Errorf("validation: %w", err)
 			}
 
 			kingid := board.GetKing(c.p1)

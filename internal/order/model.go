@@ -12,7 +12,7 @@ type CredentialsModel struct {
 
 // [O]
 type InviteModel struct {
-	ID string `json:"id"`
+	ID string `json:"id" validate:"required"`
 }
 
 // [U]
@@ -24,14 +24,14 @@ type GameModel struct {
 
 // [O]
 type MoveModel struct {
-	ID  int8        `json:"id"`
-	Dst board.Point `json:"dst"`
+	ID  int8        `json:"id" validate:"required"`
+	Dst board.Point `json:"dst" validate:"required"`
 }
 
 // [O] sent as response to http
 type PossibleModel struct {
-	ID     *int8         `json:"id,omitempty"`     // [C]
-	Points *board.Points `json:"points,omitempty"` // [U]
+	ID     *int8         `json:"id,omitempty" validate:"required"` // [C]
+	Points *board.Points `json:"points,omitempty"`                 // [U]
 }
 
 // [U]
@@ -41,8 +41,8 @@ type TurnModel struct {
 
 // [O]
 type PromoteModel struct {
-	ID   int   `json:"id"`
-	Kind uint8 `json:"kind"`
+	ID   int   `json:"id" validate:"required"`
+	Kind uint8 `json:"kind" validiate:"required"`
 }
 
 // [U]
@@ -53,8 +53,8 @@ type PromotionModel PromoteModel /*struct {
 
 // [O]
 type CastlingModel struct {
-	Src int `json:"src"`
-	Dst int `json:"dst"`
+	Src int `json:"src" validate:"required"`
+	Dst int `json:"dst" validate:"required"`
 }
 
 // [U]
@@ -62,5 +62,5 @@ type CheckmateModel TurnModel
 
 // [O]
 type DoneModel struct {
-	P1 bool `json:"p1"`
+	P1 bool `json:"p1" validate:"required"`
 }
