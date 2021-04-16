@@ -94,14 +94,18 @@ func init() {
 			if pec.Kind != board.Pawn {
 				return ErrIllegalPromotion
 			}
+			if !(s.Kind == board.Bishop || s.Kind == board.Knight || s.Kind == board.Rook || s.Kind == board.Queen) {
+				// only allow [bishop, knight, rook, queen]
+				return ErrIllegalPromotion
+			}
 
-			pec.Kind = s.Type
+			pec.Kind = s.Kind
 
 			err = g.UpdateAll(order.Order{
 				ID: order.Promotion,
 				Parameter: order.PromotionModel{
 					ID:   s.ID,
-					Type: s.Type,
+					Kind: s.Kind,
 				},
 			})
 			if err != nil {

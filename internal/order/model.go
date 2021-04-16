@@ -42,7 +42,7 @@ type TurnModel struct {
 // [O]
 type PromoteModel struct {
 	ID   int   `json:"id"`
-	Type uint8 `json:"type"`
+	Kind uint8 `json:"kind"`
 }
 
 // [U]

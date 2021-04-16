@@ -160,7 +160,7 @@ func TestCommandPromotion(t *testing.T) {
 			t.Fatalf("promote.ID != ID : %d != %d", promote.ID, id)
 		}
 
-		promote.Type = board.Queen
+		promote.Kind = board.Queen
 		body, err := json.Marshal(promote)
 		if err != nil {
 			t.Fatalf("json.Marshal: %s", err.Error())
