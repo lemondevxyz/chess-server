@@ -42,11 +42,11 @@ func init() {
 				return fmt.Errorf("validation: %w", err)
 			}
 
-			if !board.BelongsTo(*s.ID, c.p1) {
+			if !board.BelongsTo(s.ID, c.p1) {
 				return ErrIllegalMove
 			}
 
-			pec, err := g.b.GetByIndex(int(*s.ID))
+			pec, err := g.b.GetByIndex(int(s.ID))
 			// check that piece is valid
 			if err != nil || !pec.Valid() {
 				return ErrPieceNil
@@ -58,7 +58,7 @@ func init() {
 			}
 
 			// do the order
-			ret := g.b.Move(int(*s.ID), *s.Dst)
+			ret := g.b.Move(int(s.ID), s.Dst)
 			if ret == false {
 				return ErrIllegalMove
 			}
@@ -156,7 +156,7 @@ func init() {
 
 			rid := board.GetRooks(c.p1)
 			r1, r2 := rid[0], rid[1]
-			src, dst := *cast.Src, *cast.Dst
+			src, dst := cast.Src, cast.Dst
 			if (kingid != src && kingid != dst) || src != r1 && dst != r1 && src != r2 && dst != r2 {
 				fmt.Println("debug 3")
 				return ErrIllegalCastling
@@ -204,8 +204,8 @@ func init() {
 			}
 
 			body, err := json.Marshal(order.CastlingModel{
-				Src: &kingid,
-				Dst: &rookid,
+				Src: kingid,
+				Dst: rookid,
 			})
 			if err != nil {
 				return err

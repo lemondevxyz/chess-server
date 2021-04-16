@@ -26,10 +26,13 @@ func doMove(cl1, cl2 *game.Client, list []moveModel) error {
 		id := &v.id
 		dst := &v.dst
 
-		body, err := json.Marshal(order.MoveModel{
+		x := &order.MoveModel{
 			ID:  id,
 			Dst: dst,
-		})
+		}
+		fmt.Println(x.Dst)
+
+		body, err := json.Marshal(x)
 		if err != nil {
 			return fmt.Errorf("body: %s\nerror: %s\nindex: %d", string(body), err.Error(), k)
 		}

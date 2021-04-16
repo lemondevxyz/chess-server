@@ -56,8 +56,8 @@ func TestCommandRequest(t *testing.T) {
 	id := int8(17)
 	dst := board.Point{1, 4}
 	x := order.MoveModel{
-		ID:  &id, // {1, 6}
-		Dst: &dst,
+		ID:  id, // {1, 6}
+		Dst: dst,
 	}
 
 	byt, err := json.Marshal(x)
@@ -127,7 +127,7 @@ func TestPossibleRequest(t *testing.T) {
 
 	id := int8(15)
 	possib := order.PossibleModel{
-		ID: &id,
+		ID: id,
 	}
 
 	byt, err := json.Marshal(possib)

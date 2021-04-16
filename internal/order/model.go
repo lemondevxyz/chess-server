@@ -24,13 +24,13 @@ type GameModel struct {
 
 // [O]
 type MoveModel struct {
-	ID  *int8        `json:"id" validate:"required"`
-	Dst *board.Point `json:"dst" validate:"required"`
+	ID  int8        `json:"id"`
+	Dst board.Point `json:"dst"`
 }
 
 // [O] sent as response to http
 type PossibleModel struct {
-	ID     *int8         `json:"id,omitempty" validate:"required"` // [C]
+	ID     int8          `json:"id,omitempty" validate:"required"` // [C]
 	Points *board.Points `json:"points,omitempty"`                 // [U]
 }
 
@@ -41,8 +41,8 @@ type TurnModel struct {
 
 // [O]
 type PromoteModel struct {
-	ID   int   `json:"id" validate:"required"`
-	Kind uint8 `json:"kind" validiate:"required"`
+	ID   int   `json:"id"`
+	Kind uint8 `json:"kind"`
 }
 
 // [U]
@@ -53,8 +53,8 @@ type PromotionModel PromoteModel /*struct {
 
 // [O]
 type CastlingModel struct {
-	Src *int `json:"src" validate:"required"`
-	Dst *int `json:"dst" validate:"required"`
+	Src int `json:"src"`
+	Dst int `json:"dst"`
 }
 
 // [U]

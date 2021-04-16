@@ -69,19 +69,14 @@ func PossibHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if possib.ID == nil {
-		RespondError(w, http.StatusBadRequest, fmt.Errorf("src is missing"))
-		return
-	}
-
-	if !board.BelongsTo(*possib.ID, cl.P1()) {
+	if !board.BelongsTo(possib.ID, cl.P1()) {
 		RespondError(w, http.StatusUnauthorized, fmt.Errorf("piece doesn't belong to you"))
 		return
 	}
 
 	brd := gm.Board()
 
-	points, _ := brd.Possib(int(*possib.ID))
+	points, _ := brd.Possib(int(possib.ID))
 
 	possib = order.PossibleModel{}
 	possib.Points = &points
