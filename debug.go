@@ -14,25 +14,11 @@ var debug = "promotion"
 
 const p1 = true
 
-type moveModel struct {
-	id  int8
-	dst board.Point
-}
-
-func doMove(cl1, cl2 *game.Client, list []moveModel) error {
+func doMove(cl1, cl2 *game.Client, list []order.MoveModel) error {
 	p1 := true
 
 	for k, v := range list {
-		id := &v.id
-		dst := &v.dst
-
-		x := &order.MoveModel{
-			ID:  id,
-			Dst: dst,
-		}
-		fmt.Println(x.Dst)
-
-		body, err := json.Marshal(x)
+		body, err := json.Marshal(v)
 		if err != nil {
 			return fmt.Errorf("body: %s\nerror: %s\nindex: %d", string(body), err.Error(), k)
 		}
@@ -60,7 +46,7 @@ func doMove(cl1, cl2 *game.Client, list []moveModel) error {
 
 // where c1 is p1
 func debugCastling(cl1, cl2 *game.Client) (err error) {
-	list := []moveModel{
+	list := []order.MoveModel{
 		// pawns
 		{16, board.Point{0, 4}},
 		{8, board.Point{0, 3}},
@@ -94,25 +80,22 @@ func debugCastling(cl1, cl2 *game.Client) (err error) {
 	}
 	// const
 	if !p1 {
-		list = append(list, moveModel{
-			id:  27,
-			dst: board.Point{5, 6},
-		})
+		list = append(list, order.MoveModel{27, board.Point{5, 6}})
 	}
 
 	return doMove(cl1, cl2, list)
 }
 
 func debugCheckmate(cl1, cl2 *game.Client) error {
-	var list []moveModel
+	var list []order.MoveModel
 	if !p1 {
-		list = []moveModel{
+		list = []order.MoveModel{
 			{21, board.Point{5, 5}},
 			{12, board.Point{4, 3}},
 			{22, board.Point{6, 4}},
 		}
 	} else {
-		list = []moveModel{
+		list = []order.MoveModel{
 			{20, board.Point{4, 4}},
 			{13, board.Point{5, 3}},
 			{30, board.Point{7, 5}},
@@ -124,7 +107,7 @@ func debugCheckmate(cl1, cl2 *game.Client) error {
 }
 
 func debugPromotion(cl1, cl2 *game.Client) error {
-	list := []moveModel{
+	list := []order.MoveModel{
 		{17, board.Point{1, 4}},
 		{15, board.Point{7, 3}},
 		{17, board.Point{1, 3}},
