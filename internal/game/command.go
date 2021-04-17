@@ -39,7 +39,7 @@ func init() {
 				return ErrIllegalMove
 			}
 
-			pec, err := g.b.GetByIndex(int(s.ID))
+			pec, err := g.b.GetByIndex(s.ID)
 			// check that piece is valid
 			if err != nil || !pec.Valid() {
 				return ErrPieceNil
@@ -51,7 +51,7 @@ func init() {
 			}
 
 			// do the order
-			ret := g.b.Move(int(s.ID), s.Dst)
+			ret := g.b.Move(s.ID, s.Dst)
 			if ret == false {
 				return ErrIllegalMove
 			}
@@ -95,7 +95,7 @@ func init() {
 			if err != nil {
 				return board.ErrEmptyPiece
 			}
-			if pec.Kind != board.Pawn || int(pec.Pos.Y) != board.GetEighthRank(c.p1) {
+			if pec.Kind != board.Pawn || pec.Pos.Y != board.GetEighthRank(c.p1) {
 				return ErrIllegalPromotion
 			}
 
@@ -144,7 +144,7 @@ func init() {
 			}
 
 			kingid := board.GetKing(c.p1)
-			rookid := 0
+			rookid := int8(0)
 
 			rid := board.GetRooks(c.p1)
 			r1, r2 := rid[0], rid[1]

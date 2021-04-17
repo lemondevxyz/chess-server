@@ -46,7 +46,7 @@ func NewGame(cl1, cl2 *Client) (*Game, error) {
 
 	g.b = board.NewBoard()
 
-	g.b.Listen(func(id int, p board.Piece, src board.Point, dst board.Point) {
+	g.b.Listen(func(id int8, p board.Piece, src board.Point, dst board.Point) {
 		if p.Kind == board.Pawn {
 			if dst.Y == 7 || dst.Y == 0 {
 				c := g.cs[p.P1]

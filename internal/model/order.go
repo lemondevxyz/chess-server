@@ -37,12 +37,9 @@ const (
 	// Promotion is sent whenever a player promotes it's pawn [U]
 	OrPromotion
 	// Castling is the act of switching the king and the rook's positions. This is only legal when the king and the rook haven't moved, and nothing is in between them. [O]
-	// Can be used as a command(or move instead), but it's required as an Update.
 	OrCastling
 	// Checkmate is sent whenever the king is in danger and needs to move.
 	OrCheckmate
-	// Message is sent/received whenver a player sends/receives a message. Deprecated
-	// Message
 	// Done is sent whenever a game ends, or when the player wants to leave the game. [O]
 	OrDone
 )
@@ -60,6 +57,8 @@ type InviteOrder struct {
 
 // [U]
 type WatchableOrder struct {
+	P1    Profile      `json:"p1"`
+	P2    Profile      `json:"p2"`
 	Board *board.Board `json:"board"`
 }
 
@@ -89,20 +88,17 @@ type TurnOrder struct {
 
 // [O]
 type PromoteOrder struct {
-	ID   int   `json:"id"`
+	ID   int8  `json:"id"`
 	Kind uint8 `json:"kind"`
 }
 
 // [U]
-type PromotionOrder PromoteOrder /*struct {
-	Type uint8       `json:"type"`
-	Dst  board.Point `json:"dst"`
-}*/
+type PromotionOrder PromoteOrder
 
 // [O]
 type CastlingOrder struct {
-	Src int `json:"src"`
-	Dst int `json:"dst"`
+	Src int8 `json:"src"`
+	Dst int8 `json:"dst"`
 }
 
 // [U]

@@ -76,7 +76,7 @@ func PossibHandler(w http.ResponseWriter, r *http.Request) {
 
 	brd := gm.Board()
 
-	points, _ := brd.Possib(int(possib.ID))
+	points, _ := brd.Possib(possib.ID)
 
 	possib = model.PossibleOrder{}
 	possib.Points = &points

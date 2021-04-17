@@ -214,7 +214,7 @@ func TestCommandCastling(t *testing.T) {
 	defer resetPipe()
 
 	id := model.OrCastling
-	do := func(other bool, rook int, king int, cl *Client) {
+	do := func(other bool, rook int8, king int8, cl *Client) {
 		resetPipe()
 		cl1.g, cl2.g = nil, nil
 		gGame, _ = NewGame(cl1, cl2)

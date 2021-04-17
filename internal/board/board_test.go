@@ -74,7 +74,7 @@ func TestBoardListen(t *testing.T) {
 
 	x, y := false, false
 	// func(p Piece, src Point, dst Point, ret bool)
-	b.Listen(func(_ int, _ Piece, _, _ Point) {
+	b.Listen(func(_ int8, _ Piece, _, _ Point) {
 		t.Log("ay")
 		ok <- true
 		t.Log("ay again")
@@ -122,9 +122,9 @@ func TestBoardMovePawn(t *testing.T) {
 
 	// dark 1
 	// light 1
-	d1 := 11
-	l1 := 20
-	l2 := 21
+	d1 := int8(11)
+	l1 := int8(20)
+	l2 := int8(21)
 
 	t.Log(b.data[d1], b.data[l1], b.data[l2])
 
@@ -143,7 +143,7 @@ func TestBoardMovePawn(t *testing.T) {
 		t.Fatalf("forward pawn should kill other pawn")
 	}
 
-	d2 := 12
+	d2 := int8(12)
 	b.Move(d2, Point{3, 4})
 	if b.Move(d2, Point{4, 4}) {
 		t.Fatalf("pawn cannot takeout pawn in front of it")
@@ -157,8 +157,8 @@ func TestBoardMoveKill(t *testing.T) {
 
 	b := NewBoard()
 	cs := []struct {
-		nm1 int
-		nm2 int
+		nm1 int8
+		nm2 int8
 		src Point
 		dst Point
 		t   uint8
@@ -247,7 +247,7 @@ func TestBoardMoveKill(t *testing.T) {
 // check if some pieces can move over pieces that are in the way...
 // it's a tiny bit overkill to test every piece type, but reliablity is worth every price
 func TestBoardMoveInTheWay(t *testing.T) {
-	generic := func(id int) {
+	generic := func(id int8) {
 		brd := NewBoard()
 		pec, _ := brd.GetByIndex(id)
 
@@ -262,7 +262,7 @@ func TestBoardMoveInTheWay(t *testing.T) {
 		}
 	}
 
-	for i := 0; i < 16; i++ {
+	for i := int8(0); i < 16; i++ {
 		x := i
 		if i == 1 || i == 6 || i == 9 || i == 14 { // skip over knights
 			continue
@@ -276,7 +276,7 @@ func TestBoardMoveInTheWay(t *testing.T) {
 
 	b := NewBoard()
 
-	id := 25
+	id := int8(25)
 	pec, _ := b.GetByIndex(id)
 
 	for _, v := range pec.Possib() {
@@ -415,13 +415,13 @@ func TestBoardPieceBugInTheWay(t *testing.T) {
 func TestBoardCheckmate(t *testing.T) {
 	// testing top 10 fast checkmates: https://www.chess.com/article/view/fastest-chess-checkmates
 	// black always wins
-	empty := func(brd *Board, id int) {
+	empty := func(brd *Board, id int8) {
 		if brd == nil {
 			t.Fatalf("board is nil")
 		}
 		brd.Set(id, Point{-1, -1})
 	}
-	try := func(brd *Board, id int, pnt Point) {
+	try := func(brd *Board, id int8, pnt Point) {
 		pec, err := brd.GetByIndex(id)
 		if err != nil {
 			t.Fatalf("no piece at %d", id)

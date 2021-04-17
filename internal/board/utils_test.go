@@ -30,7 +30,7 @@ func TestGetQueen(t *testing.T) {
 	}
 }
 
-func verify_by_2int(t *testing.T, p1 bool, w1, w2 int, fn func(bool) [2]int) {
+func verify_by_2int(t *testing.T, p1 bool, w1, w2 int8, fn func(bool) [2]int8) {
 	vals := fn(p1)
 	h1, h2 := vals[0], vals[1]
 
@@ -41,37 +41,28 @@ func verify_by_2int(t *testing.T, p1 bool, w1, w2 int, fn func(bool) [2]int) {
 }
 
 func TestGetBishops(t *testing.T) {
-	r1, r2 := 26, 29
-	verify_by_2int(t, true, r1, r2, GetBishops)
-
-	r1, r2 = 2, 5
-	verify_by_2int(t, false, r1, r2, GetBishops)
+	verify_by_2int(t, true, 26, 29, GetBishops)
+	verify_by_2int(t, false, 2, 5, GetBishops)
 }
 
 func TestGetKnights(t *testing.T) {
-	r1, r2 := 25, 30
-	verify_by_2int(t, true, r1, r2, GetKnights)
-
-	r1, r2 = 1, 6
-	verify_by_2int(t, false, r1, r2, GetKnights)
+	verify_by_2int(t, true, 25, 30, GetKnights)
+	verify_by_2int(t, false, 1, 6, GetKnights)
 }
 
 func TestGetRooks(t *testing.T) {
-	r1, r2 := 24, 31
-	verify_by_2int(t, true, r1, r2, GetRooks)
-
-	r1, r2 = 0, 7
-	verify_by_2int(t, false, r1, r2, GetRooks)
+	verify_by_2int(t, true, 24, 31, GetRooks)
+	verify_by_2int(t, false, 0, 7, GetRooks)
 }
 
 func TestGetRange(t *testing.T) {
-	ourarr := []int{}
-	for i := 16; i < 32; i++ {
+	ourarr := []int8{}
+	for i := int8(16); i < 32; i++ {
 		ourarr = append(ourarr, i)
 	}
 
-	theirarr := []int{}
-	for i := 0; i < 16; i++ {
+	theirarr := []int8{}
+	for i := int8(0); i < 16; i++ {
 		theirarr = append(theirarr, i)
 	}
 

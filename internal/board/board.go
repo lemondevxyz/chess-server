@@ -16,7 +16,7 @@ import (
 )
 
 // MoveEvent is a function called post-movement of a piece.
-type MoveEvent func(id int, pec Piece, src Point, dst Point)
+type MoveEvent func(id int8, pec Piece, src Point, dst Point)
 
 type Board struct {
 	// data [8][8]*Piece
@@ -117,7 +117,7 @@ func (brd *Board) Listen(callback MoveEvent) {
 }
 
 // Set sets a piece's position in the board without game-logic interfering.
-func (brd *Board) Set(id int, pos Point) error {
+func (brd *Board) Set(id int8, pos Point) error {
 	if !IsIDValid(int8(id)) {
 		return ErrInvalidID
 	}
@@ -138,7 +138,7 @@ func (brd *Board) Set(id int, pos Point) error {
 }
 
 // SetKind sets a piece's kind
-func (brd *Board) SetKind(id int, kind uint8) error {
+func (brd *Board) SetKind(id int8, kind uint8) error {
 	if !IsIDValid(int8(id)) {
 		return ErrInvalidID
 	}
@@ -149,7 +149,7 @@ func (brd *Board) SetKind(id int, kind uint8) error {
 }
 
 // Get returns a piece and it's index. Or otherwise -1, an empty piece and an error.
-func (brd Board) Get(src Point) (int, Piece, error) {
+func (brd Board) Get(src Point) (int8, Piece, error) {
 	if !src.Valid() {
 		return -1, Piece{}, ErrInvalidPoint
 	}
@@ -157,26 +157,26 @@ func (brd Board) Get(src Point) (int, Piece, error) {
 	for k, v := range brd.data {
 		if v.Pos.Equal(src) {
 			if !v.Valid() {
-				return k, v, ErrInvalidPoint
+				return int8(k), v, ErrInvalidPoint
 			}
 
-			return k, v, nil
+			return int8(k), v, nil
 		}
 	}
 
 	return -1, Piece{}, ErrEmptyPiece
 }
 
-func (brd Board) GetByIndex(i int) (Piece, error) {
-	if i >= len(brd.data) {
+func (brd Board) GetByIndex(id int8) (Piece, error) {
+	if id >= int8(len(brd.data)) {
 		return Piece{}, ErrInvalidPoint
 	}
 
-	return brd.data[i], nil
+	return brd.data[id], nil
 }
 
 // Possib is the same as Piece.Possib, but with removal of illegal moves.
-func (brd Board) Possib(id int) (Points, error) {
+func (brd Board) Possib(id int8) (Points, error) {
 	pec, err := brd.GetByIndex(id)
 	if err != nil {
 		return nil, ErrEmptyPiece
@@ -465,48 +465,20 @@ func (brd Board) Checkmate(p1 bool) bool {
 }
 
 // i plan to replace this function by the Possib function...
-func (brd *Board) canMove(id int, dst Point) (valid bool) {
+func (brd *Board) canMove(id int8, dst Point) (valid bool) {
 	pec, err := brd.GetByIndex(id)
 	if err != nil || !pec.Valid() || dst.Equal(pec.Pos) {
 		valid = false
 		return
 	}
 
-	// can we legally go there, i.e is it in the possible combinations??
-	// so for example bishop cannot go horizontally
-	/*
-		_, cep, err := brd.Get(dst)
-		// is there a piece in the destination??
-		if cep.Valid() && err == nil {
-			// is the piece's an enemy
-			if pec.P1 != cep.P1 {
-				// is it not a pawn(cause pawns cannot enemy forward or backward of them)
-				if pec.Kind != Pawn {
-					ps, err := brd.Possib(id)
-					if err != nil {
-						valid = false
-					} else {
-						valid = ps.In(dst)
-					}
-				}
-			}
-		} else {
-			// no piece in the destination
-			ps, err := brd.Possib(id)
-			if err != nil {
-				valid = false
-			} else {
-				valid = ps.In(dst)
-			}
-		}
-	*/
-
 	ps, _ := brd.Possib(id)
 	return ps.In(dst)
 }
 
 // Move moves a piece from it's original position to the destination. Returns true if it did, or false if it didn't.
-func (brd *Board) Move(id int, dst Point) bool {
+// Move is difference from Set, cause Move checks for the validity of the Move, and if it's valid does it. Then it triggers MoveEvent
+func (brd *Board) Move(id int8, dst Point) bool {
 	pec, _ := brd.GetByIndex(id)
 	valid := brd.canMove(id, dst)
 
