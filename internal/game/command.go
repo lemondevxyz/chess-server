@@ -5,19 +5,19 @@ import (
 	"fmt"
 
 	"github.com/toms1441/chess-server/internal/board"
-	"github.com/toms1441/chess-server/internal/order"
+	"github.com/toms1441/chess-server/internal/model"
 )
 
 // Command is a communication structure sent from the client to the server.
 // Data needs to be encoded in JSON, and each command has it's own parameters. Defined in order/model.go
 
-type CommandCallback func(c *Client, o order.Order) error
+type CommandCallback func(c *Client, o model.Order) error
 
 var cbs map[uint8]CommandCallback
 
 func init() {
 	cbs = map[uint8]CommandCallback{
-		order.Move: func(c *Client, o order.Order) error {
+		model.OrMove: func(c *Client, o model.Order) error {
 			g := c.g
 			if !g.IsTurn(c) {
 				return ErrIllegalTurn
@@ -27,7 +27,7 @@ func init() {
 				return ErrInPromotion
 			}
 
-			s := &order.MoveModel{}
+			s := &model.MoveOrder{}
 
 			err := json.Unmarshal(o.Data, s)
 			// unmarshal the order
@@ -57,8 +57,8 @@ func init() {
 			}
 
 			// first off update about the move...
-			err = g.UpdateAll(order.Order{
-				ID:   order.Move,
+			err = g.UpdateAll(model.Order{
+				ID:   model.OrMove,
 				Data: o.Data,
 			})
 			if err != nil {
@@ -77,9 +77,9 @@ func init() {
 
 			return nil
 		},
-		order.Promote: func(c *Client, o order.Order) error {
+		model.OrPromote: func(c *Client, o model.Order) error {
 			g := c.g
-			s := &order.PromoteModel{}
+			s := &model.PromoteOrder{}
 
 			if !c.inPromotion() {
 				return ErrIllegalPromotion
@@ -110,9 +110,9 @@ func init() {
 				return err
 			}
 
-			err = g.UpdateAll(order.Order{
-				ID: order.Promotion,
-				Parameter: order.PromotionModel{
+			err = g.UpdateAll(model.Order{
+				ID: model.OrPromotion,
+				Parameter: model.PromotionOrder{
 					ID:   s.ID,
 					Kind: s.Kind,
 				},
@@ -124,7 +124,7 @@ func init() {
 			g.SwitchTurn()
 			return nil
 		},
-		order.Castling: func(c *Client, o order.Order) error {
+		model.OrCastling: func(c *Client, o model.Order) error {
 			if !c.g.IsTurn(c) {
 				return ErrIllegalTurn
 			}
@@ -136,7 +136,7 @@ func init() {
 				return ErrInPromotion
 			}
 
-			cast := order.CastlingModel{}
+			cast := model.CastlingOrder{}
 			err := json.Unmarshal(o.Data, &cast)
 			// unmarshal the order
 			if err != nil {
@@ -195,7 +195,7 @@ func init() {
 				brd.Set(kingid, board.Point{2, y})
 			}
 
-			body, err := json.Marshal(order.CastlingModel{
+			body, err := json.Marshal(model.CastlingOrder{
 				Src: kingid,
 				Dst: rookid,
 			})
@@ -203,8 +203,8 @@ func init() {
 				return err
 			}
 
-			err = c.g.UpdateAll(order.Order{
-				ID:   order.Castling,
+			err = c.g.UpdateAll(model.Order{
+				ID:   model.OrCastling,
 				Data: body,
 			})
 			if err != nil {
@@ -215,13 +215,13 @@ func init() {
 
 			return nil
 		},
-		order.Done: func(c *Client, o order.Order) error {
+		model.OrDone: func(c *Client, o model.Order) error {
 			oth := board.GetInversePlayer(c.p1)
 
 			c.g.done = true
 
-			return c.g.UpdateAll(order.Order{
-				ID:        order.Done,
+			return c.g.UpdateAll(model.Order{
+				ID:        model.OrDone,
 				Parameter: oth,
 			})
 		},

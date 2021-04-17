@@ -3,7 +3,7 @@ package rest
 import (
 	"net/http"
 
-	"github.com/toms1441/chess-server/internal/order"
+	"github.com/toms1441/chess-server/internal/model"
 )
 
 func InviteHandler(w http.ResponseWriter, r *http.Request) {
@@ -13,7 +13,7 @@ func InviteHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	inv := order.InviteModel{}
+	inv := model.InviteOrder{}
 	err = BindJSON(r, &inv)
 	if err != nil {
 		RespondError(w, http.StatusBadRequest, err)
@@ -36,7 +36,7 @@ func AcceptInviteHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	inv := order.InviteModel{}
+	inv := model.InviteOrder{}
 	err = BindJSON(r, &inv)
 	if err != nil {
 		RespondError(w, http.StatusBadRequest, err)

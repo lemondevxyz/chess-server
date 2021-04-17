@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/toms1441/chess-server/internal/board"
-	"github.com/toms1441/chess-server/internal/order"
+	"github.com/toms1441/chess-server/internal/model"
 )
 
 // Note: Future contributors, beware of io.Pipe freezing the entire test, wrapping Write operations around a goroutine would make the tests unpredictable.
@@ -72,7 +72,7 @@ func TestInPromotion(t *testing.T) {
 	<-clientRead(rd1)
 	<-clientRead(rd2)
 
-	list := []order.MoveModel{
+	list := []model.MoveOrder{
 		{17, board.Point{1, 4}},
 		{15, board.Point{7, 3}},
 		{17, board.Point{1, 3}},
@@ -91,8 +91,8 @@ func TestInPromotion(t *testing.T) {
 			t.Fatalf("json.Marshal: %s", err.Error())
 		}
 
-		ord := order.Order{
-			ID:   order.Move,
+		ord := model.Order{
+			ID:   model.OrMove,
 			Data: body,
 		}
 
@@ -128,7 +128,7 @@ func TestInPromotion(t *testing.T) {
 		t.Fatalf("in promotion does not work")
 	}
 
-	body, err := json.Marshal(order.PromoteModel{
+	body, err := json.Marshal(model.PromoteOrder{
 		ID:   17,
 		Kind: board.Queen,
 	})
@@ -139,8 +139,8 @@ func TestInPromotion(t *testing.T) {
 	go clientRead(rd1)
 	go clientRead(rd2)
 
-	err = cl1.Do(order.Order{
-		ID:   order.Promote,
+	err = cl1.Do(model.Order{
+		ID:   model.OrPromote,
 		Data: body,
 	})
 	t.Log(err)

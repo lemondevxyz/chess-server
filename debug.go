@@ -6,7 +6,7 @@ import (
 
 	"github.com/toms1441/chess-server/internal/board"
 	"github.com/toms1441/chess-server/internal/game"
-	"github.com/toms1441/chess-server/internal/order"
+	"github.com/toms1441/chess-server/internal/model"
 )
 
 //var debug = "yes"
@@ -14,7 +14,7 @@ var debug = "promotion"
 
 const p1 = false
 
-func doMove(cl1, cl2 *game.Client, list []order.MoveModel) error {
+func doMove(cl1, cl2 *game.Client, list []model.MoveOrder) error {
 	p1 := true
 
 	for k, v := range list {
@@ -23,16 +23,14 @@ func doMove(cl1, cl2 *game.Client, list []order.MoveModel) error {
 			return fmt.Errorf("body: %s\nerror: %s\nindex: %d", string(body), err.Error(), k)
 		}
 
+		o := model.Order{
+			ID:   model.OrMove,
+			Data: body,
+		}
 		if p1 {
-			err = cl1.Do(order.Order{
-				ID:   order.Move,
-				Data: body,
-			})
+			err = cl1.Do(o)
 		} else {
-			err = cl2.Do(order.Order{
-				ID:   order.Move,
-				Data: body,
-			})
+			err = cl2.Do(o)
 		}
 		if err != nil {
 			return fmt.Errorf("body: %s\nerror: %s\nindex: %d", string(body), err, k)
@@ -46,7 +44,7 @@ func doMove(cl1, cl2 *game.Client, list []order.MoveModel) error {
 
 // where c1 is p1
 func debugCastling(cl1, cl2 *game.Client) (err error) {
-	list := []order.MoveModel{
+	list := []model.MoveOrder{
 		// pawns
 		{16, board.Point{0, 4}},
 		{8, board.Point{0, 3}},
@@ -80,22 +78,22 @@ func debugCastling(cl1, cl2 *game.Client) (err error) {
 	}
 	// const
 	if !p1 {
-		list = append(list, order.MoveModel{27, board.Point{5, 6}})
+		list = append(list, model.MoveOrder{27, board.Point{5, 6}})
 	}
 
 	return doMove(cl1, cl2, list)
 }
 
 func debugCheckmate(cl1, cl2 *game.Client) error {
-	var list []order.MoveModel
+	var list []model.MoveOrder
 	if !p1 {
-		list = []order.MoveModel{
+		list = []model.MoveOrder{
 			{21, board.Point{5, 5}},
 			{12, board.Point{4, 3}},
 			{22, board.Point{6, 4}},
 		}
 	} else {
-		list = []order.MoveModel{
+		list = []model.MoveOrder{
 			{20, board.Point{4, 4}},
 			{13, board.Point{5, 3}},
 			{30, board.Point{7, 5}},
@@ -107,7 +105,7 @@ func debugCheckmate(cl1, cl2 *game.Client) error {
 }
 
 func debugPromotion(cl1, cl2 *game.Client) error {
-	list := []order.MoveModel{
+	list := []model.MoveOrder{
 		{17, board.Point{1, 4}},
 		{15, board.Point{7, 3}},
 		{17, board.Point{1, 3}},
@@ -118,7 +116,7 @@ func debugPromotion(cl1, cl2 *game.Client) error {
 		{15, board.Point{6, 6}},
 	}
 	if !p1 {
-		list = append(list, order.MoveModel{25, board.Point{0, 5}})
+		list = append(list, model.MoveOrder{25, board.Point{0, 5}})
 	}
 
 	return doMove(cl1, cl2, list)

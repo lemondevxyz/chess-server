@@ -11,11 +11,11 @@ import (
 	"github.com/kjk/betterguid"
 	"github.com/thanhpk/randstr"
 	"github.com/toms1441/chess-server/internal/game"
-	"github.com/toms1441/chess-server/internal/order"
+	"github.com/toms1441/chess-server/internal/model"
 )
 
 type User struct {
-	order.CredentialsModel
+	model.CredentialsOrder
 	invite map[string]*User
 	cl     *game.Client
 }
@@ -160,7 +160,7 @@ func (u *User) Invite(tok string, lifespan time.Duration) (string, error) {
 	}
 
 	id := randstr.String(4)
-	param := order.InviteModel{
+	param := model.InviteOrder{
 		ID: id,
 	}
 
@@ -171,8 +171,8 @@ func (u *User) Invite(tok string, lifespan time.Duration) (string, error) {
 
 	// u invited vs
 	vs.invite[id] = u
-	gu := order.Order{
-		ID:   order.Invite,
+	gu := model.Order{
+		ID:   model.OrInvite,
 		Data: body,
 	}
 	send, err := json.Marshal(gu)
@@ -216,30 +216,30 @@ func (u *User) AcceptInvite(tok string) error {
 		return fmt.Errorf("%s | %w", err.Error(), ErrInternal)
 	}
 
-	jsu, err := json.Marshal(order.GameModel{
+	jsu, err := json.Marshal(model.GameOrder{
 		P1:    u.Client().P1(),
 		Board: b,
 	})
 	if err != nil {
 		return cancel(err)
 	}
-	jsv, err := json.Marshal(order.GameModel{
+	jsv, err := json.Marshal(model.GameOrder{
 		P1:    vs.Client().P1(),
 		Board: b,
 	})
 	if err != nil {
 		return cancel(err)
 	}
-	data, err := json.Marshal(order.Order{
-		ID:   order.Game,
+	data, err := json.Marshal(model.Order{
+		ID:   model.OrGame,
 		Data: jsu,
 	})
 	if err != nil {
 		return cancel(err)
 	}
 	u.Client().W.Write(data)
-	data, err = json.Marshal(order.Order{
-		ID:   order.Game,
+	data, err = json.Marshal(model.Order{
+		ID:   model.OrGame,
 		Data: jsv,
 	})
 	if err != nil {

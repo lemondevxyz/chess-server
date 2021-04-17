@@ -3,28 +3,20 @@ package game
 import (
 	"encoding/json"
 
-	"github.com/toms1441/chess-server/internal/order"
+	"github.com/toms1441/chess-server/internal/model"
 )
 
 // Update is a communication structure from the server to the client, while Command is from the client to the server.
-/*
-type Update struct {
-	ID   uint8           `json:"id"`
-	Data json.RawMessage `json:"data"`
-	// used inside this package only
-	parameter interface{}
-}
-*/
 
 // UpdateCallback sets the data for the update, since some updates are quite repetitive.
-type UpdateCallback func(c *Client, u *order.Order) error
+type UpdateCallback func(c *Client, u *model.Order) error
 
 // Tests are bundled with command tests.
 
 // redundant updates go here
 // as well as verification for certain updates.
 var ubs = map[uint8]UpdateCallback{
-	order.Move: func(c *Client, u *order.Order) error {
+	model.OrMove: func(c *Client, u *model.Order) error {
 		x, ok := u.Parameter.([]byte)
 		if !ok {
 			return ErrUpdateParameter
@@ -33,8 +25,8 @@ var ubs = map[uint8]UpdateCallback{
 
 		return nil
 	},
-	order.Promote: func(c *Client, u *order.Order) error {
-		x, ok := u.Parameter.(order.PromoteModel)
+	model.OrPromote: func(c *Client, u *model.Order) error {
+		x, ok := u.Parameter.(model.PromoteOrder)
 		if !ok {
 			return ErrUpdateParameter
 		}
@@ -48,8 +40,8 @@ var ubs = map[uint8]UpdateCallback{
 
 		return nil
 	},
-	order.Promotion: func(c *Client, u *order.Order) error {
-		x, ok := u.Parameter.(order.PromotionModel)
+	model.OrPromotion: func(c *Client, u *model.Order) error {
+		x, ok := u.Parameter.(model.PromotionOrder)
 		if !ok {
 			return ErrUpdateParameter
 		}
@@ -62,13 +54,13 @@ var ubs = map[uint8]UpdateCallback{
 
 		return nil
 	},
-	order.Checkmate: func(c *Client, u *order.Order) error {
+	model.OrCheckmate: func(c *Client, u *model.Order) error {
 		x, ok := u.Parameter.(bool)
 		if !ok {
 			return ErrUpdateParameter
 		}
 
-		body, err := json.Marshal(order.CheckmateModel{
+		body, err := json.Marshal(model.CheckmateOrder{
 			P1: x,
 		})
 		if err != nil {
@@ -79,14 +71,14 @@ var ubs = map[uint8]UpdateCallback{
 		return nil
 	},
 	// lamo laziness
-	order.Done: func(c *Client, u *order.Order) error {
+	model.OrDone: func(c *Client, u *model.Order) error {
 		x, ok := u.Parameter.(bool)
 		if !ok {
 			return ErrUpdateParameter
 		}
 
 		var err error
-		u.Data, err = json.Marshal(order.DoneModel{
+		u.Data, err = json.Marshal(model.DoneOrder{
 			P1: x,
 		})
 		if err != nil {

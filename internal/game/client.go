@@ -5,7 +5,7 @@ import (
 	"sync"
 
 	"github.com/toms1441/chess-server/internal/board"
-	"github.com/toms1441/chess-server/internal/order"
+	"github.com/toms1441/chess-server/internal/model"
 )
 
 // Client is a struct used for the server to communicate to the client.
@@ -20,7 +20,7 @@ type Client struct {
 
 // Do executes a command. It automatically checks if the player is in a game, or if the command's ID is invalid.
 // Use of cbs[cmd.ID] is discouraged.
-func (c *Client) Do(cmd order.Order) error {
+func (c *Client) Do(cmd model.Order) error {
 	if c.g == nil {
 		return ErrGameNil
 	}
@@ -58,8 +58,8 @@ func (c *Client) LeaveGame() {
 	}
 
 	x := c.g.cs[board.GetInversePlayer(c.p1)]
-	g.Update(x, order.Order{
-		ID:        order.Done,
+	g.Update(x, model.Order{
+		ID:        model.OrDone,
 		Parameter: x.p1,
 	})
 

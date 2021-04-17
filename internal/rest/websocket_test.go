@@ -9,7 +9,7 @@ import (
 
 	"github.com/gobwas/ws"
 	"github.com/gobwas/ws/wsutil"
-	"github.com/toms1441/chess-server/internal/order"
+	"github.com/toms1441/chess-server/internal/model"
 )
 
 var (
@@ -84,13 +84,13 @@ func TestWsWrite(t *testing.T) {
 		t.Fatalf("wsutil.ReadServerText: %s", err.Error())
 	}
 
-	upd := order.Order{}
+	upd := model.Order{}
 	err = json.Unmarshal(b, &upd)
 	if err != nil {
 		t.Fatalf("json.Unmarshal: %s", err.Error())
 	}
 
-	u := order.CredentialsModel{}
+	u := model.CredentialsOrder{}
 	err = json.Unmarshal(upd.Data, &u)
 	if err != nil {
 		t.Fatalf("json.Unmarshal: %s", err.Error())

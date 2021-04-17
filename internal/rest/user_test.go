@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/toms1441/chess-server/internal/game"
-	"github.com/toms1441/chess-server/internal/order"
+	"github.com/toms1441/chess-server/internal/model"
 )
 
 var (
@@ -105,7 +105,7 @@ func TestUserAcceptInvite(t *testing.T) {
 		close(ch)
 	}()
 
-	update := order.Order{}
+	update := model.Order{}
 	err = json.Unmarshal(<-read(rd2), &update)
 	t.Log()
 	if err != nil {
@@ -117,7 +117,7 @@ func TestUserAcceptInvite(t *testing.T) {
 		t.Fatalf("rd2.Read: %s", err.Error())
 	}
 
-	inv := order.InviteModel{}
+	inv := model.InviteOrder{}
 	json.Unmarshal(update.Data, &inv)
 	if err != nil {
 		t.Fatalf("json.Unmarshal: %s", err.Error())
@@ -137,25 +137,25 @@ func TestUserAcceptInvite(t *testing.T) {
 	}()
 
 	x := <-read(rd2)
-	o := order.Order{}
+	o := model.Order{}
 	err = json.Unmarshal(x, &o)
 	if err != nil {
 		t.Log(string(x))
 		t.Fatalf("json.Unmarshal: %s", err.Error())
 	}
-	gm2 := order.GameModel{}
+	gm2 := model.GameOrder{}
 	err = json.Unmarshal(o.Data, &gm2)
 	if err != nil {
 		t.Fatalf("json.Unmarshal: %s", err.Error())
 	}
 
 	x = <-read(rd1)
-	o = order.Order{}
+	o = model.Order{}
 	err = json.Unmarshal(x, &o)
 	if err != nil {
 		t.Fatalf("json.Unmarshal: %s", err.Error())
 	}
-	gm1 := order.GameModel{}
+	gm1 := model.GameOrder{}
 	err = json.Unmarshal(o.Data, &gm1)
 	if err != nil {
 		t.Fatalf("json.Unmarshal: %s", err.Error())

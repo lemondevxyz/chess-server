@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/toms1441/chess-server/internal/board"
-	"github.com/toms1441/chess-server/internal/order"
+	"github.com/toms1441/chess-server/internal/model"
 )
 
 var kingmap = map[int8]int8{
@@ -33,7 +33,7 @@ func TestCommandMove(t *testing.T) {
 	gGame.SwitchTurn()
 
 	do := func(cl *Client, rd *io.PipeReader, id int8, dst board.Point) error {
-		body, err := json.Marshal(order.MoveModel{
+		body, err := json.Marshal(model.MoveOrder{
 			ID:  id,
 			Dst: dst,
 		})
@@ -42,8 +42,8 @@ func TestCommandMove(t *testing.T) {
 			return fmt.Errorf("json.Marshal: %s", err.Error())
 		}
 
-		c := order.Order{
-			ID:   order.Move,
+		c := model.Order{
+			ID:   model.OrMove,
 			Data: body,
 		}
 
@@ -60,8 +60,8 @@ func TestCommandMove(t *testing.T) {
 		case <-time.After(time.Millisecond * 10):
 			return fmt.Errorf("timeout")
 		case body := <-clientRead(rd1):
-			x := &order.MoveModel{}
-			u := order.Order{}
+			x := &model.MoveOrder{}
+			u := model.Order{}
 			err = json.Unmarshal(body, &u)
 			if err != nil {
 				return fmt.Errorf("json.Unmarshal: %s", err.Error())
@@ -144,8 +144,8 @@ func TestCommandPromotion(t *testing.T) {
 		close(ch)
 	}()
 
-	getOrder := func(kind uint8) *order.Order {
-		promote := order.PromoteModel{
+	getOrder := func(kind uint8) *model.Order {
+		promote := model.PromoteOrder{
 			ID: id,
 		}
 		promote.Kind = kind
@@ -155,8 +155,8 @@ func TestCommandPromotion(t *testing.T) {
 			return nil
 		}
 
-		cmd := &order.Order{
-			ID:   order.Promote,
+		cmd := &model.Order{
+			ID:   model.OrPromote,
 			Data: body,
 		}
 		return cmd
@@ -166,11 +166,11 @@ func TestCommandPromotion(t *testing.T) {
 	case <-time.After(time.Millisecond * 100):
 		t.Fatalf("timeout")
 	case body := <-clientRead(rd1):
-		upd := &order.Order{}
+		upd := &model.Order{}
 		if err := json.Unmarshal(body, &upd); err != nil {
 			t.Fatalf("json.Unmarshal: %s", err.Error())
 		}
-		promote := &order.PromoteModel{}
+		promote := &model.PromoteOrder{}
 		if err := json.Unmarshal(upd.Data, &promote); err != nil {
 			t.Fatalf("json.Unmarshal: %s", err.Error())
 		}
@@ -213,7 +213,7 @@ func TestCommandCastling(t *testing.T) {
 
 	defer resetPipe()
 
-	id := order.Castling
+	id := model.OrCastling
 	do := func(other bool, rook int, king int, cl *Client) {
 		resetPipe()
 		cl1.g, cl2.g = nil, nil
@@ -243,7 +243,7 @@ func TestCommandCastling(t *testing.T) {
 		}
 
 		// thanks golang
-		cast := order.CastlingModel{
+		cast := model.CastlingOrder{
 			Src: rook,
 			Dst: king,
 		}
@@ -270,7 +270,7 @@ func TestCommandCastling(t *testing.T) {
 			t.Fatalf("board.GetByIndex(king): %s", err.Error())
 		}
 
-		err = cl.Do(order.Order{
+		err = cl.Do(model.Order{
 			ID:   id,
 			Data: body,
 		})
@@ -342,9 +342,8 @@ func TestCommandDone(t *testing.T) {
 
 	defer resetPipe()
 
-	go cl1.LeaveGame()
-	x := <-clientRead(rd2)
-	t.Log(string(x))
+	go clientRead(rd2)
+	cl1.LeaveGame()
 
 	var err error
 	gGame, err = NewGame(cl1, cl2)
@@ -362,8 +361,8 @@ func TestCommandDone(t *testing.T) {
 
 		done <- pam
 	}()
-	err = cl1.Do(order.Order{
-		ID:   order.Done,
+	err = cl1.Do(model.Order{
+		ID:   model.OrDone,
 		Data: nil,
 	})
 	if err != nil {

@@ -6,7 +6,7 @@ import (
 
 	"github.com/toms1441/chess-server/internal/board"
 	"github.com/toms1441/chess-server/internal/game"
-	"github.com/toms1441/chess-server/internal/order"
+	"github.com/toms1441/chess-server/internal/model"
 )
 
 func CmdHandler(w http.ResponseWriter, r *http.Request) {
@@ -23,7 +23,7 @@ func CmdHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cmd := order.Order{}
+	cmd := model.Order{}
 	err = BindJSON(r, &cmd)
 	if err != nil {
 		RespondError(w, http.StatusBadRequest, err)
@@ -62,7 +62,7 @@ func PossibHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	possib := order.PossibleModel{}
+	possib := model.PossibleOrder{}
 	err = BindJSON(r, &possib)
 	if err != nil {
 		RespondError(w, http.StatusBadRequest, err)
@@ -78,7 +78,7 @@ func PossibHandler(w http.ResponseWriter, r *http.Request) {
 
 	points, _ := brd.Possib(int(possib.ID))
 
-	possib = order.PossibleModel{}
+	possib = model.PossibleOrder{}
 	possib.Points = &points
 
 	RespondJSON(w, http.StatusOK, possib)

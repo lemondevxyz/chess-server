@@ -12,7 +12,7 @@ import (
 
 	"github.com/toms1441/chess-server/internal/board"
 	"github.com/toms1441/chess-server/internal/game"
-	"github.com/toms1441/chess-server/internal/order"
+	"github.com/toms1441/chess-server/internal/model"
 )
 
 var (
@@ -55,7 +55,7 @@ func TestCommandRequest(t *testing.T) {
 
 	id := int8(17)
 	dst := board.Point{1, 4}
-	x := order.MoveModel{
+	x := model.MoveOrder{
 		ID:  id, // {1, 6}
 		Dst: dst,
 	}
@@ -65,8 +65,8 @@ func TestCommandRequest(t *testing.T) {
 		t.Fatalf("json.Marshal: %s", err.Error())
 	}
 
-	cmd := order.Order{
-		ID:   order.Move,
+	cmd := model.Order{
+		ID:   model.OrMove,
 		Data: byt,
 	}
 
@@ -126,7 +126,7 @@ func TestCommandRequest(t *testing.T) {
 func TestPossibleRequest(t *testing.T) {
 
 	id := int8(15)
-	possib := order.PossibleModel{
+	possib := model.PossibleOrder{
 		ID: id,
 	}
 

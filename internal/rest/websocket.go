@@ -10,7 +10,7 @@ import (
 	"github.com/gobwas/ws"
 	"github.com/gobwas/ws/wsutil"
 	"github.com/toms1441/chess-server/internal/game"
-	"github.com/toms1441/chess-server/internal/order"
+	"github.com/toms1441/chess-server/internal/model"
 )
 
 type WsClient struct {
@@ -163,8 +163,8 @@ func UpgradeConn(conn net.Conn) (*WsClient, error) {
 			ch <- err
 		}
 
-		upd := order.Order{
-			ID:   order.Credentials,
+		upd := model.Order{
+			ID:   model.OrCredentials,
 			Data: body,
 		}
 		body, err = json.Marshal(upd)

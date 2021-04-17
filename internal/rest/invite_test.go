@@ -9,7 +9,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/toms1441/chess-server/internal/order"
+	"github.com/toms1441/chess-server/internal/model"
 )
 
 var _inviteCode = ""
@@ -19,7 +19,7 @@ func TestInviteHandler(t *testing.T) {
 	<-read(rd2)
 	//us2.cl.LeaveGame()
 
-	x := order.InviteModel{
+	x := model.InviteOrder{
 		ID: us2.PublicID,
 	}
 	body, err := json.Marshal(x)
@@ -47,14 +47,14 @@ func TestInviteHandler(t *testing.T) {
 		}
 		body = body[:n]
 
-		upd := order.Order{}
+		upd := model.Order{}
 		err = json.Unmarshal(body, &upd)
 		if err != nil {
 			ch <- fmt.Errorf("json.Unmarshal: %s", err.Error())
 			return
 		}
 
-		mod := order.InviteModel{}
+		mod := model.InviteOrder{}
 		err = json.Unmarshal(upd.Data, &mod)
 		if err != nil {
 			ch <- fmt.Errorf("json.Unmarshal: %s", err.Error())
@@ -85,7 +85,7 @@ func TestInviteHandler(t *testing.T) {
 }
 
 func TestAcceptInviteHandler(t *testing.T) {
-	i := order.InviteModel{
+	i := model.InviteOrder{
 		ID: _inviteCode,
 	}
 

@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 
 	"github.com/toms1441/chess-server/internal/board"
-	"github.com/toms1441/chess-server/internal/order"
+	"github.com/toms1441/chess-server/internal/model"
 )
 
 type Game struct {
@@ -52,12 +52,12 @@ func NewGame(cl1, cl2 *Client) (*Game, error) {
 				c := g.cs[p.P1]
 				if c != nil {
 
-					x := order.PromoteModel{
+					x := model.PromoteOrder{
 						ID: id,
 					}
 
-					g.Update(c, order.Order{
-						ID:        order.Promote,
+					g.Update(c, model.Order{
+						ID:        model.OrPromote,
 						Parameter: x,
 					})
 				}
@@ -77,8 +77,8 @@ func (g *Game) SwitchTurn() {
 	aft := !g.turn
 
 	if g.b.FinalCheckmate(aft) {
-		g.UpdateAll(order.Order{
-			ID:        order.Done,
+		g.UpdateAll(model.Order{
+			ID:        model.OrDone,
 			Parameter: bef,
 		})
 
@@ -89,21 +89,21 @@ func (g *Game) SwitchTurn() {
 
 	g.turn = aft
 
-	x, _ := json.Marshal(order.TurnModel{
+	x, _ := json.Marshal(model.TurnOrder{
 		P1: aft,
 	})
 
 	if g.b.Checkmate(aft) {
-		g.Update(g.cs[aft], order.Order{
-			ID:        order.Checkmate,
+		g.Update(g.cs[aft], model.Order{
+			ID:        model.OrCheckmate,
 			Parameter: aft,
 		})
-		g.Update(g.cs[bef], order.Order{
-			ID:        order.Checkmate,
+		g.Update(g.cs[bef], model.Order{
+			ID:        model.OrCheckmate,
 			Parameter: aft,
 		})
 	}
-	g.UpdateAll(order.Order{ID: order.Turn, Data: x})
+	g.UpdateAll(model.Order{ID: model.OrTurn, Data: x})
 }
 
 // IsTurn returns if it's the client's turn this time
@@ -112,7 +112,7 @@ func (g *Game) IsTurn(c *Client) bool {
 }
 
 // Update is used to send updates to the client, such as a movement of a piece.
-func (g *Game) Update(c *Client, u order.Order) error {
+func (g *Game) Update(c *Client, u model.Order) error {
 	if c == nil {
 		return ErrClientNil
 	}
@@ -141,7 +141,7 @@ func (g *Game) Update(c *Client, u order.Order) error {
 
 // UpdateAll sends the update to all of the players. Difference between this and calling update individually is the data does not get re-marshalized.
 // Use this whenever the data is the same between the two players
-func (g *Game) UpdateAll(u order.Order) error {
+func (g *Game) UpdateAll(u model.Order) error {
 	if g.cs[false] == nil || g.cs[true] == nil {
 		return ErrClientNil
 	}
