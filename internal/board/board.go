@@ -116,10 +116,10 @@ func (brd *Board) Listen(callback MoveEvent) {
 	brd.ml = append(brd.ml, callback)
 }
 
-// Set sets a piece in the board without game-logic interfering.
+// Set sets a piece's position in the board without game-logic interfering.
 func (brd *Board) Set(id int, pos Point) error {
-	if id >= len(brd.data) {
-		return ErrInvalidPoint
+	if !IsIDValid(int8(id)) {
+		return ErrInvalidID
 	}
 
 	if !pos.Valid() {
@@ -137,8 +137,23 @@ func (brd *Board) Set(id int, pos Point) error {
 	return nil
 }
 
+// SetKind sets a piece's kind
+func (brd *Board) SetKind(id int, kind uint8) error {
+	if !IsIDValid(int8(id)) {
+		return ErrInvalidID
+	}
+
+	brd.data[id].Kind = kind
+
+	return nil
+}
+
 // Get returns a piece and it's index. Or otherwise -1, an empty piece and an error.
 func (brd Board) Get(src Point) (int, Piece, error) {
+	if !src.Valid() {
+		return -1, Piece{}, ErrInvalidPoint
+	}
+
 	for k, v := range brd.data {
 		if v.Pos.Equal(src) {
 			if !v.Valid() {

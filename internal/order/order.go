@@ -17,6 +17,8 @@ const (
 	Credentials uint8 = iota + 1
 	// Invite is sent whenever a user receives an invite to a game. [U]
 	Invite
+	// Watchable is an update indicating a watchable game. [U]
+	Watchable
 	// Game is sent whenever a game starts. Sent by the invite handler. [U]
 	Game
 	// Move is sent/received whenever a player's piece moves. If the src is from the king/rook, if the dst is from the rook/king. And both src and dst belong to the player then Castling is called. So it's sort  [O]

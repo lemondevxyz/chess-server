@@ -2,14 +2,12 @@ package game
 
 import (
 	"encoding/json"
-	"sync"
 
 	"github.com/toms1441/chess-server/internal/board"
 	"github.com/toms1441/chess-server/internal/order"
 )
 
 type Game struct {
-	mtx       sync.Mutex
 	cs        map[bool]*Client // refers to p1
 	turn      bool             // refers to p1
 	done      bool
@@ -89,9 +87,7 @@ func (g *Game) SwitchTurn() {
 		return
 	}
 
-	g.mtx.Lock()
 	g.turn = aft
-	g.mtx.Unlock()
 
 	x, _ := json.Marshal(order.TurnModel{
 		P1: aft,

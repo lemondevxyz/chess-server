@@ -1,8 +1,11 @@
 package board
 
-import "fmt"
+import (
+	"errors"
+)
 
 var (
-	ErrInvalidPoint = fmt.Errorf("point out of bounds")
-	ErrEmptyPiece   = fmt.Errorf("empty piece")
+	ErrInvalidID    = errors.New("id is invalid")
+	ErrInvalidPoint = errors.New("invalid point")
+	ErrEmptyPiece   = errors.New("piece is empty")
 )

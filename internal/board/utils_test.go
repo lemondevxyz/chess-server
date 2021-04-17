@@ -137,6 +137,24 @@ func TestGetPawnRow(t *testing.T) {
 	}
 }
 
+func TestIsIDValid(t *testing.T) {
+	if IsIDValid(32) {
+		t.Fatalf("IsIDValid(32): want: false | have: true")
+	}
+	if IsIDValid(-1) {
+		t.Fatalf("IsIDValid(0): want: false | have: true")
+	}
+}
+
+func TestGetEighthRank(t *testing.T) {
+	if GetEighthRank(true) != 0 {
+		t.Fatalf("EighthRank(p1) != 0")
+	}
+	if GetEighthRank(false) != 7 {
+		t.Fatalf("EighthRank(p2) != 7")
+	}
+}
+
 func TestBelongsTo(t *testing.T) {
 	ourvalues := [16]int8{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}
 

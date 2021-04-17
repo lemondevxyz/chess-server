@@ -16,6 +16,11 @@ type InviteModel struct {
 }
 
 // [U]
+type WatchableModel struct {
+	Board *board.Board `json:"board"`
+}
+
+// [U]
 type GameModel struct {
 	// which pieces are yours
 	P1    bool         `json:"p1"`

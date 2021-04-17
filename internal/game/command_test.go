@@ -144,6 +144,24 @@ func TestCommandPromotion(t *testing.T) {
 		close(ch)
 	}()
 
+	getOrder := func(kind uint8) *order.Order {
+		promote := order.PromoteModel{
+			ID: id,
+		}
+		promote.Kind = kind
+		body, err := json.Marshal(promote)
+		if err != nil {
+			t.Fatalf("json.Marshal: %s | promote: %v", err.Error(), promote)
+			return nil
+		}
+
+		cmd := &order.Order{
+			ID:   order.Promote,
+			Data: body,
+		}
+		return cmd
+	}
+
 	select {
 	case <-time.After(time.Millisecond * 100):
 		t.Fatalf("timeout")
@@ -160,29 +178,29 @@ func TestCommandPromotion(t *testing.T) {
 			t.Fatalf("promote.ID != ID : %d != %d", promote.ID, id)
 		}
 
-		promote.Kind = board.Queen
-		body, err := json.Marshal(promote)
-		if err != nil {
-			t.Fatalf("json.Marshal: %s", err.Error())
-		}
+		break
+	}
 
-		cmd := &order.Order{
-			ID:   order.Promote,
-			Data: body,
-		}
+	err = cl1.Do(*getOrder(board.King))
+	if err == nil {
+		t.Fatalf("cl1.Do: can promote pawn to king...")
+	}
+	err = cl1.Do(*getOrder(board.Pawn))
+	if err == nil {
+		t.Fatalf("cl1.Do: can promote pawn to pawn...")
+	}
 
-		go func() {
-			// turn
-			<-clientRead(rd1)
-			<-clientRead(rd2)
-			<-clientRead(rd1)
-			<-clientRead(rd2)
-		}()
+	go func() {
+		// turn
+		<-clientRead(rd1)
+		<-clientRead(rd2)
+		<-clientRead(rd1)
+		<-clientRead(rd2)
+	}()
 
-		err = cl1.Do(*cmd)
-		if err != nil {
-			t.Fatalf("cl1.Do: %s", err.Error())
-		}
+	err = cl1.Do(*getOrder(board.Queen))
+	if err != nil {
+		t.Fatalf("cl1.Do: %s", err.Error())
 	}
 
 	err = <-ch

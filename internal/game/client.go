@@ -83,7 +83,7 @@ func (c *Client) inPromotion() bool {
 			continue
 		}
 
-		if int(pawn.Pos.Y) == board.EighthRank(c.p1) {
+		if int(pawn.Pos.Y) == board.GetEighthRank(c.p1) {
 			return true
 		}
 	}

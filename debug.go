@@ -12,7 +12,7 @@ import (
 //var debug = "yes"
 var debug = "promotion"
 
-const p1 = true
+const p1 = false
 
 func doMove(cl1, cl2 *game.Client, list []order.MoveModel) error {
 	p1 := true
@@ -116,6 +116,9 @@ func debugPromotion(cl1, cl2 *game.Client) error {
 		{15, board.Point{7, 5}},
 		{17, board.Point{0, 1}},
 		{15, board.Point{6, 6}},
+	}
+	if !p1 {
+		list = append(list, order.MoveModel{25, board.Point{0, 5}})
 	}
 
 	return doMove(cl1, cl2, list)

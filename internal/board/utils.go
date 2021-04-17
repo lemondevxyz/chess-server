@@ -1,6 +1,7 @@
 package board
 
-// utils.go is a file containing utility functions for board that do not depend on it.
+// utils.go is a file containing utility functions for board.
+
 // GetKing returns the king number for player
 func GetKing(p1 bool) int {
 	if p1 {
@@ -119,8 +120,13 @@ func GetRangePawn(p1 bool) [8]int {
 	return arr
 }
 
-// EighthRank returns value of y whenever pawn needs to promote.
-func EighthRank(p1 bool) int {
+// IsIDValid returns true if the id is valid
+func IsIDValid(id int8) bool {
+	return id <= 31 && id >= 0
+}
+
+// GetEighthRank returns value of y whenever pawn needs to promote.
+func GetEighthRank(p1 bool) int {
 	if p1 {
 		return 0
 	} else {
