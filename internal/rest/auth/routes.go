@@ -40,6 +40,10 @@ func NewRoutes(cfg Config) *mux.Router {
 	r.HandleFunc("/login", cfg.login).Methods("POST")
 	r.HandleFunc("/logout", cfg.logout).Methods()
 
+	mtx.Lock()
+	sliceidentify = append(sliceidentify, cfg.identify)
+	mtx.Unlock()
+
 	return r
 }
 

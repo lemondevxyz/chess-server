@@ -12,9 +12,10 @@ import (
 )
 
 type UnmarshalCallback func(io.ReadCloser) model.AuthUser
-type IdentifyCallback func(http.ResponseWriter, *http.Request) model.AuthUser
+type IdentifyCallback func(*http.Request) model.AuthUser
 
 var mtx sync.Mutex
+var sliceidentify = []IdentifyCallback{}
 
 func (cfg Config) token(req *http.Request) *oauth2.Token {
 	cookie, err := req.Cookie(cfg.ID + tokensuffix)
