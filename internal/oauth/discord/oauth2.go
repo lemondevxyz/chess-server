@@ -1,11 +1,6 @@
 package discord
 
 import (
-	"context"
-	"encoding/json"
-	"fmt"
-	"io/ioutil"
-	"net/http"
 	"net/url"
 	"path"
 	"time"
@@ -40,6 +35,7 @@ func init() {
 	endpoint.TokenURL = token.String()
 }
 
+/*
 func GetUser(src oauth2.TokenSource) (u User, err error) {
 	if src == nil {
 		return u, fmt.Errorf("src == nil")
@@ -55,7 +51,9 @@ func GetUser(src oauth2.TokenSource) (u User, err error) {
 		return u, fmt.Errorf("token is invalid")
 	}
 
-	ctx, _ := context.WithTimeout(context.Background(), timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
 	client := oauth2.NewClient(ctx, src)
 
 	resp, err := client.Get(meurl.String())
@@ -80,3 +78,4 @@ func GetUser(src oauth2.TokenSource) (u User, err error) {
 
 	return u, nil
 }
+*/
