@@ -47,11 +47,7 @@ func AddClient(profile model.Profile, c *game.Client) *User {
 	}
 
 	us.Token = id
-<<<<<<< HEAD
 	us.Profile = profile
-=======
-	us.CredentialsOrder.Profile = profile
->>>>>>> a83ab84049ca0410b81217381344215232f157f8
 
 	users[id] = us
 	go func() {
@@ -77,7 +73,7 @@ func GetUser(r *http.Request) (*User, error) {
 
 // GetAvaliableUsersHandler returns a list of public ids that are looking to play.
 func GetAvaliableUsersHandler(w http.ResponseWriter, r *http.Request) {
-	_, err := GetUser(r)
+	u, err := GetUser(r)
 	if err != nil {
 		RespondError(w, http.StatusUnauthorized, err)
 		return
@@ -86,21 +82,18 @@ func GetAvaliableUsersHandler(w http.ResponseWriter, r *http.Request) {
 	ids := []json.RawMessage{}
 	for _, v := range users {
 		// lamo you can't invite yourself
-		if v.Profile.GetPublicID() == v.Profile.GetPublicID() && v.Profile.GetPlatform() == v.Profile.GetPlatform() {
+		if v.Profile.GetPublicID() == u.Profile.GetPublicID() && v.Profile.GetPlatform() == u.Profile.GetPlatform() {
 			continue
 		}
 
 		if v.Valid() {
 			if v.Client().Game() == nil {
-<<<<<<< HEAD
 				body, err := model.MarshalProfile(v.Profile)
 				if err != nil {
 					RespondError(w, http.StatusInternalServerError, err)
+					return
 				}
 				ids = append(ids, body)
-=======
-				ids = append(ids, v.Profile.GetPublicID())
->>>>>>> a83ab84049ca0410b81217381344215232f157f8
 			}
 		}
 	}
