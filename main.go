@@ -1,68 +1,19 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"net"
 	"net/http"
 	"os"
-	"time"
 
 	"github.com/fatih/color"
-	"github.com/gobwas/ws"
 	"github.com/gorilla/mux"
+	"github.com/toms1441/chess-server/internal/model/discord"
 	"github.com/toms1441/chess-server/internal/rest"
+	"github.com/toms1441/chess-server/internal/rest/auth"
 )
 
 const apiver = "v1"
-
-func debug_game() {
-	fmt.Println("endless loop mode")
-	if debug != "yes" {
-		fmt.Printf("debug state: %s\n", debug)
-	}
-	for {
-		x := rest.ClientChannel()
-		cl1 := <-x
-		time.Sleep(time.Second)
-		go func() {
-			cn, _, _, err := ws.Dial(context.Background(), "ws://localhost:8080/api/v1/ws")
-			if err != nil {
-				fmt.Printf("ws.Dial: %s\n", err)
-			}
-
-			for {
-				b := make([]byte, 2048)
-				_, err := cn.Read(b)
-				if err != nil {
-					panic(err)
-				}
-			}
-		}()
-		cl2 := <-x
-		if !p1 {
-			cl1, cl2 = cl2, cl1
-		}
-
-		id, _ := cl2.Invite(cl1.PublicID, rest.InviteLifespan)
-		time.Sleep(time.Millisecond * 10)
-		cl1.AcceptInvite(id)
-
-		var err error
-		switch debug {
-		case "castling":
-			err = debugCastling(cl1.Client(), cl2.Client())
-		case "checkmate":
-			err = debugCheckmate(cl1.Client(), cl2.Client())
-		case "promotion":
-			err = debugPromotion(cl1.Client(), cl2.Client())
-		}
-
-		if err != nil {
-			panic(err)
-		}
-	}
-}
 
 func main() {
 	if debug != "no" {
@@ -70,8 +21,8 @@ func main() {
 	}
 
 	rout := mux.NewRouter()
+	api := rout.PathPrefix("/api/" + apiver).Subrouter()
 	{ // api routes
-		api := rout.PathPrefix("/api/" + apiver).Subrouter()
 
 		api.HandleFunc("/cmd", rest.CmdHandler).Methods("POST", "OPTIONS")
 		api.HandleFunc("/invite", rest.InviteHandler).Methods("POST", "OPTIONS")
@@ -91,6 +42,14 @@ func main() {
 			w.Write(nil)
 		}).Methods("GET")
 	}
+
+	discordrouter := api.PathPrefix("/discord").Subrouter()
+	discordconfig := discord.NewAuthConfig(discord.Config{
+		ClientID:     os.Getenv("DISCORD_CLIENTID"),
+		ClientSecret: os.Getenv("DISCORD_CLIENTSECRET"),
+		Redirect:     os.Getenv("DISCORD_REDIRECT"),
+	})
+	auth.AddRoutes(discordconfig, discordrouter)
 
 	var proto string
 	var port string

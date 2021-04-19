@@ -11,6 +11,7 @@ import (
 	"github.com/gobwas/ws/wsutil"
 	"github.com/toms1441/chess-server/internal/game"
 	"github.com/toms1441/chess-server/internal/model"
+	"github.com/toms1441/chess-server/internal/rest/auth"
 )
 
 type WsClient struct {
@@ -186,6 +187,9 @@ func UpgradeConn(conn net.Conn) (*WsClient, error) {
 }
 
 func WebsocketHandler(w http.ResponseWriter, r *http.Request) {
+	authuser := auth.Identify(r)
+	fmt.Println(authuser)
+
 	conn, _, _, err := ws.UpgradeHTTP(r, w)
 	if err != nil {
 		RespondError(w, http.StatusBadRequest, err)
@@ -196,7 +200,6 @@ func WebsocketHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func WebsocketServe(ln net.Listener) {
-
 	for {
 		conn, err := ln.Accept()
 		if err != nil {

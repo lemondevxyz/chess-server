@@ -1,18 +1,70 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"time"
 
+	"github.com/gobwas/ws"
 	"github.com/toms1441/chess-server/internal/board"
 	"github.com/toms1441/chess-server/internal/game"
 	"github.com/toms1441/chess-server/internal/model"
+	"github.com/toms1441/chess-server/internal/rest"
 )
 
 //var debug = "yes"
 var debug = "promotion"
 
 const p1 = false
+
+func debug_game() {
+	fmt.Println("endless loop mode")
+	if debug != "yes" {
+		fmt.Printf("debug state: %s\n", debug)
+	}
+	for {
+		x := rest.ClientChannel()
+		cl1 := <-x
+		time.Sleep(time.Second)
+		go func() {
+			cn, _, _, err := ws.Dial(context.Background(), "ws://localhost:8080/api/v1/ws")
+			if err != nil {
+				fmt.Printf("ws.Dial: %s\n", err)
+			}
+
+			for {
+				b := make([]byte, 2048)
+				_, err := cn.Read(b)
+				if err != nil {
+					panic(err)
+				}
+			}
+		}()
+		cl2 := <-x
+		if !p1 {
+			cl1, cl2 = cl2, cl1
+		}
+
+		id, _ := cl2.Invite(cl1.PublicID, rest.InviteLifespan)
+		time.Sleep(time.Millisecond * 10)
+		cl1.AcceptInvite(id)
+
+		var err error
+		switch debug {
+		case "castling":
+			err = debugCastling(cl1.Client(), cl2.Client())
+		case "checkmate":
+			err = debugCheckmate(cl1.Client(), cl2.Client())
+		case "promotion":
+			err = debugPromotion(cl1.Client(), cl2.Client())
+		}
+
+		if err != nil {
+			panic(err)
+		}
+	}
+}
 
 func doMove(cl1, cl2 *game.Client, list []model.MoveOrder) error {
 	p1 := true

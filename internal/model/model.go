@@ -22,11 +22,3 @@ type Profile interface {
 	// any other fields could be inserted aswell
 	json.Marshaler
 }
-
-// AuthUser is an interface used to the authenticate user.
-type AuthUser interface {
-	// GetToken returns the token for the user, token is primarily used to authenticate the commands.
-	GetToken() string
-	// GetProfile returns the profile for the user.
-	GetProfile() Profile
-}

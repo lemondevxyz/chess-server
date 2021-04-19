@@ -11,11 +11,22 @@ import (
 	"golang.org/x/oauth2"
 )
 
-type UnmarshalCallback func(io.ReadCloser) model.AuthUser
-type IdentifyCallback func(*http.Request) model.AuthUser
+type UnmarshalCallback func(io.ReadCloser) model.Profile
+type IdentifyCallback func(*http.Request) model.Profile
 
 var mtx sync.Mutex
 var sliceidentify = []IdentifyCallback{}
+
+func Identify(r *http.Request) model.Profile {
+	for _, identify := range sliceidentify {
+		authuser := identify(r)
+		if authuser != nil {
+			return authuser
+		}
+	}
+
+	return nil
+}
 
 func (cfg Config) token(req *http.Request) *oauth2.Token {
 	cookie, err := req.Cookie(cfg.ID + tokensuffix)
@@ -34,7 +45,7 @@ func (cfg Config) token(req *http.Request) *oauth2.Token {
 }
 
 // does not write anything, just returns a model.AuthUser
-func (cfg Config) identify(req *http.Request) model.AuthUser {
+func (cfg Config) identify(req *http.Request) model.Profile {
 	token := cfg.token(req)
 	if token == nil {
 		return nil

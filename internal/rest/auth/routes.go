@@ -10,7 +10,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/gorilla/securecookie"
-	"github.com/toms1441/chess-server/internal/rest"
+	"github.com/thanhpk/randstr"
 	"golang.org/x/oauth2"
 )
 
@@ -25,7 +25,6 @@ const (
 )
 
 type Config struct {
-	Endpoint  oauth2.Endpoint
 	Config    oauth2.Config
 	MeURL     string
 	ID        string
@@ -33,26 +32,41 @@ type Config struct {
 	Logout    string
 }
 
-func NewRoutes(cfg Config) *mux.Router {
-	r := mux.NewRouter()
-
+func AddRoutes(cfg Config, r *mux.Router) {
 	r.HandleFunc("/redirect", cfg.redirect).Methods("GET")
-	r.HandleFunc("/login", cfg.login).Methods("POST")
+	r.HandleFunc("/private", cfg.private).Methods("GET")
+	r.HandleFunc("/login", cfg.login).Methods("GET")
 	r.HandleFunc("/logout", cfg.logout).Methods()
 
 	mtx.Lock()
 	sliceidentify = append(sliceidentify, cfg.identify)
 	mtx.Unlock()
+}
 
-	return r
+func (cfg Config) private(w http.ResponseWriter, r *http.Request) {
+	if cfg.identify(r) == nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		w.Write([]byte("not logged in"))
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(""))
 }
 
 func (cfg Config) redirect(w http.ResponseWriter, r *http.Request) {
-	state := securecookie.GenerateRandomKey(32)
+	if cfg.identify(r) != nil {
+		w.WriteHeader(http.StatusNoContent)
+		w.Write([]byte(""))
+		return
+	}
+
+	state := randstr.String(32)
 
 	encoded, err := scokie.Encode(cfg.ID+statesuffix, state)
 	if err != nil {
-		rest.RespondError(w, http.StatusInternalServerError, fmt.Errorf("securecookie.Encode: %w", err))
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(fmt.Sprintf("securecookie.Encode: %s", err.Error())))
 		return
 	}
 
@@ -60,10 +74,9 @@ func (cfg Config) redirect(w http.ResponseWriter, r *http.Request) {
 		Name:     cfg.ID + statesuffix,
 		Value:    encoded,
 		Path:     "/",
-		Secure:   true,
+		Secure:   false,
 		HttpOnly: true,
 		MaxAge:   60,
-		SameSite: http.SameSiteStrictMode,
 	}
 
 	http.SetCookie(w, cookie)
@@ -71,15 +84,22 @@ func (cfg Config) redirect(w http.ResponseWriter, r *http.Request) {
 }
 
 func (cfg Config) login(w http.ResponseWriter, r *http.Request) {
-	state := r.Header.Get("state")
+	state := r.URL.Query().Get("state")
 	if len(state) == 0 {
-		rest.RespondError(w, http.StatusBadRequest, fmt.Errorf("empty state"))
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("state is empty"))
 		return
 	}
 
+	for _, v := range r.Cookies() {
+		fmt.Println(v)
+	}
+
+	fmt.Println(cfg.ID + statesuffix)
 	cookie, err := r.Cookie(cfg.ID + statesuffix)
 	if err != nil {
-		rest.RespondError(w, http.StatusBadRequest, fmt.Errorf("cookie error: %w", err))
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("cookie error: " + err.Error()))
 		return
 	}
 
@@ -87,18 +107,21 @@ func (cfg Config) login(w http.ResponseWriter, r *http.Request) {
 
 	err = scokie.Decode(cfg.ID+statesuffix, cookie.Value, &val)
 	if err != nil {
-		rest.RespondError(w, http.StatusInternalServerError, fmt.Errorf("securecookie.Encode: %w", err))
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("securecookie.Encode: " + err.Error()))
 		return
 	}
 
 	if val != state {
-		rest.RespondError(w, http.StatusUnauthorized, fmt.Errorf("val != state"))
+		w.WriteHeader(http.StatusUnauthorized)
+		w.Write([]byte("val != state"))
 		return
 	}
 
-	code := r.Header.Get("code")
+	code := r.URL.Query().Get("code")
 	if len(code) == 0 {
-		rest.RespondError(w, http.StatusForbidden, fmt.Errorf("code is empty"))
+		w.WriteHeader(http.StatusForbidden)
+		w.Write([]byte("code is empty"))
 		return
 	}
 
@@ -108,7 +131,10 @@ func (cfg Config) login(w http.ResponseWriter, r *http.Request) {
 
 	encoded, err := scokie.Encode(cfg.ID+tokensuffix, token)
 	if err != nil {
-		rest.RespondError(w, http.StatusInternalServerError, err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("encode: " + err.Error()))
+
+		return
 	}
 
 	http.SetCookie(w, &http.Cookie{
@@ -120,25 +146,29 @@ func (cfg Config) login(w http.ResponseWriter, r *http.Request) {
 		SameSite: http.SameSiteStrictMode,
 	})
 
-	rest.RespondJSON(w, http.StatusOK, nil)
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(""))
 }
 
 func (cfg Config) logout(w http.ResponseWriter, r *http.Request) {
 	token := cfg.token(r)
 	if token != nil {
-		rest.RespondError(w, http.StatusUnauthorized, fmt.Errorf("you're not logged in"))
+		w.WriteHeader(http.StatusUnauthorized)
+		w.Write([]byte("not logged in"))
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
-	client := cfg.Config.Client(ctx, token)
+	if len(cfg.MeURL) > 0 {
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+		client := cfg.Config.Client(ctx, token)
 
-	form := url.Values{}
-	form.Add("token", token.AccessToken)
+		form := url.Values{}
+		form.Add("token", token.AccessToken)
 
-	resp, _ := client.Post(cfg.MeURL, "application/x-www-form-urlencoded", strings.NewReader(form.Encode()))
-	cancel()
-	resp.Body.Close()
+		resp, _ := client.Post(cfg.MeURL, "application/x-www-form-urlencoded", strings.NewReader(form.Encode()))
+		cancel()
+		resp.Body.Close()
+	}
 
 	http.SetCookie(w, &http.Cookie{
 		Name:   cfg.ID + tokensuffix,

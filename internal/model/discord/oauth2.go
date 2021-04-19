@@ -19,6 +19,12 @@ var meurl = url.URL{
 	Path:   path.Join(apipath, "users", "@me"),
 }
 
+var logouturl = url.URL{
+	Scheme: "https",
+	Host:   host,
+	Path:   path.Join(apipath, "oauth2", "token", "revoke"),
+}
+
 func init() {
 	auth := url.URL{
 		Scheme: "https",
