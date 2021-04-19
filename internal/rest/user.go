@@ -47,7 +47,11 @@ func AddClient(profile model.Profile, c *game.Client) *User {
 	}
 
 	us.Token = id
+<<<<<<< HEAD
 	us.Profile = profile
+=======
+	us.CredentialsOrder.Profile = profile
+>>>>>>> a83ab84049ca0410b81217381344215232f157f8
 
 	users[id] = us
 	go func() {
@@ -88,11 +92,15 @@ func GetAvaliableUsersHandler(w http.ResponseWriter, r *http.Request) {
 
 		if v.Valid() {
 			if v.Client().Game() == nil {
+<<<<<<< HEAD
 				body, err := model.MarshalProfile(v.Profile)
 				if err != nil {
 					RespondError(w, http.StatusInternalServerError, err)
 				}
 				ids = append(ids, body)
+=======
+				ids = append(ids, v.Profile.GetPublicID())
+>>>>>>> a83ab84049ca0410b81217381344215232f157f8
 			}
 		}
 	}
