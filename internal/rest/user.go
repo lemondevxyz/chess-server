@@ -37,7 +37,7 @@ func ClientChannel() chan *User {
 	return chanuser
 }
 
-func AddClient(c *game.Client) *User {
+func AddClient(profile model.Profile, c *game.Client) *User {
 	usermtx.Lock()
 
 	id := betterguid.New()
@@ -47,7 +47,7 @@ func AddClient(c *game.Client) *User {
 	}
 
 	us.Token = id
-	us.PublicID = randstr.String(4)
+	us.Profile = profile
 
 	users[id] = us
 	go func() {
@@ -72,24 +72,27 @@ func GetUser(r *http.Request) (*User, error) {
 }
 
 // GetAvaliableUsersHandler returns a list of public ids that are looking to play.
-// TODO: exclude this user's public id from the returned value
 func GetAvaliableUsersHandler(w http.ResponseWriter, r *http.Request) {
-	u, err := GetUser(r)
+	_, err := GetUser(r)
 	if err != nil {
 		RespondError(w, http.StatusUnauthorized, err)
 		return
 	}
 
-	ids := []string{}
+	ids := []json.RawMessage{}
 	for _, v := range users {
 		// lamo you can't invite yourself
-		if v.PublicID == u.PublicID {
+		if v.Profile.GetPublicID() == v.Profile.GetPublicID() && v.Profile.GetPlatform() == v.Profile.GetPlatform() {
 			continue
 		}
 
 		if v.Valid() {
 			if v.Client().Game() == nil {
-				ids = append(ids, v.PublicID)
+				body, err := model.MarshalProfile(v.Profile)
+				if err != nil {
+					RespondError(w, http.StatusInternalServerError, err)
+				}
+				ids = append(ids, body)
 			}
 		}
 	}
@@ -102,7 +105,7 @@ func (u *User) Client() *game.Client {
 }
 
 func (u *User) Delete() {
-	u.PublicID = ""
+	u.Profile = nil
 	u.Token = ""
 	if u.cl.Game() != nil {
 		u.cl.LeaveGame()
@@ -130,7 +133,7 @@ func (u *User) Valid() bool {
 	return true
 }
 
-func (u *User) Invite(tok string, lifespan time.Duration) (string, error) {
+func (u *User) Invite(pubid string, lifespan time.Duration) (string, error) {
 	// make sure panic don't happen
 	if !u.Valid() {
 		return "", game.ErrClientNil
@@ -141,7 +144,7 @@ func (u *User) Invite(tok string, lifespan time.Duration) (string, error) {
 
 	var vs *User
 	for _, v := range users {
-		if v.PublicID == tok {
+		if v.Profile.GetPublicID() == pubid {
 			vs = v
 			break
 		}

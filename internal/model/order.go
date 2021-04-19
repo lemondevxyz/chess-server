@@ -46,8 +46,8 @@ const (
 
 // [U]
 type CredentialsOrder struct {
-	Token    string `json:"token"`
-	PublicID string `json:"public_id"`
+	Profile Profile `json:"profile"`
+	Token   string  `json:"token"`
 }
 
 // [O]

@@ -13,12 +13,15 @@ type Profile interface {
 	GetPublicID() string
 	// GetPlatform returns the platform of that user, in lower case. E.g. "google", "facebook"
 	GetPlatform() string
+}
 
-	// JSON output should contain the following
-	// - username
-	// - id
-	// - platform: the name of the platform
-	// - picture: the url to the profile picture
-	// any other fields could be inserted aswell
-	json.Marshaler
+func MarshalProfile(p Profile) ([]byte, error) {
+	m := map[string]string{
+		"id":       p.GetPublicID(),
+		"picture":  p.GetPicture(),
+		"username": p.GetUsername(),
+		"platform": p.GetPlatform(),
+	}
+
+	return json.Marshal(m)
 }

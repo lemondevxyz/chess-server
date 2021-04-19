@@ -77,7 +77,7 @@ func (cl *WsClient) Write(b []byte) (n int, err error) {
 	return 0, nil
 }
 
-func UpgradeConn(conn net.Conn) (*WsClient, error) {
+func UpgradeConn(profile model.Profile, conn net.Conn) (*WsClient, error) {
 	if conn == nil {
 		return nil, fmt.Errorf("conn is nil")
 	}
@@ -153,13 +153,28 @@ func UpgradeConn(conn net.Conn) (*WsClient, error) {
 		W: cl,
 	}
 
-	u := AddClient(gc)
+	u := AddClient(profile, gc)
 	cl.u = u
 
 	// send token to the client
 	ch := make(chan error)
 	go func(u *User, ch chan error) {
-		body, err := json.Marshal(u)
+		m := map[string]json.RawMessage{}
+
+		var err error
+		m["profile"], err = model.MarshalProfile(u.Profile)
+		if err != nil {
+			ch <- err
+			return
+		}
+
+		m["token"], err = json.Marshal(u.Token)
+		if err != nil {
+			ch <- err
+			return
+		}
+
+		body, err := json.Marshal(m)
 		if err != nil {
 			ch <- err
 		}
@@ -188,7 +203,10 @@ func UpgradeConn(conn net.Conn) (*WsClient, error) {
 
 func WebsocketHandler(w http.ResponseWriter, r *http.Request) {
 	authuser := auth.Identify(r)
-	fmt.Println(authuser)
+	if authuser == nil {
+		RespondError(w, http.StatusUnauthorized, fmt.Errorf("you're not logged in"))
+		return
+	}
 
 	conn, _, _, err := ws.UpgradeHTTP(r, w)
 	if err != nil {
@@ -196,9 +214,10 @@ func WebsocketHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	UpgradeConn(conn)
+	UpgradeConn(authuser, conn)
 }
 
+/*
 func WebsocketServe(ln net.Listener) {
 	for {
 		conn, err := ln.Accept()
@@ -213,4 +232,4 @@ func WebsocketServe(ln net.Listener) {
 
 		UpgradeConn(conn)
 	}
-}
+}*/

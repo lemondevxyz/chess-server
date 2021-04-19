@@ -46,7 +46,7 @@ func debug_game() {
 			cl1, cl2 = cl2, cl1
 		}
 
-		id, _ := cl2.Invite(cl1.PublicID, rest.InviteLifespan)
+		id, _ := cl2.Invite(cl1.Profile.GetPublicID(), rest.InviteLifespan)
 		time.Sleep(time.Millisecond * 10)
 		cl1.AcceptInvite(id)
 

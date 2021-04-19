@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/toms1441/chess-server/internal/model"
+	"github.com/toms1441/chess-server/internal/model/local"
 	"golang.org/x/oauth2"
 )
 
@@ -23,6 +24,10 @@ func Identify(r *http.Request) model.Profile {
 		if authuser != nil {
 			return authuser
 		}
+	}
+
+	if len(sliceidentify) == 0 {
+		return local.NewUser()
 	}
 
 	return nil

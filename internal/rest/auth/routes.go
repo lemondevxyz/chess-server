@@ -36,7 +36,7 @@ func AddRoutes(cfg Config, r *mux.Router) {
 	r.HandleFunc("/redirect", cfg.redirect).Methods("GET")
 	r.HandleFunc("/private", cfg.private).Methods("GET")
 	r.HandleFunc("/login", cfg.login).Methods("GET")
-	r.HandleFunc("/logout", cfg.logout).Methods()
+	r.HandleFunc("/logout", cfg.logout).Methods("POST")
 
 	mtx.Lock()
 	sliceidentify = append(sliceidentify, cfg.identify)
@@ -91,11 +91,6 @@ func (cfg Config) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	for _, v := range r.Cookies() {
-		fmt.Println(v)
-	}
-
-	fmt.Println(cfg.ID + statesuffix)
 	cookie, err := r.Cookie(cfg.ID + statesuffix)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -138,12 +133,13 @@ func (cfg Config) login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.SetCookie(w, &http.Cookie{
-		Name:     cfg.ID + tokensuffix,
-		Value:    encoded,
-		Path:     "/",
-		Secure:   true,
+		Name:  cfg.ID + tokensuffix,
+		Value: encoded,
+		Path:  "/",
+		// Secure:   true,
 		HttpOnly: true,
-		SameSite: http.SameSiteStrictMode,
+		// SameSite: http.SameSiteStrictMode,
+		MaxAge: (3600 * 24) * 14,
 	})
 
 	w.WriteHeader(http.StatusOK)

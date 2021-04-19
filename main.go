@@ -43,13 +43,21 @@ func main() {
 		}).Methods("GET")
 	}
 
-	discordrouter := api.PathPrefix("/discord").Subrouter()
-	discordconfig := discord.NewAuthConfig(discord.Config{
-		ClientID:     os.Getenv("DISCORD_CLIENTID"),
-		ClientSecret: os.Getenv("DISCORD_CLIENTSECRET"),
-		Redirect:     os.Getenv("DISCORD_REDIRECT"),
-	})
-	auth.AddRoutes(discordconfig, discordrouter)
+	{
+		id := os.Getenv("DISCORD_CLIENT_ID")
+		secret := os.Getenv("DISCORD_CLIENT_SECRET")
+		redirect := os.Getenv("DISCORD_REDIRECT")
+
+		if len(id) > 0 && len(secret) > 0 && len(redirect) > 0 {
+			discordrouter := api.PathPrefix("/discord").Subrouter()
+			discordconfig := discord.NewAuthConfig(discord.Config{
+				ClientID:     os.Getenv("DISCORD_CLIENT_ID"),
+				ClientSecret: os.Getenv("DISCORD_CLIENT_SECRET"),
+				Redirect:     os.Getenv("DISCORD_REDIRECT"),
+			})
+			auth.AddRoutes(discordconfig, discordrouter)
+		}
+	}
 
 	var proto string
 	var port string
@@ -72,12 +80,14 @@ func main() {
 	}
 
 	if proto == "unix" {
+		/* TODO: merge http.sock with ws.sock
 		ws, err := net.Listen("unix", "ws.sock")
 		if err != nil {
 			panic(err)
 		}
 
 		go rest.WebsocketServe(ws)
+		*/
 
 		os.Chmod("ws.sock", 0777)
 		os.Chmod("http.sock", 0777)

@@ -1,7 +1,6 @@
 package discord
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/url"
 	"path"
@@ -16,7 +15,7 @@ type User struct {
 	// Discriminator is the number after the username with the hashtag. E.g. #4444
 	Discriminator string `json:"discriminator"` // # + the 4 numbers fater a username
 	// Avatar is the hash used to get the url to the profile picture.
-	Avatar string `json:"string"`
+	Avatar string `json:"avatar"`
 }
 
 const host = "discord.com"
@@ -24,14 +23,14 @@ const platform = "discord"
 
 var cdn = url.URL{
 	Scheme: "https",
-	Host:   fmt.Sprintf("cdn.%s", host),
+	Host:   "cdn.discordapp.com",
 }
 
 func (u User) GetPicture() string {
 	pic, _ := cdn.Parse(cdn.String())
 	if len(u.Avatar) > 0 {
 		ext := "png"
-		if u.Avatar[0] == 'a' {
+		if u.Avatar[0] == 'a' && u.Avatar[1] == '_' {
 			ext = "gif"
 		}
 
@@ -57,18 +56,4 @@ func (u User) GetPublicID() string {
 
 func (u User) GetPlatform() string {
 	return platform
-}
-
-func (u User) MarshalJSON() ([]byte, error) {
-	m := map[string]interface{}{
-		"id":            u.ID,
-		"nickname":      u.Nickname,
-		"discriminator": u.Discriminator,
-		"username":      u.GetUsername(),
-		"avatar":        u.Avatar,
-		"picture":       u.GetPicture(),
-		"platform":      u.GetPlatform(),
-	}
-
-	return json.Marshal(m)
 }
