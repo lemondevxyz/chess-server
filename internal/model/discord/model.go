@@ -1,10 +1,15 @@
 package discord
 
+// Package discord provides user model, and authentication config for rest/auth.
+// As well as helper function to get profile pictures, usernames and such.
+
 import (
 	"fmt"
 	"net/url"
 	"path"
 	"strconv"
+
+	"github.com/toms1441/chess-server/internal/model"
 )
 
 type User struct {
@@ -50,10 +55,11 @@ func (u User) GetUsername() string {
 	return fmt.Sprintf("%s#%s", u.Nickname, u.Discriminator)
 }
 
-func (u User) GetPublicID() string {
-	return u.ID
-}
-
-func (u User) GetPlatform() string {
-	return platform
+func (u User) GetProfile() model.Profile {
+	return model.Profile{
+		ID:       u.ID,
+		Picture:  u.GetPicture(),
+		Username: u.GetUsername(),
+		Platform: platform,
+	}
 }

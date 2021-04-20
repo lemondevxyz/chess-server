@@ -9,7 +9,6 @@ import (
 
 	"github.com/gobwas/ws"
 	"github.com/gobwas/ws/wsutil"
-	"github.com/toms1441/chess-server/internal/game"
 	"github.com/toms1441/chess-server/internal/model"
 	"github.com/toms1441/chess-server/internal/rest/auth"
 )
@@ -45,8 +44,8 @@ func (cl *WsClient) ClosedChannel() chan bool {
 	return x
 }
 
-// Close closes the underlying websocket connection. Sudden determines if the websocket connection closed due to an unreceived pong frame, or if it wasn't sudden
-func (cl *WsClient) Close(status ws.StatusCode, reason string) error {
+// CloseWithReason closes the underlying websocket connection, with websocket status code an reason.
+func (cl *WsClient) CloseWithReason(status ws.StatusCode, reason string) error {
 	if cl.closed {
 		return nil
 	}
@@ -71,6 +70,10 @@ func (cl *WsClient) Close(status ws.StatusCode, reason string) error {
 	return nil
 }
 
+func (cl *WsClient) Close() error {
+	return cl.CloseWithReason(ws.StatusNormalClosure, "")
+}
+
 func (cl *WsClient) Write(b []byte) (n int, err error) {
 	cl.W <- b
 
@@ -89,17 +92,24 @@ func UpgradeConn(profile model.Profile, conn net.Conn) (*WsClient, error) {
 		r:    []chan []byte{},
 	}
 
+	u, err := AddClient(profile, cl)
+	if err != nil {
+		return nil, err
+	}
+
+	cl.u = u
+
 	// read any close messages
 	go func() {
 		for !cl.closed {
 			header, err := ws.ReadHeader(conn)
 			if err != nil {
-				cl.Close(ws.StatusProtocolError, "")
+				cl.CloseWithReason(ws.StatusProtocolError, "")
 				return
 			}
 
 			if header.OpCode == ws.OpClose {
-				cl.Close(ws.StatusGoingAway, "")
+				cl.CloseWithReason(ws.StatusGoingAway, "")
 				return
 			}
 
@@ -112,7 +122,7 @@ func UpgradeConn(profile model.Profile, conn net.Conn) (*WsClient, error) {
 
 	go func() {
 		defer func() {
-			cl.Close(ws.StatusAbnormalClosure, "cannot send data")
+			cl.CloseWithReason(ws.StatusAbnormalClosure, "cannot send data")
 		}()
 
 		ticker := time.NewTicker(pingPeriod)
@@ -149,32 +159,25 @@ func UpgradeConn(profile model.Profile, conn net.Conn) (*WsClient, error) {
 		}
 	}()
 
-	gc := &game.Client{
-		W: cl,
-	}
-
-	u := AddClient(profile, gc)
-	cl.u = u
-
 	// send token to the client
 	ch := make(chan error)
 	go func(u *User, ch chan error) {
-		m := map[string]json.RawMessage{}
+		/*
+			var err error
+			m["profile"], err = model.MarshalProfile(u.Profile)
+			if err != nil {
+				ch <- err
+				return
+			}
 
-		var err error
-		m["profile"], err = model.MarshalProfile(u.Profile)
-		if err != nil {
-			ch <- err
-			return
-		}
+			m["token"], err = json.Marshal(u.Token)
+			if err != nil {
+				ch <- err
+				return
+			}
+		*/
 
-		m["token"], err = json.Marshal(u.Token)
-		if err != nil {
-			ch <- err
-			return
-		}
-
-		body, err := json.Marshal(m)
+		body, err := json.Marshal(u)
 		if err != nil {
 			ch <- err
 		}
@@ -193,7 +196,7 @@ func UpgradeConn(profile model.Profile, conn net.Conn) (*WsClient, error) {
 		close(ch)
 	}(u, ch)
 
-	err := <-ch
+	err = <-ch
 	if err != nil {
 		return nil, err
 	}
@@ -214,7 +217,7 @@ func WebsocketHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	UpgradeConn(authuser, conn)
+	UpgradeConn(*authuser, conn)
 }
 
 /*

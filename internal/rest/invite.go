@@ -20,7 +20,7 @@ func InviteHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = u.Invite(inv.ID, InviteLifespan)
+	_, err = u.Invite(inv, InviteLifespan)
 	if err != nil {
 		RespondError(w, http.StatusBadRequest, err)
 		return

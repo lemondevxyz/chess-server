@@ -1,6 +1,12 @@
 package local
 
-import "fmt"
+// Package local provides a user model to use while debugging/testing.
+
+import (
+	"fmt"
+
+	"github.com/toms1441/chess-server/internal/model"
+)
 
 var i int
 
@@ -11,19 +17,16 @@ type User struct {
 	Username string `json:"username"`
 }
 
-const platform = "local"
+const platform = "127.0.0.1"
 const picture = "https://lemondev.xyz/android-icon-192x192.png"
 
-func NewUser() User {
+func NewUser() model.Profile {
 	i++
 	id := fmt.Sprintf("#%04d", i)
-	return User{
+	return model.Profile{
 		ID:       id,
+		Picture:  picture,
 		Username: id,
+		Platform: platform,
 	}
 }
-
-func (u User) GetPicture() string  { return picture }
-func (u User) GetUsername() string { return u.Username }
-func (u User) GetPublicID() string { return u.ID }
-func (u User) GetPlatform() string { return platform }

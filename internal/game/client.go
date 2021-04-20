@@ -11,7 +11,7 @@ import (
 // Client is a struct used for the server to communicate to the client.
 type Client struct {
 	// W where to write updates
-	W   io.Writer
+	W   io.WriteCloser
 	p1  bool // player 1 or 2??
 	id  string
 	g   *Game

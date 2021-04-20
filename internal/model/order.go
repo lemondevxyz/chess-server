@@ -52,7 +52,8 @@ type CredentialsOrder struct {
 
 // [O]
 type InviteOrder struct {
-	ID string `json:"id" validate:"required"`
+	ID       string `json:"id" validate:"required"`
+	Platform string `json:"platform" validate:"required"`
 }
 
 // [U]

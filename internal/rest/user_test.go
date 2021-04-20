@@ -8,18 +8,24 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"time"
 
 	"github.com/toms1441/chess-server/internal/game"
 	"github.com/toms1441/chess-server/internal/model"
+	"github.com/toms1441/chess-server/internal/model/local"
 )
 
 var (
-	us = &User{}
+	us       = &User{}
+	urd, uwr = io.Pipe()
 )
 
 func TestNewUser(t *testing.T) {
-	us = AddClient(cl1)
+	var err error
+	us, err = AddClient(local.NewUser(), uwr)
+
+	if err != nil {
+		t.Fatalf("AddClient: %s", err.Error())
+	}
 }
 
 func TestGetUser(t *testing.T) {
@@ -47,13 +53,6 @@ func TestGetUser(t *testing.T) {
 
 }
 
-func TestUserClient(t *testing.T) {
-	cl := us.Client()
-	if cl1 != cl {
-		t.Fatalf("not the same pointers")
-	}
-}
-
 func TestUserDelete(t *testing.T) {
 	us.Delete()
 
@@ -62,6 +61,7 @@ func TestUserDelete(t *testing.T) {
 	}
 }
 
+/*
 func TestUserInvite(t *testing.T) {
 	rd1, wr1 = io.Pipe()
 	rd2, wr2 = io.Pipe()
@@ -74,7 +74,11 @@ func TestUserInvite(t *testing.T) {
 	go func() {
 		rd2.Read(make([]byte, 64))
 	}()
-	_, err := us1.Invite(us2.PublicID, lifespan)
+
+	_, err := us1.Invite(model.InviteOrder{
+		ID:       us2.Profile.GetPublicID(),
+		Platform: us2.Profile.GetPlatform(),
+	}, lifespan)
 	if err != nil {
 		t.Fatalf("us.Invite: %s", err.Error())
 	}
@@ -97,7 +101,10 @@ func TestUserAcceptInvite(t *testing.T) {
 	ch := make(chan error)
 
 	go func() {
-		_, err = us1.Invite(us2.PublicID, InviteLifespan)
+		_, err = us1.Invite(model.InviteOrder{
+			ID:       us2.Profile.GetPublicID(),
+			Platform: us2.Profile.GetPlatform(),
+		}, InviteLifespan)
 		if err != nil {
 			ch <- fmt.Errorf("us.Invite: %s", err.Error())
 			return
@@ -167,6 +174,7 @@ func TestUserAcceptInvite(t *testing.T) {
 	}
 
 }
+*/
 
 func TestGetAvaliableUsersHandler(t *testing.T) {
 	go func() {
@@ -178,7 +186,6 @@ func TestGetAvaliableUsersHandler(t *testing.T) {
 		<-read(rd1)
 	}()
 	us1.Client().LeaveGame()
-	//us2.Client().LeaveGame()
 
 	handle := http.HandlerFunc(GetAvaliableUsersHandler)
 
@@ -190,7 +197,7 @@ func TestGetAvaliableUsersHandler(t *testing.T) {
 
 	req.Header.Add("Authorization", us1.Token)
 
-	avali := []string{}
+	avali := []model.Profile{}
 
 	handle.ServeHTTP(resp, req)
 	body, err := ioutil.ReadAll(resp.Body)
@@ -208,7 +215,7 @@ func TestGetAvaliableUsersHandler(t *testing.T) {
 
 	game.NewGame(cl1, cl2)
 
-	avali = []string{}
+	avali = []model.Profile{}
 
 	handle.ServeHTTP(resp, req)
 	body, err = ioutil.ReadAll(resp.Body)

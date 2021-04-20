@@ -3,6 +3,7 @@ package rest
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
 	"sync"
@@ -37,26 +38,30 @@ func ClientChannel() chan *User {
 	return chanuser
 }
 
-func AddClient(profile model.Profile, c *game.Client) *User {
-	usermtx.Lock()
+func AddClient(profile model.Profile, wc io.WriteCloser) (*User, error) {
+	if wc == nil || !profile.Valid() {
+		return nil, fmt.Errorf("one of the parameters is nil")
+	}
 
 	id := betterguid.New()
 	us := &User{
 		invite: map[string]*User{},
-		cl:     c,
+		cl: &game.Client{
+			W: wc,
+		},
 	}
 
 	us.Token = id
 	us.Profile = profile
 
+	usermtx.Lock()
 	users[id] = us
+	usermtx.Unlock()
 	go func() {
 		chanuser <- us
 	}()
 
-	usermtx.Unlock()
-
-	return us
+	return us, nil
 }
 
 func GetUser(r *http.Request) (*User, error) {
@@ -82,13 +87,13 @@ func GetAvaliableUsersHandler(w http.ResponseWriter, r *http.Request) {
 	ids := []json.RawMessage{}
 	for _, v := range users {
 		// lamo you can't invite yourself
-		if v.Profile.GetPublicID() == u.Profile.GetPublicID() && v.Profile.GetPlatform() == u.Profile.GetPlatform() {
+		if v.Profile.ID == u.Profile.ID && v.Profile.Platform == u.Profile.Platform {
 			continue
 		}
 
 		if v.Valid() {
 			if v.Client().Game() == nil {
-				body, err := model.MarshalProfile(v.Profile)
+				body, err := json.Marshal(v.Profile)
 				if err != nil {
 					RespondError(w, http.StatusInternalServerError, err)
 					return
@@ -106,15 +111,18 @@ func (u *User) Client() *game.Client {
 }
 
 func (u *User) Delete() {
-	u.Profile = nil
+	id := u.Token
+
+	u.Profile = model.Profile{}
 	u.Token = ""
 	if u.cl.Game() != nil {
 		u.cl.LeaveGame()
 	}
 	u.cl = nil
 	u.invite = nil
+
 	usermtx.Lock()
-	delete(users, u.Token)
+	delete(users, id)
 	usermtx.Unlock()
 }
 
@@ -134,7 +142,7 @@ func (u *User) Valid() bool {
 	return true
 }
 
-func (u *User) Invite(pubid string, lifespan time.Duration) (string, error) {
+func (u *User) Invite(inv model.InviteOrder, lifespan time.Duration) (string, error) {
 	// make sure panic don't happen
 	if !u.Valid() {
 		return "", game.ErrClientNil
@@ -145,7 +153,8 @@ func (u *User) Invite(pubid string, lifespan time.Duration) (string, error) {
 
 	var vs *User
 	for _, v := range users {
-		if v.Profile.GetPublicID() == pubid {
+		pro := v.Profile
+		if pro.ID == inv.ID && pro.Platform == inv.Platform {
 			vs = v
 			break
 		}

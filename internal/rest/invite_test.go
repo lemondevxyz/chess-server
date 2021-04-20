@@ -20,7 +20,8 @@ func TestInviteHandler(t *testing.T) {
 	//us2.cl.LeaveGame()
 
 	x := model.InviteOrder{
-		ID: us2.PublicID,
+		ID:       us2.Profile.ID,
+		Platform: us2.Profile.Platform,
 	}
 	body, err := json.Marshal(x)
 	if err != nil {
@@ -86,7 +87,8 @@ func TestInviteHandler(t *testing.T) {
 
 func TestAcceptInviteHandler(t *testing.T) {
 	i := model.InviteOrder{
-		ID: _inviteCode,
+		ID:       _inviteCode,
+		Platform: ".",
 	}
 
 	body, err := json.Marshal(i)

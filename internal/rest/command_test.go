@@ -13,22 +13,18 @@ import (
 	"github.com/toms1441/chess-server/internal/board"
 	"github.com/toms1441/chess-server/internal/game"
 	"github.com/toms1441/chess-server/internal/model"
+	"github.com/toms1441/chess-server/internal/model/local"
 )
 
 var (
 	rd1, wr1 = io.Pipe()
 	rd2, wr2 = io.Pipe()
 
-	cl1 = &game.Client{
-		W: wr1,
-	}
+	us1, _ = AddClient(local.NewUser(), wr1)
+	us2, _ = AddClient(local.NewUser(), wr2)
 
-	cl2 = &game.Client{
-		W: wr2,
-	}
-
-	us1 = AddClient(cl1)
-	us2 = AddClient(cl2)
+	cl1 = us1.Client()
+	cl2 = us2.Client()
 
 	gGame, _ = game.NewGame(cl1, cl2)
 )

@@ -1,27 +1,18 @@
 package model
 
-import "encoding/json"
-
-// Profile is an interface used to get information about the user.
-// Having it as an interface makes it easy to swap oauth2 platforms.
-type Profile interface {
-	// GetPicture returns a URL of the profile picture of the user
-	GetPicture() string
-	// GetUsername returns a the name of the user
-	GetUsername() string
-	// GetPublicID returns the public id for the user, public id is primarily used by the invite system.
-	GetPublicID() string
-	// GetPlatform returns the platform of that user, in lower case. E.g. "google", "facebook"
-	GetPlatform() string
+// ProfileGetter is an interface to get profile
+type ProfileGetter interface {
+	GetProfile() Profile
 }
 
-func MarshalProfile(p Profile) ([]byte, error) {
-	m := map[string]string{
-		"id":       p.GetPublicID(),
-		"picture":  p.GetPicture(),
-		"username": p.GetUsername(),
-		"platform": p.GetPlatform(),
-	}
+// Profile is a generic struct used to get information about the user.
+type Profile struct {
+	ID       string `json:"id"`
+	Picture  string `json:"picture"`
+	Username string `json:"username"`
+	Platform string `json:"platform"`
+}
 
-	return json.Marshal(m)
+func (p Profile) Valid() bool {
+	return len(p.ID) > 0 && len(p.Picture) > 0 && len(p.Username) > 0
 }

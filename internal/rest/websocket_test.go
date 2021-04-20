@@ -10,6 +10,7 @@ import (
 	"github.com/gobwas/ws"
 	"github.com/gobwas/ws/wsutil"
 	"github.com/toms1441/chess-server/internal/model"
+	"github.com/toms1441/chess-server/internal/model/local"
 )
 
 var (
@@ -40,7 +41,7 @@ func TestWsDial(t *testing.T) {
 			return
 		}
 
-		wcl, err = UpgradeConn(y)
+		wcl, err = UpgradeConn(local.NewUser(), y)
 		if err != nil {
 			x <- err
 		} else {
@@ -96,7 +97,7 @@ func TestWsWrite(t *testing.T) {
 		t.Fatalf("json.Unmarshal: %s", err.Error())
 	}
 
-	if u.Token != wcl.u.Token || u.PublicID != wcl.u.PublicID {
+	if u.Token != wcl.u.Token || u.Profile.ID != wcl.u.Profile.ID {
 		t.Log(u, wcl.u)
 		t.Fatalf("ids do not match")
 	}
@@ -134,7 +135,7 @@ func TestWsClose(t *testing.T) {
 	x := wcl.ClosedChannel()
 
 	go func() {
-		wcl.Close(ws.StatusNormalClosure, "")
+		wcl.Close()
 	}()
 
 	select {
