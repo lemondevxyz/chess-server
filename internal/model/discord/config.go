@@ -29,7 +29,7 @@ func NewAuthConfig(cfg Config) auth.Config {
 		MeURL:  meurl.String(),
 		ID:     "discord",
 		Logout: logouturl.String(),
-		Unmarshal: func(reader io.ReadCloser) model.Profile {
+		Unmarshal: func(reader io.ReadCloser) *model.Profile {
 			defer reader.Close()
 
 			decode := json.NewDecoder(reader)
@@ -39,7 +39,8 @@ func NewAuthConfig(cfg Config) auth.Config {
 				return nil
 			}
 
-			return user
+			pro := user.GetProfile()
+			return &pro
 		},
 	}
 }
