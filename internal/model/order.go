@@ -60,9 +60,9 @@ type InviteOrder struct {
 // [U]
 type GameOrder struct {
 	// which pieces are yours
-	P1 bool `json:"p1"`
+	P1 bool `json:"p1,omitempty"`
 	// Profile is the other player's profile
-	Profile Profile      `json:"profile"`
+	Profile Profile      `json:"profile,omitempty"`
 	Brd     *board.Board `json:"brd"`
 }
 
@@ -97,5 +97,5 @@ type CheckmateOrder TurnOrder
 
 // [O]
 type DoneOrder struct {
-	P1 bool `json:"p1" validate:"required"`
+	P1 bool `json:"p1"`
 }

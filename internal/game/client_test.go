@@ -148,7 +148,7 @@ func TestInPromotion(t *testing.T) {
 		t.Fatalf("cl1.Do: %s", err.Error())
 	}
 
-	pec, err := cl1.g.b.GetByIndex(17)
+	pec, err := cl1.g.brd.GetByIndex(17)
 	t.Log(pec, err)
 	if cl1.inPromotion() == true {
 		t.Fatalf("client is in promotion, after promotion.")

@@ -39,7 +39,7 @@ func init() {
 				return ErrIllegalMove
 			}
 
-			pec, err := g.b.GetByIndex(s.ID)
+			pec, err := g.brd.GetByIndex(s.ID)
 			// check that piece is valid
 			if err != nil || !pec.Valid() {
 				return ErrPieceNil
@@ -51,7 +51,7 @@ func init() {
 			}
 
 			// do the order
-			ret := g.b.Move(s.ID, s.Dst)
+			ret := g.brd.Move(s.ID, s.Dst)
 			if ret == false {
 				return ErrIllegalMove
 			}
@@ -91,7 +91,7 @@ func init() {
 				return fmt.Errorf("json.Unmarshal: %w", err)
 			}
 
-			pec, err := g.b.GetByIndex(s.ID)
+			pec, err := g.brd.GetByIndex(s.ID)
 			if err != nil {
 				return board.ErrEmptyPiece
 			}
@@ -105,7 +105,7 @@ func init() {
 			}
 
 			pec.Kind = s.Kind
-			err = g.b.SetKind(s.ID, pec.Kind)
+			err = g.brd.SetKind(s.ID, pec.Kind)
 			if err != nil {
 				return err
 			}
@@ -160,7 +160,7 @@ func init() {
 				rookid = r2
 			}
 
-			brd := c.g.b
+			brd := c.g.brd
 			pecrook, err := brd.GetByIndex(rookid)
 			if err != nil {
 				return board.ErrEmptyPiece

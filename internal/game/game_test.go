@@ -196,7 +196,7 @@ func TestGameDone(t *testing.T) {
 		          P
 		P P P P P     P
 		R N B Q K B N R
-		t.Logf("\n%s", gGame.b)
+		t.Logf("\n%s", gGame.brd)
 	*/
 
 	lc1 := gGame.cs[true]
@@ -205,6 +205,6 @@ func TestGameDone(t *testing.T) {
 		t.Fatalf("gGame cs: %v | %v", lc1, lc2)
 	}
 
-	t.Logf("\n%s", gGame.b.String())
+	t.Logf("\n%s", gGame.brd.String())
 
 }

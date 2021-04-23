@@ -2,17 +2,33 @@ package game
 
 import (
 	"encoding/json"
+	"io"
+	"sync"
 
+	"github.com/kjk/betterguid"
 	"github.com/toms1441/chess-server/internal/board"
 	"github.com/toms1441/chess-server/internal/model"
 )
 
 type Game struct {
-	cs        map[bool]*Client // refers to p1
-	turn      bool             // refers to p1
-	done      bool
-	b         *board.Board
-	canCastle map[bool]bool // refers to p1
+	// cs is a map of p1 and !p1 linking them to a client pointer
+	cs map[bool]*Client
+	// turn is a flip flop of p1. SwitchTurn
+	turn bool
+	// done is set whenever the game ends
+	done bool
+	// listenDone is a channel that gets closed whenever the game ends
+	listenDone chan struct{}
+	// b is the board used for the game
+	brd *board.Board
+	// canCastle is a map containing if each player could castle or not. canCastle gets set to false whenever the king or either rook moves...
+	canCastle map[bool]bool
+	// spectators is a map of ids assigned to io writers.
+	// Spectators cannot send commands, and only have access to the following updates:
+	// OrMove, OrTurn, OrPromotion, OrCastling, OrCheckmate, OrDone
+	// All spectator operations should be non-blocking, and should be ignored if they fail
+	spectators map[string]io.Writer
+	mtx        sync.Mutex
 }
 
 // NewGame creates a game for client 1 and client 2(cl1, cl2). It fails whenever the clients are already in a game, or one of them is nil.
@@ -40,13 +56,14 @@ func NewGame(cl1, cl2 *Client) (*Game, error) {
 			true:  true,
 			false: true,
 		},
+		listenDone: make(chan struct{}),
 	}
 
 	cl1.g, cl2.g = g, g
 
-	g.b = board.NewBoard()
+	g.brd = board.NewBoard()
 
-	g.b.Listen(func(id int8, p board.Piece, src board.Point, dst board.Point) {
+	g.brd.Listen(func(id int8, p board.Piece, src board.Point, dst board.Point) {
 		if p.Kind == board.Pawn {
 			if dst.Y == 7 || dst.Y == 0 {
 				c := g.cs[p.P1]
@@ -72,11 +89,14 @@ func NewGame(cl1, cl2 *Client) (*Game, error) {
 
 // SwitchTurn called after a player ends their turn, to notify the other player.
 func (g *Game) SwitchTurn() {
-
+	// old turn
 	bef := g.turn
+	// new turn
 	aft := !g.turn
 
-	if g.b.FinalCheckmate(aft) {
+	// well, do we have a final checkmate on the other player?
+	if g.brd.FinalCheckmate(aft) {
+		// if so, gg
 		g.UpdateAll(model.Order{
 			ID:        model.OrDone,
 			Parameter: bef,
@@ -87,18 +107,17 @@ func (g *Game) SwitchTurn() {
 		return
 	}
 
+	// change the turn
+	g.mtx.Lock()
 	g.turn = aft
+	g.mtx.Unlock()
 
 	x, _ := json.Marshal(model.TurnOrder{
 		P1: aft,
 	})
 
-	if g.b.Checkmate(aft) {
-		g.Update(g.cs[aft], model.Order{
-			ID:        model.OrCheckmate,
-			Parameter: aft,
-		})
-		g.Update(g.cs[bef], model.Order{
+	if g.brd.Checkmate(aft) {
+		g.UpdateAll(model.Order{
 			ID:        model.OrCheckmate,
 			Parameter: aft,
 		})
@@ -108,6 +127,10 @@ func (g *Game) SwitchTurn() {
 
 // IsTurn returns if it's the client's turn this time
 func (g *Game) IsTurn(c *Client) bool {
+	if c == nil {
+		return false
+	}
+
 	return c.p1 == g.turn
 }
 
@@ -166,16 +189,55 @@ func (g *Game) UpdateAll(u model.Order) error {
 	g.cs[true].W.Write(body)
 	g.cs[false].W.Write(body)
 
+	go func() {
+		for _, writer := range g.spectators {
+			writer.Write(body)
+		}
+	}()
+
 	return nil
 }
 
 // Board returns the actual board.
-func (g *Game) Board() *board.Board {
-	return g.b
+func (g *Game) Board() *board.Board { return g.brd }
+
+// ListenForDone returns a channel that gets closed when the game ends.
+func (g *Game) ListenForDone() chan struct{} { return g.listenDone }
+
+// AddSpectator adds a spectator to the list of spectators in the game, and returns it's id.
+func (g *Game) AddSpectator(spectator io.Writer) string {
+	id := betterguid.New()
+
+	g.mtx.Lock()
+	defer g.mtx.Unlock()
+
+	g.spectators[id] = spectator
+	go func() {
+		body, _ := json.Marshal(model.GameOrder{Brd: g.brd})
+		body, _ = json.Marshal(model.Order{ID: model.OrGame, Data: body})
+
+		spectator.Write(body)
+	}()
+
+	return id
 }
 
-// Close closes the game, and cleans up the clients
+// RmSpectator removes a spectator from the list of spectators, and is safe if the id is invalid
+func (g *Game) RmSpectator(id string) {
+	g.mtx.Lock()
+	defer g.mtx.Unlock()
+
+	delete(g.spectators, id)
+}
+
+// Close closes the game, and cleans up any data assigned to the clients or the game struct. It does not send a message to clients indicating that the game is closed
 func (g *Game) close() {
+	defer g.mtx.Unlock()
+	g.mtx.Lock()
+	go func() {
+		close(g.listenDone)
+	}()
+
 	do := func(cl *Client) {
 		if cl.g != nil {
 			cl.mtx.Lock()

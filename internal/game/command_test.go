@@ -74,7 +74,7 @@ func TestCommandMove(t *testing.T) {
 			t.Logf("\n%v", x)
 		}
 
-		_, pec, err := cl.g.b.Get(dst)
+		_, pec, err := cl.g.brd.Get(dst)
 		if err != nil || !pec.Valid() {
 			return fmt.Errorf("piece is nil")
 		}
@@ -112,7 +112,7 @@ func TestCommandPromotion(t *testing.T) {
 	cl1.g, cl2.g = nil, nil
 	gGame, _ = NewGame(cl1, cl2)
 
-	pec, err := gGame.b.GetByIndex(id)
+	pec, err := gGame.brd.GetByIndex(id)
 	if err != nil {
 		t.Fatalf("board.Get: %s", err)
 	}
@@ -120,21 +120,21 @@ func TestCommandPromotion(t *testing.T) {
 
 	ch := make(chan error)
 	go func() {
-		pec, _ := gGame.b.GetByIndex(id)
+		pec, _ := gGame.brd.GetByIndex(id)
 		pos.Y -= 2
-		if !gGame.b.Move(id, pos) {
+		if !gGame.brd.Move(id, pos) {
 			//fmt.Println("error 1")
 			ch <- fmt.Errorf("here cannot move from %v to %v", pec.Pos, pos)
 			return
 		}
 
-		gGame.b.Set(3, board.Point{-1, -1})
-		gGame.b.Set(11, board.Point{-1, -1})
+		gGame.brd.Set(3, board.Point{-1, -1})
+		gGame.brd.Set(11, board.Point{-1, -1})
 
 		for i := 0; i < 4; i++ {
-			pec, _ := gGame.b.GetByIndex(id)
+			pec, _ := gGame.brd.GetByIndex(id)
 			pos.Y -= 1
-			if !gGame.b.Move(id, pos) {
+			if !gGame.brd.Move(id, pos) {
 				//fmt.Println("error 2")
 				ch <- fmt.Errorf("cannot move from %v to %v", pec.Pos, pos)
 				return
@@ -236,9 +236,9 @@ func TestCommandCastling(t *testing.T) {
 		row := board.GetRangeStart(cl.p1)
 		for _, v := range row {
 
-			pec, _ := gGame.b.GetByIndex(v)
+			pec, _ := gGame.brd.GetByIndex(v)
 			if pec.Kind != board.Rook && pec.Kind != board.King {
-				gGame.b.Set(v, board.Point{-1, -1})
+				gGame.brd.Set(v, board.Point{-1, -1})
 			}
 		}
 
@@ -261,11 +261,11 @@ func TestCommandCastling(t *testing.T) {
 			x2 = clientRead(rd2)
 		}()
 
-		pecking, err := gGame.b.GetByIndex(king)
+		pecking, err := gGame.brd.GetByIndex(king)
 		if err != nil {
 			t.Fatalf("board.GetByIndex(king): %s", err.Error())
 		}
-		pecrook, err := gGame.b.GetByIndex(rook)
+		pecrook, err := gGame.brd.GetByIndex(rook)
 		if err != nil {
 			t.Fatalf("board.GetByIndex(king): %s", err.Error())
 		}
@@ -287,11 +287,11 @@ func TestCommandCastling(t *testing.T) {
 			rookx = pecking.Pos.X
 		}
 
-		pecking, err = gGame.b.GetByIndex(king)
+		pecking, err = gGame.brd.GetByIndex(king)
 		if err != nil {
 			t.Fatalf("board.GetByIndex(king): %s", err.Error())
 		}
-		pecrook, err = gGame.b.GetByIndex(rook)
+		pecrook, err = gGame.brd.GetByIndex(rook)
 		if err != nil {
 			t.Fatalf("board.GetByIndex(king): %s", err.Error())
 		}
@@ -302,12 +302,12 @@ func TestCommandCastling(t *testing.T) {
 
 		want := board.Point{rookmap[rookx], y}
 		if !pecrook.Pos.Equal(want) {
-			t.Logf("\n%s", gGame.b.String())
+			t.Logf("\n%s", gGame.brd.String())
 			t.Fatalf("rook's position hasn't changed. want: %s | have: %s", want, pecrook.Pos)
 		}
 		want = board.Point{kingmap[rookx], y}
 		if !pecking.Pos.Equal(want) {
-			t.Logf("\n%s", gGame.b.String())
+			t.Logf("\n%s", gGame.brd.String())
 			t.Fatalf("king's position hasn't changed. want: %s | have: %s", want, pecking.Pos)
 		}
 	}

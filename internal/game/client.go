@@ -73,7 +73,7 @@ func (c *Client) P1() bool {
 
 func (c *Client) inPromotion() bool {
 	for _, v := range board.GetRangePawn(c.p1) {
-		pawn, err := c.g.b.GetByIndex(v)
+		pawn, err := c.g.brd.GetByIndex(v)
 		if err != nil {
 			return true
 		}
