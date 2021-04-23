@@ -15,7 +15,7 @@ func InviteHandler(w http.ResponseWriter, r *http.Request) {
 
 	inv := model.InviteOrder{}
 	err = BindJSON(r, &inv)
-	if err != nil {
+	if err != nil || len(inv.Platform) == 0 {
 		RespondError(w, http.StatusBadRequest, err)
 		return
 	}

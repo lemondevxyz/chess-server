@@ -174,7 +174,8 @@ func (u *User) Invite(inv model.InviteOrder, lifespan time.Duration) (string, er
 
 	id := randstr.String(4)
 	param := model.InviteOrder{
-		ID: id,
+		ID:      id,
+		Profile: vs.Profile,
 	}
 
 	body, err := json.Marshal(param)
@@ -230,15 +231,16 @@ func (u *User) AcceptInvite(tok string) error {
 	}
 
 	jsu, err := json.Marshal(model.GameOrder{
-		P1:    u.Client().P1(),
-		Board: b,
+		P1:      u.Client().P1(),
+		Profile: vs.Profile,
+		Brd:     b,
 	})
 	if err != nil {
 		return cancel(err)
 	}
 	jsv, err := json.Marshal(model.GameOrder{
-		P1:    vs.Client().P1(),
-		Board: b,
+		P1:  vs.Client().P1(),
+		Brd: b,
 	})
 	if err != nil {
 		return cancel(err)

@@ -17,7 +17,7 @@ const apiver = "v1"
 
 func main() {
 	if debug != "no" {
-		// go debug_game()
+		go debug_game()
 	}
 
 	rout := mux.NewRouter()

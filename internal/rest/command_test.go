@@ -122,7 +122,7 @@ func TestCommandRequest(t *testing.T) {
 func TestPossibleRequest(t *testing.T) {
 
 	id := int8(15)
-	possib := model.PossibleOrder{
+	possib := model.Possible{
 		ID: id,
 	}
 

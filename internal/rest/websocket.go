@@ -162,21 +162,6 @@ func UpgradeConn(profile model.Profile, conn net.Conn) (*WsClient, error) {
 	// send token to the client
 	ch := make(chan error)
 	go func(u *User, ch chan error) {
-		/*
-			var err error
-			m["profile"], err = model.MarshalProfile(u.Profile)
-			if err != nil {
-				ch <- err
-				return
-			}
-
-			m["token"], err = json.Marshal(u.Token)
-			if err != nil {
-				ch <- err
-				return
-			}
-		*/
-
 		body, err := json.Marshal(u)
 		if err != nil {
 			ch <- err

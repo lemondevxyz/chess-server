@@ -62,7 +62,7 @@ func PossibHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	possib := model.PossibleOrder{}
+	possib := model.Possible{}
 	err = BindJSON(r, &possib)
 	if err != nil {
 		RespondError(w, http.StatusBadRequest, err)
@@ -78,7 +78,7 @@ func PossibHandler(w http.ResponseWriter, r *http.Request) {
 
 	points, _ := brd.Possib(possib.ID)
 
-	possib = model.PossibleOrder{}
+	possib = model.Possible{}
 	possib.Points = &points
 
 	RespondJSON(w, http.StatusOK, possib)

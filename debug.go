@@ -13,10 +13,10 @@ import (
 	"github.com/toms1441/chess-server/internal/rest"
 )
 
-//var debug = "yes"
-var debug = "promotion"
+var debug = "yes"
 
-const p1 = false
+const p1 = true
+const solo = false
 
 func debug_game() {
 	fmt.Println("endless loop mode")
@@ -27,20 +27,22 @@ func debug_game() {
 		x := rest.ClientChannel()
 		cl1 := <-x
 		time.Sleep(time.Second)
-		go func() {
-			cn, _, _, err := ws.Dial(context.Background(), "ws://localhost:8080/api/v1/ws")
-			if err != nil {
-				fmt.Printf("ws.Dial: %s\n", err)
-			}
-
-			for {
-				b := make([]byte, 2048)
-				_, err := cn.Read(b)
+		if solo {
+			go func() {
+				cn, _, _, err := ws.Dial(context.Background(), "ws://localhost:8080/api/v1/ws")
 				if err != nil {
-					panic(err)
+					fmt.Printf("ws.Dial: %s\n", err)
 				}
-			}
-		}()
+
+				for {
+					b := make([]byte, 2048)
+					_, err := cn.Read(b)
+					if err != nil {
+						panic(err)
+					}
+				}
+			}()
+		}
 		cl2 := <-x
 		if !p1 {
 			cl1, cl2 = cl2, cl1

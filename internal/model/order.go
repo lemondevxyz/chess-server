@@ -21,14 +21,10 @@ const (
 	OrCredentials uint8 = iota + 1
 	// Invite is sent whenever a user receives an invite to a game. [U]
 	OrInvite
-	// Watchable is an update indicating a watchable game. [U]
-	OrWatchable
 	// Game is sent whenever a game starts. Sent by the invite handler. [U]
 	OrGame
-	// Move is sent/received whenever a player's piece moves. If the src is from the king/rook, if the dst is from the rook/king. And both src and dst belong to the player then Castling is called. So it's sort  [O]
+	// Move is sent/received whenever a player's piece moves. If the src is from the king/rook, if the dst is from the rook/king.
 	OrMove
-	// Possible is sent to view which moves are avaliable. It uses http instead of websocket to receive the update via it's own handler. [O]
-	OrPossible
 	// Turn is sent whenever a player moves a piece / special cases such as a promotion. [U]
 	OrTurn
 	// Promote is received from a player, to change a pawn that reached the end of the board to a dead piece. [O]
@@ -52,34 +48,28 @@ type CredentialsOrder struct {
 
 // [O]
 type InviteOrder struct {
-	ID       string `json:"id" validate:"required"`
-	Platform string `json:"platform" validate:"required"`
-}
-
-// [U]
-type WatchableOrder struct {
-	P1    Profile      `json:"p1"`
-	P2    Profile      `json:"p2"`
-	Board *board.Board `json:"board"`
+	// ID is the public id of the user when used for a command
+	// and becomes the id for the invite when used for an update..
+	ID string `json:"id" validate:"required"`
+	// Platform is only used for commands
+	Platform string `json:"platform"`
+	// Profile is only used for updates...
+	Profile Profile `json:"profile,omitempty"`
 }
 
 // [U]
 type GameOrder struct {
 	// which pieces are yours
-	P1    bool         `json:"p1"`
-	Board *board.Board `json:"board"`
+	P1 bool `json:"p1"`
+	// Profile is the other player's profile
+	Profile Profile      `json:"profile"`
+	Brd     *board.Board `json:"brd"`
 }
 
 // [O]
 type MoveOrder struct {
 	ID  int8        `json:"id"`
 	Dst board.Point `json:"dst"`
-}
-
-// [O] sent as response to http
-type PossibleOrder struct {
-	ID     int8          `json:"id,omitempty" validate:"required"` // [C]
-	Points *board.Points `json:"points,omitempty"`                 // [U]
 }
 
 // [U]
