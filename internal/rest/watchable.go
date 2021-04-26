@@ -10,7 +10,7 @@ import (
 	"github.com/toms1441/chess-server/internal/model"
 )
 
-const cacheDuration = time.Minute
+var cacheDuration = time.Minute
 
 type cacheWatchable struct {
 	mtx   sync.Mutex
@@ -26,6 +26,8 @@ func (c *cacheWatchable) Add(m model.Watchable) string {
 	c.slice[id] = m
 	watchable.mtx.Unlock()
 
+	go c.Rebuild(true)
+
 	return id
 }
 
@@ -33,6 +35,8 @@ func (c *cacheWatchable) Rm(id string) {
 	watchable.mtx.Lock()
 	delete(c.slice, id)
 	watchable.mtx.Unlock()
+
+	go c.Rebuild(true)
 }
 
 func (c *cacheWatchable) Rebuild(force bool) {
