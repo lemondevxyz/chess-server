@@ -61,9 +61,6 @@ func TestUserDelete(t *testing.T) {
 	}
 }
 
-/*
- */
-
 func TestGetAvaliableUsersHandler(t *testing.T) {
 	go func() {
 		// turn update

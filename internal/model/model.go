@@ -4,10 +4,10 @@ import "github.com/toms1441/chess-server/internal/board"
 
 // Profile is a generic struct used to get information about the user.
 type Profile struct {
-	ID       string `json:"id"`
-	Picture  string `json:"picture"`
-	Username string `json:"username"`
-	Platform string `json:"platform"`
+	ID       string `json:"id" validate:"required"`
+	Picture  string `json:"picture" validate:"required"`
+	Username string `json:"username" validate:"required"`
+	Platform string `json:"platform" validate:"required"`
 }
 
 func (p Profile) Valid() bool {

@@ -48,13 +48,8 @@ type CredentialsOrder struct {
 
 // [O]
 type InviteOrder struct {
-	// ID is the public id of the user when used for a command
-	// and becomes the id for the invite when used for an update..
-	ID string `json:"id" validate:"required"`
-	// Platform is only used for commands
-	Platform string `json:"platform"`
 	// Profile is only used for updates...
-	Profile Profile `json:"profile,omitempty"`
+	Profile Profile `json:"profile" validate:"required"`
 }
 
 // [U]

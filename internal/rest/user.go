@@ -16,6 +16,7 @@ import (
 
 type User struct {
 	model.CredentialsOrder
+	mtx    sync.Mutex
 	invite map[string]*User
 	cl     *game.Client
 }
