@@ -12,11 +12,13 @@ import (
 var _watchableId = ""
 
 func TestWatchableAdd(t *testing.T) {
+	t.Log(len(watchable.slice))
+
 	oldcache := string(watchable.cache)
 	_watchableId = watchable.Add(model.Watchable{
 		P1:  local.NewUser(),
 		P2:  local.NewUser(),
-		Brd: *board.NewBoard(),
+		Brd: board.NewBoard(),
 	})
 
 	if len(_watchableId) == 0 {

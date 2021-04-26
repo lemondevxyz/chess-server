@@ -22,7 +22,7 @@ type Possible struct {
 
 // Watchable is a game that could be spectated
 type Watchable struct {
-	P1  Profile     `json:"p1"`
-	P2  Profile     `json:"p2"`
-	Brd board.Board `json:"brd"`
+	P1  Profile      `json:"p1"`
+	P2  Profile      `json:"p2"`
+	Brd *board.Board `json:"brd"`
 }
