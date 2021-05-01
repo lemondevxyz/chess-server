@@ -78,6 +78,7 @@ func WatchableHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(watchable.cache)
 }
 
+/*
 func SpectateHandler(w http.ResponseWriter, r *http.Request) {
 	u, err := GetUser(r)
 	if err != nil {
@@ -85,3 +86,4 @@ func SpectateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+*/
