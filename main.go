@@ -41,6 +41,8 @@ func main() {
 			w.WriteHeader(http.StatusOK)
 			w.Write(nil)
 		}).Methods("GET")
+
+		api.HandleFunc("/watchable", rest.WatchableHandler).Methods("GET", "OPTIONS")
 	}
 
 	{

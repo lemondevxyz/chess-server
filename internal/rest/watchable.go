@@ -2,6 +2,7 @@ package rest
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"sync"
 	"time"
@@ -65,7 +66,22 @@ var watchable = cacheWatchable{
 }
 
 func WatchableHandler(w http.ResponseWriter, r *http.Request) {
+	_, err := GetUser(r)
+	if err != nil {
+		RespondError(w, http.StatusUnauthorized, fmt.Errorf("you must be logged in to view watchable games"))
+		return
+	}
+
 	watchable.Rebuild(false)
 
-	BindJSON(r, watchable.cache)
+	w.WriteHeader(http.StatusOK)
+	w.Write(watchable.cache)
+}
+
+func SpectateHandler(w http.ResponseWriter, r *http.Request) {
+	u, err := GetUser(r)
+	if err != nil {
+		RespondError(w, http.StatusUnauthorized, fmt.Errorf("you must be logged in to view watchable games"))
+		return
+	}
 }

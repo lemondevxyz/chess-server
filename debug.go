@@ -13,21 +13,41 @@ import (
 	"github.com/toms1441/chess-server/internal/rest"
 )
 
-var debug = "yes"
+var debug = "watchable"
 
 const p1 = true
-const solo = false
+
+var solo = true
 
 func debug_game() {
 	fmt.Println("endless loop mode")
 	if debug != "yes" {
 		fmt.Printf("debug state: %s\n", debug)
 	}
+	if debug == "watchable" {
+		go func() {
+			cn, _, _, err := ws.Dial(context.Background(), "ws://localhost:8080/api/v1/ws")
+			if err != nil {
+				fmt.Printf("ws.Dial: %s\n", err)
+			}
+
+			for {
+				b := make([]byte, 2048)
+				_, err := cn.Read(b)
+				if err != nil {
+					panic(err)
+				}
+			}
+		}()
+	}
+
 	for {
 		x := rest.ClientChannel()
 		cl1 := <-x
-		time.Sleep(time.Second)
 		if solo {
+			if debug == "watchable" {
+				solo = false
+			}
 			go func() {
 				cn, _, _, err := ws.Dial(context.Background(), "ws://localhost:8080/api/v1/ws")
 				if err != nil {
@@ -42,20 +62,22 @@ func debug_game() {
 					}
 				}
 			}()
+			time.Sleep(time.Second)
 		}
 		cl2 := <-x
 		if !p1 {
 			cl1, cl2 = cl2, cl1
 		}
 
-		id, _ := cl2.Invite(model.InviteOrder{
-			ID:       cl1.Profile.ID,
-			Platform: cl1.Profile.Platform,
+		err := cl2.Invite(model.InviteOrder{
+			Profile: cl1.Profile,
 		}, rest.InviteLifespan)
+		if err != nil {
+			panic(err)
+		}
 		time.Sleep(time.Millisecond * 10)
-		cl1.AcceptInvite(id)
+		cl1.AcceptInvite(cl2.Profile.ID + "_" + cl2.Profile.Platform)
 
-		var err error
 		switch debug {
 		case "castling":
 			err = debugCastling(cl1.Client(), cl2.Client())
