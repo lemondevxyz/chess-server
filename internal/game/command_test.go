@@ -351,15 +351,18 @@ func TestCommandDone(t *testing.T) {
 		t.Fatalf("NewGame: %s", err.Error())
 	}
 
-	done := make(chan map[string]interface{})
+	done := make(chan model.DoneOrder)
 	go func() {
 		b := <-clientRead(rd1)
 		<-clientRead(rd2)
-		pam := map[string]interface{}{}
 
-		json.Unmarshal(b, &pam)
+		or := model.Order{}
+		json.Unmarshal(b, &or)
 
-		done <- pam
+		do := model.DoneOrder{}
+		json.Unmarshal(or.Data, &do)
+
+		done <- do
 	}()
 	err = cl1.Do(model.Order{
 		ID:   model.OrDone,
@@ -369,15 +372,13 @@ func TestCommandDone(t *testing.T) {
 		t.Fatalf("cl.Do: %s", err.Error())
 	}
 
-	pam := <-done
-	data := pam["data"].(map[string]interface{})
+	do := <-done
+	won := do.Reason
 
-	won := data["p1"].(bool)
-
-	if cl1.P1() == won {
+	if won == model.DoneWhiteWon {
 		t.Fatalf("cl1 should be the one who's losing, not winning")
 	}
-	if cl2.P1() != won {
+	if won != model.DoneBlackWon {
 		t.Fatalf("cl2 should be the one who won, not losing..")
 	}
 

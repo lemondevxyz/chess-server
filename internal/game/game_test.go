@@ -3,6 +3,7 @@ package game
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"testing"
 	"time"
 
@@ -11,6 +12,8 @@ import (
 )
 
 var gGame, _ = NewGame(cl1, cl2)
+var specR, specW = io.Pipe()
+var specCl = &Client{W: specW}
 
 func TestTurns(t *testing.T) {
 	resetPipe()
@@ -117,6 +120,49 @@ func TestTurns(t *testing.T) {
 				t.Fatalf("err: %s", err.Error())
 			}
 		}
+	}
+}
+
+func TestGameAddSpectator(t *testing.T) {
+	go func() {
+		<-clientRead(rd2)
+	}()
+	cl1.LeaveGame()
+
+	resetPipe()
+
+	var err error
+	gGame, err = NewGame(cl1, cl2)
+
+	if err != nil {
+		t.Fatalf("NewGame: %s", err.Error())
+	}
+
+	done := make(chan bool)
+	go func() {
+		<-clientRead(specR)
+		<-clientRead(specR)
+
+		close(done)
+	}()
+	gGame.AddSpectator(specCl)
+
+	<-done
+}
+
+func TestGameSpectatorUpdate(t *testing.T) {
+	go gGame.SwitchTurn()
+
+	<-clientRead(rd1)
+	<-clientRead(rd2)
+	<-clientRead(specR)
+}
+
+func TestGameRmSpectator(t *testing.T) {
+	gGame.RmSpectator(specCl)
+
+	if _, ok := gGame.spectators[specCl]; ok {
+		t.Fatalf("RmSpectator does not remove the spectator")
 	}
 }
 

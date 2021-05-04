@@ -92,5 +92,14 @@ type CheckmateOrder TurnOrder
 
 // [O]
 type DoneOrder struct {
-	P1 bool `json:"p1"`
+	Reason uint8 `json:"reason"`
 }
+
+const (
+	DoneWhiteWon      uint8 = iota + 1 // white refers to p1
+	DoneBlackWon                       // black refers to !p1
+	DoneStalemate                      // stalemate, no one won
+	DoneWhiteForfeit                   // white forfeits/left
+	DoneBlackForfeit                   // black forfeits/left
+	DoneSpectatorLeft                  // spectator left. only affects spectator
+)

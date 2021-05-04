@@ -19,6 +19,8 @@ type User struct {
 	mtx    sync.Mutex
 	invite map[string]*User
 	cl     *game.Client
+	// if empty, means not spectating
+	watchid string
 }
 
 var users = map[string]*User{}

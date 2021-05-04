@@ -1,6 +1,8 @@
 package model
 
-import "github.com/toms1441/chess-server/internal/board"
+import (
+	"github.com/toms1441/chess-server/internal/board"
+)
 
 // Profile is a generic struct used to get information about the user.
 type Profile struct {
@@ -25,4 +27,9 @@ type Watchable struct {
 	P1  Profile      `json:"p1"`
 	P2  Profile      `json:"p2"`
 	Brd *board.Board `json:"brd"`
+}
+
+// Generic is a struct used for generic stuff. If a model *only* uses ID, then it should use generic.
+type Generic struct {
+	ID string `json:"id"`
 }

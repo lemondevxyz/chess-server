@@ -94,8 +94,8 @@ func TestGetAvaliableUsersHandler(t *testing.T) {
 		t.Fatalf("json.Unmarshal: %s", err.Error())
 	}
 
-	if len(avali) != 1 {
-		t.Fatalf("len(avali): %d - want: 1", len(avali))
+	if len(avali) != 2 {
+		t.Fatalf("len(avali): %d - want: 2", len(avali))
 	}
 
 	game.NewGame(cl1, cl2)
@@ -112,8 +112,8 @@ func TestGetAvaliableUsersHandler(t *testing.T) {
 		t.Fatalf("json.Unmarshal: %s", err.Error())
 	}
 
-	if len(avali) != 0 {
-		t.Fatalf("len(avali): %d - want: 0", len(avali))
+	if len(avali) != 1 {
+		t.Fatalf("len(avali): %d - want: 1", len(avali))
 	}
 
 	rd1, wr1 = io.Pipe()

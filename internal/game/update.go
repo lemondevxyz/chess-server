@@ -77,9 +77,16 @@ var ubs = map[uint8]UpdateCallback{
 			return ErrUpdateParameter
 		}
 
+		var reason uint8
+		if x {
+			reason = model.DoneWhiteWon
+		} else {
+			reason = model.DoneBlackWon
+		}
+
 		var err error
 		u.Data, err = json.Marshal(model.DoneOrder{
-			P1: x,
+			Reason: reason,
 		})
 		if err != nil {
 			return err

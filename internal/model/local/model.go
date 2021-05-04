@@ -4,6 +4,7 @@ package local
 
 import (
 	"fmt"
+	"sync"
 
 	"github.com/toms1441/chess-server/internal/model"
 )
@@ -20,8 +21,13 @@ type User struct {
 const platform = "127.0.0.1"
 const picture = "https://lemondev.xyz/android-icon-192x192.png"
 
+var mtx sync.Mutex
+
 func NewUser() model.Profile {
+	mtx.Lock()
 	i++
+	mtx.Unlock()
+
 	id := fmt.Sprintf("#%04d", i)
 	return model.Profile{
 		ID:       id,

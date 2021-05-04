@@ -35,7 +35,7 @@ func (u *User) Invite(inv model.InviteOrder, lifespan time.Duration) error {
 		return game.ErrClientNil
 	}
 
-	// lamo you though you were slick
+	// lamo you thought you were slick
 	if vs == u {
 		return game.ErrClientNil
 	}
@@ -137,10 +137,8 @@ func (u *User) AcceptInvite(tok string) error {
 
 	g.SwitchTurn()
 
-	id := watchable.Add(model.Watchable{
-		P1:  u.Profile,
-		P2:  vs.Profile,
-		Brd: g.Board(),
+	id := watchable.Add(watchableModel{
+		gm: g,
 	})
 
 	go func() {

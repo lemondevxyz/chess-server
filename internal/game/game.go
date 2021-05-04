@@ -2,10 +2,8 @@ package game
 
 import (
 	"encoding/json"
-	"io"
 	"sync"
 
-	"github.com/kjk/betterguid"
 	"github.com/toms1441/chess-server/internal/board"
 	"github.com/toms1441/chess-server/internal/model"
 )
@@ -27,7 +25,7 @@ type Game struct {
 	// Spectators cannot send commands, and only have access to the following updates:
 	// OrMove, OrTurn, OrPromotion, OrCastling, OrCheckmate, OrDone
 	// All spectator operations should be non-blocking, and should be ignored if they fail
-	spectators map[string]io.Writer
+	spectators map[*Client]struct{}
 	mtx        sync.Mutex
 }
 
@@ -57,6 +55,7 @@ func NewGame(cl1, cl2 *Client) (*Game, error) {
 			false: true,
 		},
 		listenDone: make(chan struct{}),
+		spectators: map[*Client]struct{}{},
 	}
 
 	cl1.g, cl2.g = g, g
@@ -122,6 +121,7 @@ func (g *Game) SwitchTurn() {
 			Parameter: aft,
 		})
 	}
+
 	g.UpdateAll(model.Order{ID: model.OrTurn, Data: x})
 }
 
@@ -190,9 +190,11 @@ func (g *Game) UpdateAll(u model.Order) error {
 	g.cs[false].W.Write(body)
 
 	go func() {
-		for _, writer := range g.spectators {
-			writer.Write(body)
+		g.mtx.Lock()
+		for cl := range g.spectators {
+			cl.W.Write(body)
 		}
+		g.mtx.Unlock()
 	}()
 
 	return nil
@@ -204,30 +206,68 @@ func (g *Game) Board() *board.Board { return g.brd }
 // ListenForDone returns a channel that gets closed when the game ends.
 func (g *Game) ListenForDone() chan struct{} { return g.listenDone }
 
-// AddSpectator adds a spectator to the list of spectators in the game, and returns it's id.
-func (g *Game) AddSpectator(spectator io.Writer) string {
-	id := betterguid.New()
+// AddSpectator adds a spectator to the list of spectators in the game. These spectators receives all UpdateAll updates, and they receive model.GameOrder and model.TurnModel upon calling this function.
+func (g *Game) AddSpectator(cl *Client) error {
+	if cl.g != nil {
+		return ErrGameIsNotNil
+	}
 
 	g.mtx.Lock()
-	defer g.mtx.Unlock()
+	g.spectators[cl] = struct{}{}
+	g.mtx.Unlock()
 
-	g.spectators[id] = spectator
+	cl.mtx.Lock()
+	cl.g = g
+	cl.mtx.Unlock()
+
 	go func() {
 		body, _ := json.Marshal(model.GameOrder{Brd: g.brd})
 		body, _ = json.Marshal(model.Order{ID: model.OrGame, Data: body})
 
-		spectator.Write(body)
+		cl.W.Write(body)
+
+		body, _ = json.Marshal(model.TurnOrder{
+			P1: g.turn,
+		})
+		body, _ = json.Marshal(model.Order{
+			ID:   model.OrTurn,
+			Data: body,
+		})
+
+		cl.W.Write(body)
 	}()
 
-	return id
+	return nil
 }
 
 // RmSpectator removes a spectator from the list of spectators, and is safe if the id is invalid
-func (g *Game) RmSpectator(id string) {
-	g.mtx.Lock()
-	defer g.mtx.Unlock()
+func (g *Game) RmSpectator(cl *Client) error {
+	if cl.g == nil {
+		return ErrGameNil
+	}
 
-	delete(g.spectators, id)
+	defer g.mtx.Unlock()
+	g.mtx.Lock()
+
+	_, ok := g.spectators[cl]
+	if !ok {
+		return ErrSpectatorNil
+	}
+
+	/*
+		body, _ := json.Marshal(model.DoneOrder{
+			Reason: model.DoneSpectatorLeft,
+		})
+		body, _ = json.Marshal(model.Order{
+			ID:   model.OrDone,
+			Data: body,
+		})
+
+		cl.W.Write(body)
+	*/
+	delete(g.spectators, cl)
+
+	return nil
 }
 
 // Close closes the game, and cleans up any data assigned to the clients or the game struct. It does not send a message to clients indicating that the game is closed

@@ -33,7 +33,7 @@ func clientRead(rd *io.PipeReader) chan []byte {
 	ch := make(chan []byte)
 
 	go func() {
-		body := make([]byte, 128)
+		body := make([]byte, 2048)
 		n, err := rd.Read(body)
 		if err != nil {
 			ch <- nil

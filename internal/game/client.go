@@ -1,6 +1,7 @@
 package game
 
 import (
+	"encoding/json"
 	"io"
 	"sync"
 
@@ -57,10 +58,24 @@ func (c *Client) LeaveGame() {
 		return
 	}
 
+	var reason uint8
+	if c.p1 {
+		reason = model.DoneWhiteForfeit
+	} else {
+		reason = model.DoneBlackForfeit
+	}
+
+	body, err := json.Marshal(model.DoneOrder{
+		Reason: reason,
+	})
+	if err != nil {
+		return
+	}
+
 	x := c.g.cs[board.GetInversePlayer(c.p1)]
 	g.Update(x, model.Order{
-		ID:        model.OrDone,
-		Parameter: x.p1,
+		ID:   model.OrDone,
+		Data: body,
 	})
 
 	c.g.close()
