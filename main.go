@@ -16,7 +16,7 @@ import (
 const apiver = "v1"
 
 func main() {
-	if debug != "no" {
+	if debug != "no" && debug != "normal" {
 		go debug_game()
 	}
 
@@ -42,7 +42,12 @@ func main() {
 			w.Write(nil)
 		}).Methods("GET")
 
-		api.HandleFunc("/watchable", rest.WatchableHandler).Methods("GET", "OPTIONS")
+		watchable := api.PathPrefix("/watchable/").Subrouter()
+		{
+			watchable.HandleFunc("/list", rest.WatchableListHandler).Methods("GET", "OPTIONS")
+			watchable.HandleFunc("/join", rest.WatchableJoinHandler).Methods("POST", "OPTIONS")
+			watchable.HandleFunc("/leave", rest.WatchableLeaveHandler).Methods()
+		}
 	}
 
 	{

@@ -26,7 +26,7 @@ type Possible struct {
 type Watchable struct {
 	P1  Profile      `json:"p1"`
 	P2  Profile      `json:"p2"`
-	Brd *board.Board `json:"brd"`
+	Brd *board.Board `json:"brd,omitempty"`
 }
 
 // Generic is a struct used for generic stuff. If a model *only* uses ID, then it should use generic.

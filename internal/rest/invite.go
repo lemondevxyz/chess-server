@@ -103,17 +103,20 @@ func (u *User) AcceptInvite(tok string) error {
 		return fmt.Errorf("%s | %w", err.Error(), ErrInternal)
 	}
 
+	p1 := u.Client().P1()
 	jsu, err := json.Marshal(model.GameOrder{
-		P1:      u.Client().P1(),
-		Profile: vs.Profile,
+		P1:      &p1,
+		Profile: &vs.Profile,
 		Brd:     b,
 	})
 	if err != nil {
 		return cancel(err)
 	}
+	p1 = vs.Client().P1()
 	jsv, err := json.Marshal(model.GameOrder{
-		P1:  vs.Client().P1(),
-		Brd: b,
+		P1:      &p1,
+		Profile: &u.Profile,
+		Brd:     b,
 	})
 	if err != nil {
 		return cancel(err)
@@ -138,6 +141,8 @@ func (u *User) AcceptInvite(tok string) error {
 	g.SwitchTurn()
 
 	id := watchable.Add(watchableModel{
+		p1: u.Profile,
+		p2: u.Profile,
 		gm: g,
 	})
 

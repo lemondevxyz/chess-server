@@ -192,7 +192,9 @@ func (g *Game) UpdateAll(u model.Order) error {
 	go func() {
 		g.mtx.Lock()
 		for cl := range g.spectators {
+			//fmt.Println("writing spectators")
 			cl.W.Write(body)
+			//fmt.Println("deone")
 		}
 		g.mtx.Unlock()
 	}()

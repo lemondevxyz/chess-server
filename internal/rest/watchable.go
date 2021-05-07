@@ -80,7 +80,7 @@ var watchable = cacheWatchable{
 	last:  time.Now().UTC().Add(cacheDuration * -1),
 }
 
-func WatchableHandler(w http.ResponseWriter, r *http.Request) {
+func WatchableListHandler(w http.ResponseWriter, r *http.Request) {
 	_, err := GetUser(r)
 	if err != nil {
 		RespondError(w, http.StatusUnauthorized, fmt.Errorf("you must be logged in to view watchable games"))
@@ -93,7 +93,7 @@ func WatchableHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(watchable.cache)
 }
 
-func WatchHandler(w http.ResponseWriter, r *http.Request) {
+func WatchableJoinHandler(w http.ResponseWriter, r *http.Request) {
 	u, err := GetUser(r)
 	if err != nil {
 		RespondError(w, http.StatusUnauthorized, fmt.Errorf("you must be logged in to view watchable games"))
@@ -114,15 +114,17 @@ func WatchHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	g := sl.gm
+	RespondJSON(w, http.StatusOK, model.Watchable{
+		P1: sl.p1,
+		P2: sl.p2,
+	})
 
+	g := sl.gm
 	g.AddSpectator(u.Client())
 
-	w.WriteHeader(http.StatusOK)
-	w.Write(nil)
 }
 
-func LeaveHandler(w http.ResponseWriter, r *http.Request) {
+func WatchableLeaveHandler(w http.ResponseWriter, r *http.Request) {
 	u, err := GetUser(r)
 	if err != nil {
 		RespondError(w, http.StatusUnauthorized, fmt.Errorf("you must be logged in to view watchable games"))

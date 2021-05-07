@@ -13,6 +13,7 @@ import (
 
 type Context struct {
 	http.ResponseWriter
+	u      *User
 	status int
 }
 

@@ -132,7 +132,7 @@ func TestWatchableWatchHandler(t *testing.T) {
 
 	req.Header = hd
 
-	handle := http.HandlerFunc(WatchHandler)
+	handle := http.HandlerFunc(WatchableJoinHandler)
 
 	go func() {
 		<-read(specR)
@@ -171,7 +171,7 @@ func TestWatchableLeaveHandler(t *testing.T) {
 
 	req.Header = hd
 
-	handle := http.HandlerFunc(LeaveHandler)
+	handle := http.HandlerFunc(WatchableLeaveHandler)
 	handle.ServeHTTP(resp, req)
 
 	if resp.Result().StatusCode != 200 {

@@ -13,7 +13,7 @@ import (
 	"github.com/toms1441/chess-server/internal/rest"
 )
 
-var debug = "watchable"
+var debug = "promotion"
 
 const p1 = true
 
@@ -22,7 +22,7 @@ var solo = true
 func debug_game() {
 	fmt.Println("endless loop mode")
 	if debug != "yes" {
-		fmt.Printf("debug state: %s\n", debug)
+		fmt.Printf("debug mode: %s\n", debug)
 	}
 	if debug == "watchable" {
 		go func() {
@@ -85,6 +85,8 @@ func debug_game() {
 			err = debugCheckmate(cl1.Client(), cl2.Client())
 		case "promotion":
 			err = debugPromotion(cl1.Client(), cl2.Client())
+		case "watchable":
+			err = debugWatchable(cl1.Client(), cl2.Client())
 		}
 
 		if err != nil {
@@ -199,4 +201,26 @@ func debugPromotion(cl1, cl2 *game.Client) error {
 	}
 
 	return doMove(cl1, cl2, list)
+}
+
+func debugWatchable(cl1, cl2 *game.Client) error {
+	rev := false
+	for {
+		var list []model.MoveOrder
+		if !rev {
+			list = []model.MoveOrder{
+				{25, board.Point{0, 5}},
+				{1, board.Point{0, 2}},
+			}
+		} else {
+			list = []model.MoveOrder{
+				{25, board.Point{1, 7}},
+				{1, board.Point{1, 0}},
+			}
+		}
+
+		doMove(cl1, cl2, list)
+		time.Sleep(time.Second * 1)
+		rev = !rev
+	}
 }
