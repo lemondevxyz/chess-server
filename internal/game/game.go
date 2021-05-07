@@ -26,7 +26,7 @@ type Game struct {
 	// OrMove, OrTurn, OrPromotion, OrCastling, OrCheckmate, OrDone
 	// All spectator operations should be non-blocking, and should be ignored if they fail
 	spectators map[*Client]struct{}
-	mtx        sync.Mutex
+	mtx        sync.RWMutex
 }
 
 // NewGame creates a game for client 1 and client 2(cl1, cl2). It fails whenever the clients are already in a game, or one of them is nil.
@@ -190,13 +190,11 @@ func (g *Game) UpdateAll(u model.Order) error {
 	g.cs[false].W.Write(body)
 
 	go func() {
-		g.mtx.Lock()
+		g.mtx.RLock()
 		for cl := range g.spectators {
-			//fmt.Println("writing spectators")
 			cl.W.Write(body)
-			//fmt.Println("deone")
 		}
-		g.mtx.Unlock()
+		g.mtx.RUnlock()
 	}()
 
 	return nil
@@ -242,32 +240,15 @@ func (g *Game) AddSpectator(cl *Client) error {
 	return nil
 }
 
-// RmSpectator removes a spectator from the list of spectators, and is safe if the id is invalid
+// RmSpectator removes a spectator from the list of spectators, and is safe in-case client is nil.
 func (g *Game) RmSpectator(cl *Client) error {
-	if cl.g == nil {
+	if cl.g == nil || cl.g != g {
 		return ErrGameNil
 	}
 
-	defer g.mtx.Unlock()
 	g.mtx.Lock()
-
-	_, ok := g.spectators[cl]
-	if !ok {
-		return ErrSpectatorNil
-	}
-
-	/*
-		body, _ := json.Marshal(model.DoneOrder{
-			Reason: model.DoneSpectatorLeft,
-		})
-		body, _ = json.Marshal(model.Order{
-			ID:   model.OrDone,
-			Data: body,
-		})
-
-		cl.W.Write(body)
-	*/
 	delete(g.spectators, cl)
+	g.mtx.Unlock()
 
 	return nil
 }
@@ -299,4 +280,5 @@ func (g *Game) close() {
 
 	delete(g.cs, false)
 	delete(g.cs, true)
+	g.spectators = map[*Client]struct{}{}
 }

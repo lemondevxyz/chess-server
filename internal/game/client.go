@@ -16,7 +16,7 @@ type Client struct {
 	p1  bool // player 1 or 2??
 	id  string
 	g   *Game
-	mtx sync.Mutex
+	mtx sync.RWMutex
 }
 
 // Do executes a command. It automatically checks if the player is in a game, or if the command's ID is invalid.
@@ -47,6 +47,8 @@ func (c *Client) Do(cmd model.Order) error {
 
 // Game returns the pointer to client's game
 func (c *Client) Game() *Game {
+	c.mtx.RLock()
+	defer c.mtx.RUnlock()
 	return c.g
 }
 

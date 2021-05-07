@@ -21,11 +21,15 @@ type watchableModel struct {
 }
 
 func (w *watchableModel) MarshalJSON() ([]byte, error) {
-	return json.Marshal(model.Watchable{
-		P1:  w.p1,
-		P2:  w.p2,
-		Brd: w.gm.Board(),
-	})
+	if w != nil && w.gm != nil {
+		return json.Marshal(model.Watchable{
+			P1:  w.p1,
+			P2:  w.p2,
+			Brd: w.gm.Board(),
+		})
+	}
+
+	return json.Marshal(nil)
 }
 
 type cacheWatchable struct {
@@ -57,11 +61,12 @@ func (c *cacheWatchable) Rm(id string) {
 
 func (c *cacheWatchable) Rebuild(force bool) {
 	if force || c.ShouldRebuild() {
-		body, _ := json.Marshal(watchable.slice)
-
 		watchable.mtx.Lock()
+
+		body, _ := json.Marshal(watchable.slice)
 		watchable.cache = body
 		watchable.last = time.Now().UTC()
+
 		watchable.mtx.Unlock()
 	}
 }

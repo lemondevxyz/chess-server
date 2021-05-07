@@ -147,10 +147,11 @@ func TestWatchableWatchHandler(t *testing.T) {
 
 func TestWatchableUpdate(t *testing.T) {
 	/* just to make sure */
-	go us1.cl.Game().SwitchTurn()
-
-	<-read(rd2)
-	<-read(rd1)
+	go func() {
+		<-read(rd2)
+		<-read(rd1)
+	}()
+	us1.cl.Game().SwitchTurn()
 
 	x := model.Order{}
 	err := json.Unmarshal(<-read(specR), &x)
@@ -172,16 +173,21 @@ func TestWatchableLeaveHandler(t *testing.T) {
 	req.Header = hd
 
 	handle := http.HandlerFunc(WatchableLeaveHandler)
+	t.Log("bef")
 	handle.ServeHTTP(resp, req)
+	t.Log("aft")
 
 	if resp.Result().StatusCode != 200 {
 		t.Fatalf("%d: %s", resp.Result().StatusCode, resp.Body.String())
 	}
 
-	go us1.cl.Game().SwitchTurn()
-
-	<-read(rd2)
-	<-read(rd1)
+	go func() {
+		<-read(rd2)
+		<-read(rd1)
+	}()
+	t.Log("switch switch bish")
+	us1.cl.Game().SwitchTurn()
+	t.Log("listen yo not work")
 
 	select {
 	case <-time.After(time.Millisecond * 25):
