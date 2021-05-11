@@ -13,7 +13,7 @@ import (
 	"github.com/toms1441/chess-server/internal/rest"
 )
 
-var debug = "promotion"
+var debug = "invite"
 
 const p1 = true
 
@@ -24,21 +24,28 @@ func debug_game() {
 	if debug != "yes" {
 		fmt.Printf("debug mode: %s\n", debug)
 	}
-	if debug == "watchable" {
-		go func() {
-			cn, _, _, err := ws.Dial(context.Background(), "ws://localhost:8080/api/v1/ws")
-			if err != nil {
-				fmt.Printf("ws.Dial: %s\n", err)
-			}
 
-			for {
-				b := make([]byte, 2048)
-				_, err := cn.Read(b)
-				if err != nil {
-					panic(err)
-				}
+	connect := func() {
+		cn, _, _, err := ws.Dial(context.Background(), "ws://localhost:8080/api/v1/ws")
+		if err != nil {
+			fmt.Printf("ws.Dial: %s\n", err)
+		}
+
+		for {
+			b := make([]byte, 2048)
+			_, err := cn.Read(b)
+			if err != nil {
+				panic(err)
 			}
-		}()
+		}
+	}
+
+	if debug == "watchable" || debug == "invite" {
+		if debug == "invite" {
+			solo = false
+		}
+
+		go connect()
 	}
 
 	for {
@@ -48,20 +55,9 @@ func debug_game() {
 			if debug == "watchable" {
 				solo = false
 			}
-			go func() {
-				cn, _, _, err := ws.Dial(context.Background(), "ws://localhost:8080/api/v1/ws")
-				if err != nil {
-					fmt.Printf("ws.Dial: %s\n", err)
-				}
 
-				for {
-					b := make([]byte, 2048)
-					_, err := cn.Read(b)
-					if err != nil {
-						panic(err)
-					}
-				}
-			}()
+			go connect()
+
 			time.Sleep(time.Second)
 		}
 		cl2 := <-x
@@ -69,15 +65,18 @@ func debug_game() {
 			cl1, cl2 = cl2, cl1
 		}
 
-		err := cl2.Invite(model.InviteOrder{
-			Profile: cl1.Profile,
-		}, rest.InviteLifespan)
-		if err != nil {
-			panic(err)
+		if debug != "invite" {
+			err := cl2.Invite(model.InviteOrder{
+				Profile: cl1.Profile,
+			}, rest.InviteLifespan)
+			if err != nil {
+				panic(err)
+			}
+			time.Sleep(time.Millisecond * 10)
+			cl1.AcceptInvite(cl2.Profile.ID + "_" + cl2.Profile.Platform)
 		}
-		time.Sleep(time.Millisecond * 10)
-		cl1.AcceptInvite(cl2.Profile.ID + "_" + cl2.Profile.Platform)
 
+		var err error
 		switch debug {
 		case "castling":
 			err = debugCastling(cl1.Client(), cl2.Client())
@@ -87,6 +86,8 @@ func debug_game() {
 			err = debugPromotion(cl1.Client(), cl2.Client())
 		case "watchable":
 			err = debugWatchable(cl1.Client(), cl2.Client())
+		case "invite":
+			err = debugInvite(cl2, cl1)
 		}
 
 		if err != nil {
@@ -223,4 +224,11 @@ func debugWatchable(cl1, cl2 *game.Client) error {
 		time.Sleep(time.Second * 1)
 		rev = !rev
 	}
+}
+
+func debugInvite(cl1 *rest.User, cl2 *rest.User) error {
+	time.Sleep(time.Millisecond * 100)
+	return cl2.Invite(model.InviteOrder{
+		Profile: cl1.Profile,
+	}, rest.InviteLifespan)
 }
