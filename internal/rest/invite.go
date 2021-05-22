@@ -18,7 +18,7 @@ func (u *User) Invite(inv model.InviteOrder, lifespan time.Duration) error {
 	if u.Client().Game() != nil {
 		return game.ErrGameIsNotNil
 	}
-	id := u.Profile.ID + "_" + u.Profile.Platform
+	id := u.Profile.GetInviteID()
 
 	var vs *User
 	for _, v := range users {
@@ -41,7 +41,7 @@ func (u *User) Invite(inv model.InviteOrder, lifespan time.Duration) error {
 	}
 
 	param := model.InviteOrder{
-		Profile: vs.Profile,
+		Profile: u.Profile,
 	}
 
 	body, err := json.Marshal(param)
@@ -155,6 +155,10 @@ func (u *User) AcceptInvite(tok string) error {
 	u.invite = map[string]*User{}
 	u.mtx.Unlock()
 
+	vs.mtx.Lock()
+	u.invite = map[string]*User{}
+	vs.mtx.Unlock()
+
 	return nil
 }
 
@@ -189,13 +193,14 @@ func AcceptInviteHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	inv := model.InviteOrder{}
+
 	err = BindJSON(r, &inv)
 	if err != nil {
 		RespondError(w, http.StatusBadRequest, err)
 		return
 	}
 
-	err = u.AcceptInvite(inv.Profile.ID + "_" + inv.Profile.Platform)
+	err = u.AcceptInvite(inv.Profile.GetInviteID())
 	if err != nil {
 		RespondError(w, http.StatusBadRequest, err)
 		return

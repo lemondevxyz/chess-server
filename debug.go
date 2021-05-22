@@ -13,7 +13,7 @@ import (
 	"github.com/toms1441/chess-server/internal/rest"
 )
 
-var debug = "invite"
+var debug = "normal"
 
 const p1 = true
 

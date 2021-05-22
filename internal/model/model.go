@@ -16,6 +16,11 @@ func (p Profile) Valid() bool {
 	return len(p.ID) > 0 && len(p.Picture) > 0 && len(p.Username) > 0
 }
 
+// GetInviteID returns the invite id from a specificed token, this function's purpose is to have a standard way of retrieving ids...
+func (p Profile) GetInviteID() string {
+	return p.ID + "_" + p.Platform
+}
+
 // Possible is a struct indicating which moves are legal.
 type Possible struct {
 	ID     int8          `json:"id,omitempty" validate:"required"` // [C]

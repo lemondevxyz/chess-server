@@ -31,16 +31,28 @@ func main() {
 		api.HandleFunc("/avali", rest.GetAvaliableUsersHandler).Methods("GET", "OPTIONS")
 		api.HandleFunc("/possib", rest.PossibHandler).Methods("POST", "OPTIONS")
 
-		api.HandleFunc("/protect", func(w http.ResponseWriter, r *http.Request) {
+		// is connected to ws?
+		api.HandleFunc("/connected", func(w http.ResponseWriter, r *http.Request) {
 			_, err := rest.GetUser(r)
 			if err != nil {
-				w.WriteHeader(http.StatusForbidden)
-				w.Write(nil)
+				w.WriteHeader(http.StatusUnauthorized)
+			} else {
+				w.WriteHeader(http.StatusOK)
 			}
 
-			w.WriteHeader(http.StatusOK)
 			w.Write(nil)
-		}).Methods("GET")
+		}).Methods("GET", "OPTIONS")
+		// is logged in?
+		api.HandleFunc("/private", func(w http.ResponseWriter, r *http.Request) {
+			mo := auth.Identify(r)
+			if mo == nil {
+				w.WriteHeader(http.StatusUnauthorized)
+			} else {
+				w.WriteHeader(http.StatusOK)
+			}
+
+			w.Write(nil)
+		}).Methods("GET", "OPTIONS")
 
 		watchable := api.PathPrefix("/watchable/").Subrouter()
 		{
@@ -58,9 +70,9 @@ func main() {
 		if len(id) > 0 && len(secret) > 0 && len(redirect) > 0 {
 			discordrouter := api.PathPrefix("/discord").Subrouter()
 			discordconfig := discord.NewAuthConfig(discord.Config{
-				ClientID:     os.Getenv("DISCORD_CLIENT_ID"),
-				ClientSecret: os.Getenv("DISCORD_CLIENT_SECRET"),
-				Redirect:     os.Getenv("DISCORD_REDIRECT"),
+				ClientID:     id,
+				ClientSecret: secret,
+				Redirect:     redirect,
 			})
 			auth.AddRoutes(discordconfig, discordrouter)
 		}
@@ -112,8 +124,9 @@ func main() {
 
 		if debug != "no" {
 			ctx.Header().Add("Access-Control-Allow-Origin", "*")
-			ctx.Header().Add("Access-Control-Allow-Headers", "Content-Type, Accept, Authorization")
+			ctx.Header().Add("Access-Control-Allow-Headers", "Content-Type, Accept, Authorization, Cookie")
 			ctx.Header().Add("Access-Control-Allow-Methods", "GET, POST")
+			ctx.Header().Add("Access-Control-Allow-Credentials", "true")
 		}
 		if r.Method == "OPTIONS" {
 			ctx.WriteHeader(http.StatusOK)
