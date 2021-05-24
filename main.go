@@ -9,6 +9,7 @@ import (
 	"github.com/fatih/color"
 	"github.com/gorilla/mux"
 	"github.com/toms1441/chess-server/internal/model/discord"
+	"github.com/toms1441/chess-server/internal/model/google"
 	"github.com/toms1441/chess-server/internal/rest"
 	"github.com/toms1441/chess-server/internal/rest/auth"
 )
@@ -75,6 +76,22 @@ func main() {
 				Redirect:     redirect,
 			})
 			auth.AddRoutes(discordconfig, discordrouter)
+		}
+	}
+	{
+		id := os.Getenv("GOOGLE_CLIENT_ID")
+		secret := os.Getenv("GOOGLE_CLIENT_SECRET")
+		redirect := os.Getenv("GOOGLE_REDIRECT")
+
+		if len(id) > 0 && len(secret) > 0 && len(redirect) > 0 {
+			googlerouter := api.PathPrefix("/google").Subrouter()
+			googleconfig := google.NewAuthConfig(google.Config{
+				ClientID:     id,
+				ClientSecret: secret,
+				Redirect:     redirect,
+			})
+
+			auth.AddRoutes(googleconfig, googlerouter)
 		}
 	}
 

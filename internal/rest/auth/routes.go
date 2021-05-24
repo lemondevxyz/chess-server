@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -44,14 +45,17 @@ func AddRoutes(cfg Config, r *mux.Router) {
 }
 
 func (cfg Config) private(w http.ResponseWriter, r *http.Request) {
-	if cfg.identify(r) == nil {
+	user := cfg.identify(r)
+	if user == nil {
 		w.WriteHeader(http.StatusUnauthorized)
 		w.Write([]byte("not logged in"))
 		return
 	}
 
+	body, _ := json.Marshal(user)
+
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(""))
+	w.Write(body)
 }
 
 func (cfg Config) redirect(w http.ResponseWriter, r *http.Request) {
