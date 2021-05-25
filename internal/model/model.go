@@ -4,6 +4,12 @@ import (
 	"github.com/toms1441/chess-server/internal/board"
 )
 
+type OAuth2Config struct {
+	ClientID     string `validate:"required" mapstructure:"client_id"`
+	ClientSecret string `validate:"required" mapstructure:"client_secret"`
+	Redirect     string `validate:"required" mapstructure:"redirect"`
+}
+
 // Profile is a generic struct used to get information about the user.
 type Profile struct {
 	ID       string `json:"id" validate:"required"`

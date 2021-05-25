@@ -16,7 +16,7 @@ type Config struct {
 	Redirect     string `validate:"required" mapstructure:"redirect"`
 }
 
-func NewAuthConfig(cfg Config) auth.Config {
+func NewAuthConfig(cfg model.OAuth2Config) auth.Config {
 	return auth.Config{
 		Config: oauth2.Config{
 			Endpoint:     google.Endpoint,
@@ -28,7 +28,7 @@ func NewAuthConfig(cfg Config) auth.Config {
 			},
 		},
 		MeURL:  meurl.String(),
-		ID:     "google",
+		ID:     platform,
 		Logout: logouturl.String(),
 		Unmarshal: func(reader io.ReadCloser) *model.Profile {
 			defer reader.Close()

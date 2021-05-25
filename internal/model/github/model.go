@@ -1,23 +1,25 @@
-package google
+package github
 
 import (
+	"strconv"
+
 	"github.com/toms1441/chess-server/internal/model"
 )
 
 type User struct {
 	// ID of the user
-	ID string `json:"user_id"`
-	// Fullname of the user
-	Name string `json:"name"`
+	ID int `json:"id"`
+	// Name of the user, could be fullname or username!
+	Name string `json:"login"`
 	// Picture is direct URL for the picture
-	Picture string `json:"picture"`
+	Picture string `json:"avatar_url"`
 }
 
-const platform = "google"
+const platform = "github"
 
 func (u User) GetProfile() model.Profile {
 	return model.Profile{
-		ID:       u.ID,
+		ID:       strconv.Itoa(u.ID),
 		Picture:  u.Picture,
 		Username: u.Name,
 		Platform: platform,

@@ -1,20 +1,13 @@
-package google
+package github
 
 import (
 	"net/url"
-	"path"
 )
 
-const host = "googleapis.com"
+const host = "api.github.com"
 
 var meurl = url.URL{
 	Scheme: "https",
 	Host:   host,
-	Path:   path.Join("oauth2", "v2", "userinfo?alt=\"json\""),
-}
-
-var logouturl = url.URL{
-	Scheme: "https",
-	Host:   "oauth2." + host,
-	Path:   "/revoke",
+	Path:   "/user",
 }
