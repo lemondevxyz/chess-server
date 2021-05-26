@@ -27,6 +27,8 @@ DISCORD_CLIENT_SECRET=''
 DISCORD_REDIRECT=''
 ```
 
+Note: You can test each platform's oauth credentials via /api/v1/platform/private. If you are logged in, it will show your user's information.
+
 ## matchup
 Matchups are created via the invite system. A user invites an available user, and if that other user accepts then a match is created.
 
