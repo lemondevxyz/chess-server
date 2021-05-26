@@ -2,7 +2,7 @@
 A server implementation of the game Chess. Websocket for live board updates and invites, and http for client commands/requests...
 
 ## demo
-soon... :)
+[website demo](https://chess.lemondev.xyz)
 
 ## orders
 Orders are basically generic models that could be used for updates(server->client) *and/or* command(client->server). 
