@@ -10,7 +10,9 @@ import (
 	"github.com/fatih/color"
 	"github.com/gorilla/mux"
 	"github.com/toms1441/chess-server/internal/model"
+	"github.com/toms1441/chess-server/internal/model/discord"
 	"github.com/toms1441/chess-server/internal/model/github"
+	"github.com/toms1441/chess-server/internal/model/google"
 	"github.com/toms1441/chess-server/internal/rest"
 	"github.com/toms1441/chess-server/internal/rest/auth"
 )
@@ -79,8 +81,8 @@ func main() {
 			auth.AddRoutes(config, router)
 		}
 	}
-	//addplatform("discord", discord.NewAuthConfig)
-	//addplatform("google", google.NewAuthConfig)
+	addplatform("discord", discord.NewAuthConfig)
+	addplatform("google", google.NewAuthConfig)
 	addplatform("github", github.NewAuthConfig)
 
 	var proto string
@@ -93,7 +95,6 @@ func main() {
 		port = "http.sock"
 
 		os.Remove(port)
-		os.Remove("ws.sock")
 	}
 
 	color.New(color.FgBlue).Println("Listening on", port)
@@ -104,17 +105,7 @@ func main() {
 	}
 
 	if proto == "unix" {
-		/* TODO: merge http.sock with ws.sock
-		ws, err := net.Listen("unix", "ws.sock")
-		if err != nil {
-			panic(err)
-		}
-
-		go rest.WebsocketServe(ws)
-		*/
-
-		os.Chmod("ws.sock", 0777)
-		os.Chmod("http.sock", 0777)
+		os.Chmod(port, 0777)
 	}
 
 	defer listen.Close()
